@@ -214,6 +214,31 @@ table.st .str.w{color:var(--good)} table.st .str.l{color:var(--bad)}
 .nav a.on{background:var(--blue); color:#fff}
 body.v-live #secTonight,body.v-live #secPath,body.v-live #secRace,body.v-live #secRun,body.v-live .foot{display:none}
 body.v-home #secLive{display:none}
+/* v7: schedule tab */
+body.v-home #secSched,body.v-live #secSched{display:none}
+body.v-sched #secLive,body.v-sched #secTonight,body.v-sched #secPath,body.v-sched #secRace,body.v-sched #secRun,body.v-sched #odds{display:none}
+#secSched{margin-top:16px}
+.seg{display:inline-flex; gap:2px; background:var(--card); border:1px solid var(--line); border-radius:7px; padding:3px}
+.seg button{font:inherit; font-size:11.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--mute);
+  background:transparent; border:0; border-radius:5px; padding:4px 10px; cursor:pointer}
+.seg button:hover{color:var(--ink)}
+.seg button.on{background:var(--blue); color:#fff}
+.sblk{margin-bottom:18px}
+.sblk .sh{display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:9px}
+.sblk .sh h3{font-family:var(--display); font-size:18px; letter-spacing:.04em; text-transform:uppercase; margin:0}
+.sblk .sh span{font-size:11.5px; color:var(--dim)}
+.sblk .sh .dr b{color:var(--mute); font-weight:600}
+.sblk .sh .dr b.fav{color:#8fb6ff}
+.g .sd{white-space:nowrap; font-family:var(--body); font-size:9.5px; font-weight:700; color:var(--dim); border:1px solid #2c3342; border-radius:3px; padding:0 4px; margin-left:6px; vertical-align:2px}
+.g .sd.in{color:#8fb6ff; border-color:rgba(47,111,224,.6)}
+.g .sd.wc{color:#f0bd73; border-color:rgba(232,163,61,.5)}
+#sched .g.fav:not(.live){border-color:var(--line); background:var(--card)}
+#sched .g.imp{border-color:var(--blue); box-shadow:0 0 0 1px var(--blue),0 0 16px rgba(47,111,224,.25)}
+#sched .g.imp.fav{background:linear-gradient(180deg,rgba(47,111,224,.14),var(--card) 55%)}
+.schnote{font-size:11.5px; color:var(--dim); margin-top:-4px}
+.bg.race .ribbon{background:rgba(139,148,165,.22); color:#c9d0dc}
+.bg.race{border-color:rgba(139,148,165,.45)}
+@media (max-width:640px){ .sch-head .note{margin-left:0; width:100%} .seg button{padding:4px 8px; font-size:11px} }
 body.v-live{overflow:hidden}
 body.v-live .wrap{max-width:none}
 
@@ -356,6 +381,7 @@ body.v-live #odds{display:none}
   <div class="rec" id="favRec">--<span id="favLeft"></span></div>
   <nav class="nav" id="nav">
     <a href="#home" data-v="home">Race</a>
+    <a href="#sched" data-v="sched">Schedule</a>
     <a href="#live" data-v="live">Scoreboard</a>
   </nav>
   <div class="spacer"></div>
@@ -375,6 +401,16 @@ body.v-live #odds{display:none}
 
   <section id="secLive">
     <div class="board" id="board"></div>
+  </section>
+
+  <section id="secSched">
+    <div class="head sch-head">
+      <h2>Schedule</h2>
+      <span class="seg" id="daySeg"></span>
+      <span class="seg" id="sortSeg"></span>
+      <span class="note" id="schNote"></span>
+    </div>
+    <div id="sched"><div class="empty">Loading the schedule</div></div>
   </section>
 
   <section id="secTonight">
@@ -738,25 +774,26 @@ function renderTonight(){
 
 function renderBoard(){
   var t=tex(); if(!t) return;
-  var list=slate().slice();
-
-  // live first, then what is still to come, then finals
-  function tier(it){ return it.st.live?0:(it.st.fin?2:1); }
-  list.sort(function(x,y){ return tier(x)-tier(y) || y.stake-x.stake; });
+  // v7: live games only; the Schedule tab has everything else
+  var list=slate().filter(function(it){ return it.st.live; });
+  list.sort(function(x,y){ return y.stake-x.stake; });
 
   // every other game in progress rides below the ones that matter
   var seen={}; list.forEach(function(it){seen[it.g.gamePk]=1;});
   var others=S.games.filter(function(g){
     return !seen[g.gamePk] && g.status && g.status.abstractGameState==='Live';
   }).map(function(g){
-    return {g:g,a:g.teams.away.team.id,h:g.teams.home.team.id,isFav:false,pull:null,split:false,stake:0,st:gameStatus(g),other:true};
-  });
+    var a=g.teams.away.team.id,h=g.teams.home.team.id, race=inRace(a)||inRace(h);
+    return {g:g,a:a,h:h,isFav:false,pull:null,split:false,stake:(race?10:0)+(closeLate(g)?5:0),st:gameStatus(g),other:true,race:race};
+  }).sort(function(x,y){ return y.stake-x.stake; });
   list=list.concat(others);
 
   var bd=$('board');
   if(!list.length){
     bd.style.removeProperty('--c');
-    bd.innerHTML='<div class="boardnote">Nothing on the board today. The race and the math are on the Race tab.</div>';
+    var nx=S.games.filter(function(g){return g.status&&g.status.abstractGameState==='Preview';})
+      .sort(function(a,b){return new Date(a.gameDate)-new Date(b.gameDate);})[0];
+    bd.innerHTML='<div class="boardnote">Nothing live right now.'+(nx?' Next first pitch: '+esc(nick(nx.teams.away.team.id))+' at '+esc(nick(nx.teams.home.team.id))+', '+esc(gameStatus(nx).t)+'.':'')+' Every game is on the Schedule tab.</div>';
     return;
   }
 
@@ -771,7 +808,7 @@ function renderBoard(){
     var g=it.g, st=it.st, ls=g.linescore||{};
     var aS=g.teams.away.score, hS=g.teams.home.score;
     var has=(aS!=null&&hS!=null);
-    var cp=it.other?['Around the league','']:chipFor(it);
+    var cp=it.other?[it.race?'Playoff race':'Around the league','']:chipFor(it);
 
     function row(id,score,other){
       var cls='br';
@@ -796,29 +833,162 @@ function renderBoard(){
         '</span></div>';
     }
 
-    var cls='bg'+(it.other?' other':' key');
+    var cls='bg'+(it.other?(it.race?' key race':' other'):' key');
     if(it.isFav) cls+=' fav';
     if(st.live) cls+=' live';
     else if(st.fin) cls+=' done';
     else if(anyLive) cls+=' soon';
 
     return '<div class="'+cls+'">'+
-      (it.other?'':'<div class="ribbon">'+(it.isFav?'Rangers':'Matters to Texas')+'</div>')+
+      (it.other&&!it.race?'':'<div class="ribbon">'+(it.isFav?'Rangers':it.race?'Playoff race':'Matters to Texas')+'</div>')+
       '<div class="bt"><span class="bchip '+cp[1]+'">'+esc(cp[0])+'</span>'+
       '<span class="bst'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+
       row(it.a,aS,hS)+row(it.h,hS,aS)+foot+'</div>';
   }).join('');
 }
 
+/* ================= render: schedule (v7) ================= */
+
+function lgOf(r){ return r&&r.div>=200&&r.div<=202?'AL':r&&r.div>=203&&r.div<=205?'NL':''; }
+var DIVORDER=[200,201,202,203,204,205];
+
+/* playoff seeds per league: three division winners, then three wild cards */
+function seeds(){
+  if(!S.stand) return {};
+  var out={};
+  ['AL','NL'].forEach(function(L){
+    var rows=S.stand.filter(function(r){return lgOf(r)===L;});
+    var lead={};
+    rows.forEach(function(r){ var c=lead[r.div]; if(!c||cmp(r,c)<0) lead[r.div]=r; });
+    var leaders=Object.keys(lead).map(function(k){return lead[k];}).sort(cmp);
+    var ids={}; leaders.forEach(function(r){ids[r.id]=1;});
+    var rest=rows.filter(function(r){return !ids[r.id];}).sort(cmp);
+    var six=rest[2];
+    leaders.concat(rest).forEach(function(r,i){
+      out[r.id]={seed:i+1, lg:L, wcgb: ids[r.id]||!six ? 0 : gapBetween(six,r)};
+    });
+  });
+  return out;
+}
+/* in a playoff spot, or close enough to one to matter */
+function inRace(id){
+  var sd=seeds()[id]; if(!sd) return false;
+  var r=S.byId[id];
+  return sd.seed<=6 || (sd.wcgb<=Math.min(6,Math.max(2,(r&&r.left||0)/2)));
+}
+function closeLate(g){
+  var ls=g.linescore||{}, a=g.teams.away.score, h=g.teams.home.score;
+  return (ls.currentInning||0)>=8 && a!=null && h!=null && Math.abs(a-h)<=2;
+}
+
+function dayStr(off){ var d=new Date(); d.setDate(d.getDate()+off); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+S.day=0; S.dayCache={};
+S.ssort=(function(){ try{ return localStorage.getItem('pc-sort')||'league'; }catch(e){ return 'league'; } })();
+function dayGames(){
+  if(S.day===0) return S.games;
+  return S.dayCache[dayStr(S.day)]||null;
+}
+function loadDay(off){
+  var d=dayStr(off);
+  if(off===0||S.dayCache[d]) return Promise.resolve();
+  return j(API+'/schedule?sportId=1&gameType=R&date='+d+'&hydrate=team,linescore').then(function(x){
+    var out=[]; (x.dates||[]).forEach(function(dt){ (dt.games||[]).forEach(function(g){ out.push(g); }); });
+    S.dayCache[d]=out;
+  });
+}
+
+var SORTS=[['league','League'],['division','Division'],['wildcard','Wildcard race']];
+function renderSched(){
+  var box=$('sched'); if(!box||!S.stand) return;
+  var days=[[-1,'Yesterday'],[0,'Today'],[1,'Tomorrow']];
+  $('daySeg').innerHTML=days.map(function(d){return '<button type="button" data-day="'+d[0]+'" class="'+(d[0]===S.day?'on':'')+'">'+d[1]+'</button>';}).join('');
+  $('sortSeg').innerHTML=SORTS.map(function(x){return '<button type="button" data-sort="'+x[0]+'" class="'+(x[0]===S.ssort?'on':'')+'">'+x[1]+'</button>';}).join('');
+  var games=dayGames();
+  if(!games){ box.innerHTML='<div class="empty">Loading</div>'; loadDay(S.day).then(renderSched).catch(function(e){ box.innerHTML='<div class="empty">Could not load that day ('+esc(e.message)+')</div>'; }); return; }
+  var sd=seeds();
+  var rel={}; if(S.day===0) slate().forEach(function(it){ rel[it.g.gamePk]=it; });
+  var byTime=function(a,b){ return new Date(a.gameDate)-new Date(b.gameDate); };
+  var live=games.filter(function(g){return g.status&&g.status.abstractGameState==='Live';}).length;
+  var fin=games.filter(function(g){return g.status&&g.status.abstractGameState==='Final';}).length;
+  var d=new Date(dayStr(S.day)+'T12:00:00');
+  $('schNote').textContent=d.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+' · '+games.length+' game'+(games.length===1?'':'s')+' · '+live+' live · '+fin+' final';
+
+  function card(g,showSeed){
+    var a=g.teams.away.team.id,h=g.teams.home.team.id, st=gameStatus(g), ls=g.linescore||{};
+    var aS=g.teams.away.score,hS=g.teams.home.score, has=(aS!=null&&hS!=null)&&(g.status||{}).abstractGameState!=='Preview';
+    var it=rel[g.gamePk], isFav=(a===FAV||h===FAV);
+    var imp=st.live&&(it||inRace(a)||inRace(h)||closeLate(g));
+    var chip='';
+    if(st.live&&it){ var cp=chipFor(it); chip='<span class="chip '+cp[1]+'">'+esc(cp[0])+'</span>'; }
+    else if(st.live&&(inRace(a)||inRace(h))) chip='<span class="chip split">Playoff race</span>';
+    else if(st.live&&closeLate(g)) chip='<span class="chip split">Close late</span>';
+    function row(id,score,other){
+      var rr=S.byId[id], x=sd[id], b='';
+      if(showSeed&&x) b='<span class="sd '+(x.seed<=3?'in':x.seed<=6?'wc':'')+'" title="'+x.lg+' seed'+(x.seed>6?', '+num(x.wcgb)+' back of the last wild card':'')+'">'+x.seed+(x.seed>6?' · '+num(x.wcgb)+' GB':'')+'</span>';
+      return '<div class="row'+(st.fin&&has&&score<other?' lose':'')+'">'+
+        '<img src="'+logo(id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+        '<span class="nm">'+esc(nick(id))+(rr?'<span class="wl">'+rr.w+'-'+rr.l+'</span>':'')+b+'</span>'+
+        '<span class="sc">'+(has?score:'')+'</span></div>';
+    }
+    var foot='';
+    if(st.live){ var o=ls.offense||{};
+      foot='<div class="gfoot"><span>'+(ls.outs!=null?ls.outs+' out':'')+'</span><span class="bases"><span class="bz'+(o.second?' on':'')+'"></span><span class="bz'+(o.third?' on':'')+'"></span><span class="bz'+(o.first?' on':'')+'"></span></span></div>'; }
+    return '<div class="g'+(isFav?' fav':'')+(st.live?' live':'')+(imp?' imp':'')+'"><div class="gtop">'+chip+'<span class="gstat'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+row(a,aS,hS)+row(h,hS,aS)+foot+'</div>';
+  }
+  function blk(title,sub,list,showSeed){
+    return '<div class="sblk"><div class="sh"><h3>'+esc(title)+'</h3><span>'+sub+'</span></div><div class="games">'+list.map(function(g){return card(g,showSeed);}).join('')+'</div></div>';
+  }
+  function cnt(n){ return n+' game'+(n===1?'':'s'); }
+  var lg=function(g,side){ return lgOf(S.byId[g.teams[side].team.id]); };
+  var html='';
+  if(!games.length) html='<div class="empty">No games on this day.</div>';
+  else if(S.ssort==='league'){
+    [['American League',function(g){return lg(g,'away')==='AL'&&lg(g,'home')==='AL';}],
+     ['National League',function(g){return lg(g,'away')==='NL'&&lg(g,'home')==='NL';}],
+     ['Interleague',function(g){return lg(g,'away')!==lg(g,'home');}]].forEach(function(p){
+      var gs=games.filter(p[1]).sort(byTime);
+      if(gs.length) html+=blk(p[0],cnt(gs.length)+' · first pitch order',gs,false);
+    });
+  } else if(S.ssort==='division'){
+    DIVORDER.forEach(function(dv){
+      var teams=S.stand.filter(function(r){return r.div===dv;}).sort(cmp);
+      if(!teams.length) return;
+      var ids={}; teams.forEach(function(r){ids[r.id]=1;});
+      var gs=games.filter(function(g){return ids[g.teams.away.team.id]||ids[g.teams.home.team.id];}).sort(byTime);
+      if(!gs.length) return;
+      var top=teams[0];
+      var recs=teams.map(function(r){ var gb=gapBetween(top,r); return '<b class="'+(r.id===FAV?'fav':'')+'">'+ab(r.id)+'</b> '+r.w+'-'+r.l+(gb>0?' ('+num(gb)+')':''); }).join(' · ');
+      html+=blk(DIVN[dv],cnt(gs.length)+' · <span class="dr">'+recs+'</span>',gs,false);
+    });
+  } else {
+    var tiers=[['In a playoff spot',function(x){return x.seed<=6;}],['In the hunt',function(x){return x.seed>6&&x.wcgb<=5;}],['Chasing',function(x){return x.seed>6&&x.wcgb>5;}]];
+    ['AL','NL'].forEach(function(L){
+      var mine=games.filter(function(g){return lg(g,'away')===L||lg(g,'home')===L;});
+      function best(g){ var b=null; ['away','home'].forEach(function(s){ var x=sd[g.teams[s].team.id]; if(x&&x.lg===L&&(!b||x.seed<b.seed)) b=x; }); return b; }
+      tiers.forEach(function(t){
+        var gs=mine.filter(function(g){var b=best(g); return b&&t[1](b);}).sort(function(a,b){return best(a).seed-best(b).seed||byTime(a,b);});
+        if(gs.length) html+=blk(L+' · '+t[0],cnt(gs.length)+(t[0]==='In a playoff spot'?' · seeds 1-3 lead a division, 4-6 hold the wild cards':t[0]==='In the hunt'?' · within 5 games of the last wild card':' · more than 5 back'),gs,true);
+      });
+    });
+    html+='<p class="schnote">Interleague games appear under both leagues. Seeds come from today\'s standings; ties break on record here, not the official tiebreakers.</p>';
+  }
+  box.innerHTML=html;
+}
+document.addEventListener('click',function(e){
+  var db=e.target.closest('#daySeg button'); if(db){ S.day=+db.getAttribute('data-day'); return renderSched(); }
+  var sb=e.target.closest('#sortSeg button'); if(sb){ S.ssort=sb.getAttribute('data-sort'); try{ localStorage.setItem('pc-sort',S.ssort); }catch(x){} return renderSched(); }
+});
+
 /* ================= views ================= */
 
 function setView(v){
-  S.view=(v==='live')?'live':'home';
+  S.view=(v==='live'||v==='sched')?v:'home';
   document.body.className='v-'+S.view;
   Array.prototype.forEach.call(document.querySelectorAll('#nav a'),function(a){
     a.className=(a.getAttribute('data-v')===S.view)?'on':'';
   });
   if(S.view==='live') renderBoard();
+  if(S.view==='sched') renderSched();
 }
 function route(){ setView((location.hash||'').replace(/^#/,'')); }
 
@@ -1118,7 +1288,7 @@ function renderOdds(){
 function renderAll(){
   if(!S.stand||!S.byId[FAV]) return;
   try{
-    renderBar(); renderOdds(); renderTonight(); renderBoard(); renderPath(); renderTables(); renderRunIn();
+    renderBar(); renderOdds(); renderTonight(); renderBoard(); renderSched(); renderPath(); renderTables(); renderRunIn();
     $('err').innerHTML='';
   }catch(e){
     $('err').innerHTML='<div class="err">Render problem: '+esc(e.message)+'</div>';
@@ -1133,7 +1303,7 @@ function fail(e){
 }
 
 function tickFast(){
-  loadToday().then(function(){ renderBar(); renderTonight(); renderBoard(); }).catch(fail);
+  loadToday().then(function(){ renderBar(); renderTonight(); renderBoard(); if(S.day===0) renderSched(); }).catch(fail);
 }
 function tickSlow(){
   Promise.all([loadStandings(),loadRest()]).then(renderAll).catch(fail);
