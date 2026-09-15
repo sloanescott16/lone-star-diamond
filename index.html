@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Lone Star Diamond</title>
+<title>Pennant Chase</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -37,7 +37,8 @@ h1,h2,h3{margin:0; font-family:var(--display); letter-spacing:.02em; text-transf
 }
 .brand{display:flex; align-items:center; gap:10px; min-width:0}
 .brand img{width:30px; height:30px; object-fit:contain; filter:drop-shadow(0 0 3px rgba(255,255,255,.28))}
-.brand h1{font-size:23px; line-height:1; white-space:nowrap}
+.brand h1{font-size:23px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:clip}
+.brand img,.bar .rec,.nav{flex-shrink:0}
 .brand h1 b{color:var(--blue); font-weight:700}
 .bar .rec{
   font-family:var(--display); font-size:19px; line-height:1;
@@ -292,6 +293,12 @@ body.v-live .wrap{max-width:none}
   .brand h1{font-size:19px}
   .bar .rec{font-size:16px; padding:4px 8px}
   .bar .rec span{display:none}
+  .bar .st #stText{display:none}
+  .bar{flex-wrap:wrap; row-gap:8px}
+  .bar .spacer{display:none}
+  .bar .st{margin-left:auto}
+  .bar .nav{order:9; flex-basis:100%; display:flex}
+  .bar .nav a{flex:1; text-align:center}
   .games{grid-template-columns:1fr}
   .tables,.paths,.runin{grid-template-columns:1fr}
   .nav a{padding:5px 9px; font-size:11.5px}
@@ -313,7 +320,7 @@ body.v-live .wrap{max-width:none}
 <div class="bar">
   <div class="brand">
     <img id="favLogo" src="https://www.mlbstatic.com/team-logos/140.svg" alt="" onerror="this.remove()">
-    <h1>Lone Star <b>Diamond</b></h1>
+    <h1>Pennant <b>Chase</b></h1>
   </div>
   <div class="rec" id="favRec">--<span id="favLeft"></span></div>
   <nav class="nav" id="nav">
@@ -372,7 +379,7 @@ body.v-live .wrap{max-width:none}
     <div class="runin" id="runin"></div>
   </section>
 
-  <div class="foot">Lone Star Diamond &middot; data from the MLB Stats API &middot; <span id="upd"></span></div>
+  <div class="foot">Pennant Chase &middot; data from the MLB Stats API &middot; <span id="upd"></span></div>
 </div>
 
 <script>
