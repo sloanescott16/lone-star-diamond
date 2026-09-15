@@ -259,6 +259,17 @@ body.v-live .wrap{max-width:none}
 .bg .bbz{display:inline-flex; gap:0.5cqw}
 .bg .bz{width:max(6px,1.6cqh); height:max(6px,1.6cqh); background:#2c3342; transform:rotate(45deg); border-radius:1px}
 .bg .bz.on{background:var(--warn)}
+
+/* key games wear a ribbon, the rest of the league sits quieter below */
+.bg.key{border-top:max(3px,0.9cqh) solid var(--warn)}
+.bg.key.fav{border-top-color:var(--blue)}
+.bg .ribbon{position:absolute; top:0; right:2.4cqw; background:var(--warn); color:#140d02;
+  font-size:max(8px,2.1cqh); font-weight:800; letter-spacing:.09em; text-transform:uppercase;
+  padding:0.5cqh 1.4cqw 0.7cqh; border-radius:0 0 5px 5px}
+.bg.key.fav .ribbon{background:var(--blue); color:#fff}
+.bg.key .bt{margin-top:max(12px,3cqh)}
+.bg.other{background:#0d1015}
+.bg.other .bchip{background:transparent; color:var(--dim); padding-left:0}
 .boardnote{color:var(--dim); font-size:13px; padding:20px 2px}
 
 /* ---------- run-in ---------- */
@@ -734,6 +745,15 @@ function renderBoard(){
   function tier(it){ return it.st.live?0:(it.st.fin?2:1); }
   list.sort(function(x,y){ return tier(x)-tier(y) || y.stake-x.stake; });
 
+  // every other game in progress rides below the ones that matter
+  var seen={}; list.forEach(function(it){seen[it.g.gamePk]=1;});
+  var others=S.games.filter(function(g){
+    return !seen[g.gamePk] && g.status && g.status.abstractGameState==='Live';
+  }).map(function(g){
+    return {g:g,a:g.teams.away.team.id,h:g.teams.home.team.id,isFav:false,pull:null,split:false,stake:0,st:gameStatus(g),other:true};
+  });
+  list=list.concat(others);
+
   var bd=$('board');
   if(!list.length){
     bd.style.removeProperty('--c');
@@ -742,7 +762,7 @@ function renderBoard(){
   }
 
   var n=list.length;
-  var c = n<=1?1 : n<=4?2 : n<=9?3 : 4;
+  var c = n<=1?1 : n<=4?2 : n<=9?3 : n<=16?4 : 5;
   bd.style.setProperty('--c',c);
 
   // dim the not-yet-started games only when there is something live to dim them against
@@ -752,12 +772,12 @@ function renderBoard(){
     var g=it.g, st=it.st, ls=g.linescore||{};
     var aS=g.teams.away.score, hS=g.teams.home.score;
     var has=(aS!=null&&hS!=null);
-    var cp=chipFor(it);
+    var cp=it.other?['Around the league','']:chipFor(it);
 
     function row(id,score,other){
       var cls='br';
       if(st.fin&&has&&score<other) cls+=' lose';
-      if(!st.fin&&!it.split) cls+=(id===it.pull?' pull':' fear');
+      if(!st.fin&&!it.split&&!it.other) cls+=(id===it.pull?' pull':' fear');
       var rr=S.byId[id];
       return '<div class="'+cls+'">'+
         '<img src="'+logo(id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
@@ -777,13 +797,14 @@ function renderBoard(){
         '</span></div>';
     }
 
-    var cls='bg';
+    var cls='bg'+(it.other?' other':' key');
     if(it.isFav) cls+=' fav';
     if(st.live) cls+=' live';
     else if(st.fin) cls+=' done';
     else if(anyLive) cls+=' soon';
 
     return '<div class="'+cls+'">'+
+      (it.other?'':'<div class="ribbon">'+(it.isFav?'Rangers':'Matters to Texas')+'</div>')+
       '<div class="bt"><span class="bchip '+cp[1]+'">'+esc(cp[0])+'</span>'+
       '<span class="bst'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+
       row(it.a,aS,hS)+row(it.h,hS,aS)+foot+'</div>';
