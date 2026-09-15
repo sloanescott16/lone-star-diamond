@@ -336,7 +336,6 @@ body.v-live .wrap{max-width:none}
 .odds .split b{color:var(--ink); font-weight:600}
 .odds .q{margin-left:auto; text-align:right; max-width:560px}
 .odds .q p{margin:0; font-family:var(--display); font-size:27px; line-height:1.08; letter-spacing:.01em}
-.odds .q cite{display:block; margin-top:5px; font-style:normal; font-size:11px; color:var(--dim); letter-spacing:.06em; text-transform:uppercase; font-weight:600}
 body.v-live #odds{display:none}
 @media (max-width:640px){
   .odds{flex-direction:column; align-items:flex-start; gap:10px; padding:13px 14px}
@@ -371,7 +370,7 @@ body.v-live #odds{display:none}
   <div class="odds" id="odds" hidden>
     <div><div class="pct" id="oddsPct">--</div><div class="lab">Playoff odds</div>
       <div class="split" id="oddsSplit"></div></div>
-    <div class="q"><p id="oddsQ"></p><cite id="oddsCite"></cite></div>
+    <div class="q"><p id="oddsQ"></p></div>
   </div>
 
   <section id="secLive">
@@ -1112,7 +1111,6 @@ function renderOdds(){
   $('oddsPct').textContent=dead?'0%':(o.all===0?'<0.1%':pctTxt(o.all));
   $('oddsSplit').innerHTML='West <b>'+pctTxt(o.div)+'</b> &middot; Wild card <b>'+pctTxt(o.wc)+'</b>';
   $('oddsQ').textContent='“'+pick[0]+'”';
-  $('oddsCite').textContent=pick[1];
 }
 
 /* ================= boot ================= */
