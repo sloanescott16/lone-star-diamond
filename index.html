@@ -711,6 +711,9 @@ function renderBoard(){
   var c = n<=1?1 : n<=4?2 : n<=9?3 : 4;
   bd.style.setProperty('--c',c);
 
+  // dim the not-yet-started games only when there is something live to dim them against
+  var anyLive=list.some(function(x){return x.st.live;});
+
   bd.innerHTML=list.map(function(it){
     var g=it.g, st=it.st, ls=g.linescore||{};
     var aS=g.teams.away.score, hS=g.teams.home.score;
@@ -744,7 +747,7 @@ function renderBoard(){
     if(it.isFav) cls+=' fav';
     if(st.live) cls+=' live';
     else if(st.fin) cls+=' done';
-    else cls+=' soon';
+    else if(anyLive) cls+=' soon';
 
     return '<div class="'+cls+'">'+
       '<div class="bt"><span class="bchip '+cp[1]+'">'+esc(cp[0])+'</span>'+
