@@ -743,7 +743,9 @@ var DIVN={200:'AL West',201:'AL East',202:'AL Central',203:'NL East',204:'NL Cen
 
 function ab(id){return (TEAM[id]||['?'])[0];}
 function nick(id){return (TEAM[id]||['?','Unknown'])[1];}
-function logo(id){return 'https://www.mlbstatic.com/team-logos/'+id+'.svg';}
+// Teams whose standard mark is too dark for the site's near-black ground use MLB's on-dark version (v15)
+const DARK_LOGO={115:1,116:1,118:1,133:1,135:1,136:1,139:1,142:1,145:1,147:1};
+function logo(id){return 'https://www.mlbstatic.com/team-logos/'+(DARK_LOGO[id]?'team-primary-on-dark/':'')+id+'.svg';}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function $(id){return document.getElementById(id);}
 function pad(n){return n<10?'0'+n:''+n;}
@@ -997,7 +999,7 @@ function renderTonight(){
       }
       var rr=S.byId[id];
       return '<div class="'+cls+'">'+
-        '<img src="'+logo(id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+        '<img src="'+logo(id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
         '<span class="nm">'+esc(nick(id))+(rr?'<span class="wl">'+rr.w+'-'+rr.l+'</span>':'')+'</span>'+
         '<span class="sc">'+(has?score:'')+'</span></div>';
     }
@@ -1034,7 +1036,7 @@ function renderTonight(){
   $('asks').innerHTML=asks.map(function(a){
     return '<div class="ask '+a.cls+'">'+
       (a.tick?'<span class="tick '+a.tick+'">'+(a.tick==='g'?'&#10003;':'&#10007;')+'</span>':'')+
-      '<img src="'+logo(a.id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+      '<img src="'+logo(a.id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
       '<span>'+a.txt+'</span></div>';
   }).join('');
 }
@@ -1099,7 +1101,7 @@ function renderBoard(){
       if(!st.fin&&!it.split&&!it.other) cls+=(id===it.pull?' pull':' fear');
       var rr=S.byId[id];
       return '<div class="'+cls+'">'+
-        '<img src="'+logo(id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+        '<img src="'+logo(id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
         '<span class="ba">'+esc(ab(id))+'</span>'+
         '<span class="bs">'+(has?score:(rr?'<span style="font-size:.42em;color:var(--dim)">'+rr.w+'-'+rr.l+'</span>':''))+'</span>'+
       '</div>';
@@ -1210,7 +1212,7 @@ function renderSched(){
       var rr=S.byId[id], x=sd[id], b='';
       if(showSeed&&x) b='<span class="sd '+(x.seed<=3?'in':x.seed<=6?'wc':'')+'" title="'+x.lg+' seed'+(x.seed>6?', '+num(x.wcgb)+' back of the last wild card':'')+'">'+x.seed+(x.seed>6?' · '+num(x.wcgb)+' GB':'')+'</span>';
       return '<div class="row'+(st.fin&&has&&score<other?' lose':'')+'">'+
-        '<img src="'+logo(id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+        '<img src="'+logo(id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
         '<span class="nm">'+esc(nick(id))+(rr?'<span class="wl">'+rr.w+'-'+rr.l+'</span>':'')+b+'</span>'+
         '<span class="sc">'+(has?score:'')+'</span></div>';
     }
@@ -1412,7 +1414,7 @@ function renderWhatIf(){
       txt='<b>'+nick(o.id)+'</b> must go <b>'+cap+'-'+(o.left-cap)+'</b> or worse. '+
           (cap+1<=o.left?('At '+(cap+1)+'-'+(o.left-cap-1)+' they tie Texas.'):'');
     }
-    return '<tr><td><span class="tm"><img src="'+logo(o.id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+    return '<tr><td><span class="tm"><img src="'+logo(o.id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
       esc(nick(o.id))+'</span></td>'+
       '<td><span class="need '+cls+'">'+(cap<0?'&mdash;':cap+' win'+(cap===1?'':'s'))+'</span></td>'+
       '<td class="say">'+rec+'</td>'+
@@ -1433,7 +1435,7 @@ function stTable(title,sub,rows,cutAfter,o){
     var m=(r.id===FAV)?null:magic(r,t);
     var sc=(r.streak||'').charAt(0).toLowerCase();
     return '<tr class="'+(r.id===FAV?'fav':'')+(cutAfter&&i===cutAfter-1?' cut':'')+'">'+
-      '<td><span class="tm"><img src="'+logo(r.id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+      '<td><span class="tm"><img src="'+logo(r.id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
       esc(nick(r.id))+'</span></td>'+
       '<td class="rec">'+r.w+'-'+r.l+'</td>'+
       '<td>'+(r.pct?r.pct.toFixed(3).replace(/^0/,''):'.000')+'</td>'+
@@ -1500,12 +1502,12 @@ function renderRunIn(){
       var d=new Date(x.date+'T12:00:00');
       return '<li class="'+cls+'"><span class="d">'+d.toLocaleDateString([], {month:'numeric',day:'numeric'})+'</span>'+
         '<span class="va">'+(x.home?'vs':'@')+'</span>'+
-        '<img src="'+logo(x.opp)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+        '<img src="'+logo(x.opp)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
         '<span class="op">'+esc(ab(x.opp))+'</span>'+
         '<span class="orec">'+(o?o.w+'-'+o.l:'')+'</span></li>';
     }).join('');
     return '<div class="ri'+(r.id===FAV?' fav':'')+'">'+
-      '<div class="rih"><img src="'+logo(r.id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'+
+      '<div class="rih"><img src="'+logo(r.id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
       '<span class="nm">'+esc(ab(r.id))+'</span>'+
       '<span class="sos">opp pct<b>'+sos+'</b></span></div>'+
       '<ul>'+(li||'<li class="d">season over</li>')+'</ul></div>';
@@ -1622,7 +1624,7 @@ function pairCols(a,h){
 }
 function shot(id){ return 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/'+id+'/headshot/67/current'; }
 function ord(n){ var s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
-function imgT(id,cls){ return '<img'+(cls?' class="'+cls+'"':'')+' src="'+logo(id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'; }
+function imgT(id,cls){ return '<img'+(cls?' class="'+cls+'"':'')+' src="'+logo(id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'; }
 
 S.gc={pk:null,feed:null,wp:null,wpFinal:false,il:{},tab:null,open:{},pa:null,at:0,busy:null,n:0,err:null,pts:null};
 
@@ -1757,7 +1759,7 @@ function personCard(F,id,side,role){
   }
   var pos=(p.primaryPosition||{}).abbreviation||'';
   var tid=F.gameData.teams[side].id;
-  return '<div class="pp '+(role==='P'?'pit':'bat')+'"><img src="'+shot(id)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'+
+  return '<div class="pp '+(role==='P'?'pit':'bat')+'"><img src="'+shot(id)+'" alt="" loading="lazy" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
     '<div class="pi"><div class="rl">'+imgT(tid)+(role==='P'?'Pitching':'At bat')+'</div>'+
     '<div class="pn">'+esc(p.fullName||'')+'</div><div class="ph">'+esc(hand+(pos&&pos!=='P'?' · '+pos:'')+(bp.jerseyNumber?' · #'+bp.jerseyNumber:''))+'</div>'+
     '<div class="pln">Today: '+esc(line)+'</div><div class="pss">'+esc(season)+'</div></div></div>';
@@ -1863,7 +1865,7 @@ function gcPreview(F){
     var p=pp[side], tid=gd.teams[side].id;
     if(!p){ body+='<div class="pp '+(side==='home'?'bat':'pit')+'"><div class="pi"><div class="rl">'+imgT(tid)+'Probable</div><div class="pn">TBD</div></div></div>'; return; }
     var y=(bxP(F,side,p.id).seasonStats||{}).pitching||{}, pl=gd.players['ID'+p.id]||{};
-    body+='<div class="pp '+(side==='home'?'bat':'pit')+'"><img src="'+shot(p.id)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'+
+    body+='<div class="pp '+(side==='home'?'bat':'pit')+'"><img src="'+shot(p.id)+'" alt="" loading="lazy" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
       '<div class="pi"><div class="rl">'+imgT(tid)+'Probable</div><div class="pn">'+esc(p.fullName)+'</div>'+
       '<div class="ph">'+esc(((pl.pitchHand||{}).code||'')+'HP')+'</div>'+
       '<div class="pln">'+(y.wins!=null?y.wins+'-'+y.losses+' · ':'')+'ERA '+esc(y.era||'-')+'</div>'+
