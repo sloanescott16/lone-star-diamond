@@ -48,6 +48,9 @@ h1,h2,h3{margin:0; font-family:var(--display); letter-spacing:.02em; text-transf
 .bar .rec span{color:var(--mute); font-size:14px; margin-left:7px}
 .bar .spacer{flex:1}
 .bar .st{display:flex; align-items:center; gap:7px; color:var(--mute); font-size:11.5px; white-space:nowrap}
+.bar a.st{text-decoration:none; pointer-events:none; border:1px solid transparent; border-radius:999px; padding:4px 10px}
+.bar a.st.go{pointer-events:auto; cursor:pointer; color:var(--live); border-color:rgba(255,59,78,.45); background:rgba(255,59,78,.1); font-weight:700; text-transform:uppercase; letter-spacing:.06em}
+.bar a.st.go:hover{background:rgba(255,59,78,.2)}
 .dot{width:8px; height:8px; border-radius:50%; background:var(--dim)}
 .dot.on{background:var(--live); box-shadow:0 0 0 0 rgba(255,59,78,.6); animation:pulse 1.9s infinite}
 @keyframes pulse{70%{box-shadow:0 0 0 8px rgba(255,59,78,0)}100%{box-shadow:0 0 0 0 rgba(255,59,78,0)}}
@@ -347,6 +350,7 @@ body.v-live .wrap{max-width:none}
   .bar .rec{font-size:16px; padding:4px 8px}
   .bar .rec span{display:none}
   .bar .st #stText{display:none}
+  .bar .st.go #stText{display:inline}
   .bar{flex-wrap:wrap; row-gap:8px}
   .bar .spacer{display:none}
   .bar .st{margin-left:auto}
@@ -641,7 +645,7 @@ details.pa>summary .psc{margin-left:auto; flex:none; font-family:var(--display);
     <option value="203">NL East</option><option value="204">NL Central</option><option value="205">NL West</option></optgroup>
   </select>
   <div class="spacer"></div>
-  <div class="st"><span class="dot" id="dot"></span><span id="stText">loading</span></div>
+  <a class="st" id="stBtn" href="#live" title="Open the full scoreboard"><span class="dot" id="dot"></span><span id="stText">loading</span></a>
   <button class="btn" id="fsBtn" hidden>Fullscreen</button>
 </div>
 
@@ -904,6 +908,7 @@ function renderBar(){
   S.liveNow=live;
   $('dot').className='dot'+(live?' on':'');
   $('stText').textContent=live?'live':'idle';
+  $('stBtn').classList.toggle('go',live);
   $('upd').textContent='updated '+new Date().toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
   var d=new Date();
   $('dateNote').textContent=d.toLocaleDateString([], {weekday:'long',month:'long',day:'numeric'});
