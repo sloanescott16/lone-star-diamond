@@ -1717,7 +1717,8 @@ function gcHeader(F){
   if(live){
     var t=/Middle|End/.test(ls.inningState||'')?(ls.inningState==='Middle'?'Mid ':'End ')+ord(ls.currentInning):(ls.isTopInning?'▲ ':'▼ ')+ord(ls.currentInning||1);
     if(st.detailedState&&!/In Progress|Warmup/.test(st.detailedState)) t=st.detailedState+' · '+t;
-    mid='<div class="gs live">'+esc(t)+'</div>'+diamond(ls.offense||{},34)+countHTML(ls);
+    var brk=/Middle|End/.test(ls.inningState||'');
+    mid='<div class="gs live">'+esc(t)+'</div>'+(brk?'<div class="gs3">Due up: '+esc(((ls.offense||{}).batter||{}).fullName||'')+'</div>':diamond(ls.offense||{},34)+countHTML(ls));
   } else if(fin){
     var n=(ls.innings||[]).length;
     mid='<div class="gs">'+esc(/Final|Game Over|Completed/.test(st.detailedState)?'Final':st.detailedState)+(n&&n!==9?'/'+n:'')+'</div>';
