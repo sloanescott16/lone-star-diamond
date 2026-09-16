@@ -12,7 +12,7 @@
   --ground:#07080a; --card:#11141a; --card2:#161a22; --line:#232936;
   --ink:#e9edf4; --mute:#8b94a5; --dim:#5d6676;
   --blue:#2f6fe0; --blue-d:#003278; --red:#d6283a;
-  --good:#37c07d; --bad:#e0475b; --warn:#e8a33d; --live:#ff3b4e;
+  --race:#22b8a6; --good:#37c07d; --bad:#e0475b; --warn:#e8a33d; --live:#ff3b4e;
   --display:'Barlow Condensed',Impact,sans-serif;
   --body:'Inter',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
 }
@@ -215,7 +215,13 @@ table.st .str.w{color:var(--good)} table.st .str.l{color:var(--bad)}
 body.v-live #secTonight,body.v-live #secPath,body.v-live #secRace,body.v-live #secRun,body.v-live .foot{display:none}
 body.v-home #secLive{display:none}
 /* v7: schedule tab */
-body.v-home #secSched,body.v-live #secSched{display:none}
+body.v-home #secSched,body.v-live #secSched,body.v-stand #secSched{display:none}
+body.v-home #secStand,body.v-live #secStand,body.v-sched #secStand{display:none}
+body.v-stand #secLive,body.v-stand #secTonight,body.v-stand #secPath,body.v-stand #secRace,body.v-stand #secRun,body.v-stand #odds{display:none}
+#secStand{margin-top:16px}
+.stlg{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; align-items:start}
+.stcol{display:flex; flex-direction:column; gap:12px; min-width:0}
+@media (max-width:900px){ .stlg{grid-template-columns:1fr} }
 body.v-sched #secLive,body.v-sched #secTonight,body.v-sched #secPath,body.v-sched #secRace,body.v-sched #secRun,body.v-sched #odds{display:none}
 #secSched{margin-top:16px}
 .seg{display:inline-flex; gap:2px; background:var(--card); border:1px solid var(--line); border-radius:7px; padding:3px}
@@ -236,8 +242,19 @@ body.v-sched #secLive,body.v-sched #secTonight,body.v-sched #secPath,body.v-sche
 #sched .g.imp{border-color:var(--blue); box-shadow:0 0 0 1px var(--blue),0 0 16px rgba(47,111,224,.25)}
 #sched .g.imp.fav{background:linear-gradient(180deg,rgba(47,111,224,.14),var(--card) 55%)}
 .schnote{font-size:11.5px; color:var(--dim); margin-top:-4px}
-.bg.race .ribbon{background:rgba(139,148,165,.22); color:#c9d0dc}
-.bg.race{border-color:rgba(139,148,165,.45)}
+/* v8: playoff race wears teal down the left edge, nothing like the amber Texas ribbon */
+.bg.key.race{border-top:1px solid rgba(34,184,166,.45); border-color:rgba(34,184,166,.45);
+  border-left:max(6px,1.4cqw) solid var(--race); background:linear-gradient(90deg,rgba(34,184,166,.10),#0d1015 45%)}
+.bg.key.race .ribbon{left:auto; right:2.4cqw; top:1.2cqh; background:transparent; color:var(--race);
+  border:1px solid var(--race); border-radius:20px; padding:0.3cqh 1.4cqw}
+.bg.key.race .bt{margin-top:max(10px,2.6cqh)}
+.bg .bchip.race,.g .chip.race{background:rgba(34,184,166,.16); color:#5fe0cf}
+#sched .g.imp.race{border-color:var(--race); box-shadow:0 0 0 1px var(--race),0 0 16px rgba(34,184,166,.22)}
+/* v8: league / division filter shared by Schedule and Scoreboard */
+.flt{display:none; font:inherit; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:7px; padding:5px 8px; cursor:pointer}
+.flt.on{border-color:var(--blue); color:#a8c6ff}
+body.v-sched .flt,body.v-live .flt,body.v-stand .flt{display:inline-block}
 @media (max-width:640px){ .sch-head .note{margin-left:0; width:100%} .seg button{padding:4px 8px; font-size:11px} }
 body.v-live{overflow:hidden}
 body.v-live .wrap{max-width:none}
@@ -335,6 +352,7 @@ body.v-live .wrap{max-width:none}
   .bar .st{margin-left:auto}
   .bar .nav{order:9; flex-basis:100%; display:flex}
   .bar .nav a{flex:1; text-align:center}
+  .bar .flt{order:10; flex-basis:100%}
   .games{grid-template-columns:1fr}
   .tables,.paths,.runin{grid-template-columns:1fr}
   .nav a{padding:5px 9px; font-size:11.5px}
@@ -383,7 +401,14 @@ body.v-live #odds{display:none}
     <a href="#home" data-v="home">Race</a>
     <a href="#sched" data-v="sched">Schedule</a>
     <a href="#live" data-v="live">Scoreboard</a>
+    <a href="#stand" data-v="stand">Standings</a>
   </nav>
+  <select class="flt" id="flt" aria-label="Show">
+    <option value="all">All of MLB</option>
+    <optgroup label="League"><option value="AL">American League</option><option value="NL">National League</option></optgroup>
+    <optgroup label="Division"><option value="200">AL West</option><option value="201">AL East</option><option value="202">AL Central</option>
+    <option value="203">NL East</option><option value="204">NL Central</option><option value="205">NL West</option></optgroup>
+  </select>
   <div class="spacer"></div>
   <div class="st"><span class="dot" id="dot"></span><span id="stText">loading</span></div>
   <button class="btn" id="fsBtn" hidden>Fullscreen</button>
@@ -411,6 +436,12 @@ body.v-live #odds{display:none}
       <span class="note" id="schNote"></span>
     </div>
     <div id="sched"><div class="empty">Loading the schedule</div></div>
+  </section>
+
+  <section id="secStand">
+    <div class="head"><h2>Standings</h2><span class="sub">all of MLB</span>
+      <span class="note">Ties sorted on record, not the official tiebreakers.</span></div>
+    <div id="standAll"><div class="empty">Loading the standings</div></div>
   </section>
 
   <section id="secTonight">
@@ -772,16 +803,26 @@ function renderTonight(){
 
 /* ================= render: scoreboard ================= */
 
+S.flt=(function(){ try{ return localStorage.getItem('pc-flt')||'all'; }catch(e){ return 'all'; } })();
+var FLTN={all:'MLB',AL:'the American League',NL:'the National League',200:'the AL West',201:'the AL East',202:'the AL Central',203:'the NL East',204:'the NL Central',205:'the NL West'};
+function teamIn(id){
+  if(S.flt==='all') return true;
+  var r=S.byId[id]; if(!r) return false;
+  if(S.flt==='AL'||S.flt==='NL') return lgOf(r)===S.flt;
+  return r.div===+S.flt;
+}
+function gameIn(g){ return teamIn(g.teams.away.team.id)||teamIn(g.teams.home.team.id); }
+
 function renderBoard(){
   var t=tex(); if(!t) return;
   // v7: live games only; the Schedule tab has everything else
-  var list=slate().filter(function(it){ return it.st.live; });
+  var list=slate().filter(function(it){ return it.st.live&&gameIn(it.g); });
   list.sort(function(x,y){ return y.stake-x.stake; });
 
   // every other game in progress rides below the ones that matter
   var seen={}; list.forEach(function(it){seen[it.g.gamePk]=1;});
   var others=S.games.filter(function(g){
-    return !seen[g.gamePk] && g.status && g.status.abstractGameState==='Live';
+    return !seen[g.gamePk] && g.status && g.status.abstractGameState==='Live' && gameIn(g);
   }).map(function(g){
     var a=g.teams.away.team.id,h=g.teams.home.team.id, race=inRace(a)||inRace(h);
     return {g:g,a:a,h:h,isFav:false,pull:null,split:false,stake:(race?10:0)+(closeLate(g)?5:0),st:gameStatus(g),other:true,race:race};
@@ -791,9 +832,9 @@ function renderBoard(){
   var bd=$('board');
   if(!list.length){
     bd.style.removeProperty('--c');
-    var nx=S.games.filter(function(g){return g.status&&g.status.abstractGameState==='Preview';})
+    var nx=S.games.filter(function(g){return g.status&&g.status.abstractGameState==='Preview'&&gameIn(g);})
       .sort(function(a,b){return new Date(a.gameDate)-new Date(b.gameDate);})[0];
-    bd.innerHTML='<div class="boardnote">Nothing live right now.'+(nx?' Next first pitch: '+esc(nick(nx.teams.away.team.id))+' at '+esc(nick(nx.teams.home.team.id))+', '+esc(gameStatus(nx).t)+'.':'')+' Every game is on the Schedule tab.</div>';
+    bd.innerHTML='<div class="boardnote">Nothing live'+(S.flt==='all'?'':' in '+FLTN[S.flt])+' right now.'+(nx?' Next first pitch: '+esc(nick(nx.teams.away.team.id))+' at '+esc(nick(nx.teams.home.team.id))+', '+esc(gameStatus(nx).t)+'.':'')+' Every game is on the Schedule tab.</div>';
     return;
   }
 
@@ -808,7 +849,7 @@ function renderBoard(){
     var g=it.g, st=it.st, ls=g.linescore||{};
     var aS=g.teams.away.score, hS=g.teams.home.score;
     var has=(aS!=null&&hS!=null);
-    var cp=it.other?[it.race?'Playoff race':'Around the league','']:chipFor(it);
+    var cp=it.other?(it.race?['Playoff race','race']:['Around the league','']):chipFor(it);
 
     function row(id,score,other){
       var cls='br';
@@ -841,7 +882,7 @@ function renderBoard(){
 
     return '<div class="'+cls+'">'+
       (it.other&&!it.race?'':'<div class="ribbon">'+(it.isFav?'Rangers':it.race?'Playoff race':'Matters to Texas')+'</div>')+
-      '<div class="bt"><span class="bchip '+cp[1]+'">'+esc(cp[0])+'</span>'+
+      '<div class="bt">'+(it.other&&it.race?'':'<span class="bchip '+cp[1]+'">'+esc(cp[0])+'</span>')+
       '<span class="bst'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+
       row(it.a,aS,hS)+row(it.h,hS,aS)+foot+'</div>';
   }).join('');
@@ -904,6 +945,7 @@ function renderSched(){
   $('daySeg').innerHTML=days.map(function(d){return '<button type="button" data-day="'+d[0]+'" class="'+(d[0]===S.day?'on':'')+'">'+d[1]+'</button>';}).join('');
   $('sortSeg').innerHTML=SORTS.map(function(x){return '<button type="button" data-sort="'+x[0]+'" class="'+(x[0]===S.ssort?'on':'')+'">'+x[1]+'</button>';}).join('');
   var games=dayGames();
+  if(games) games=games.filter(gameIn);
   if(!games){ box.innerHTML='<div class="empty">Loading</div>'; loadDay(S.day).then(renderSched).catch(function(e){ box.innerHTML='<div class="empty">Could not load that day ('+esc(e.message)+')</div>'; }); return; }
   var sd=seeds();
   var rel={}; if(S.day===0) slate().forEach(function(it){ rel[it.g.gamePk]=it; });
@@ -911,16 +953,16 @@ function renderSched(){
   var live=games.filter(function(g){return g.status&&g.status.abstractGameState==='Live';}).length;
   var fin=games.filter(function(g){return g.status&&g.status.abstractGameState==='Final';}).length;
   var d=new Date(dayStr(S.day)+'T12:00:00');
-  $('schNote').textContent=d.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+' · '+games.length+' game'+(games.length===1?'':'s')+' · '+live+' live · '+fin+' final';
+  $('schNote').textContent=d.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+(S.flt==='all'?'':' · '+FLTN[S.flt].replace(/^the /,''))+' · '+games.length+' game'+(games.length===1?'':'s')+' · '+live+' live · '+fin+' final';
 
   function card(g,showSeed){
     var a=g.teams.away.team.id,h=g.teams.home.team.id, st=gameStatus(g), ls=g.linescore||{};
     var aS=g.teams.away.score,hS=g.teams.home.score, has=(aS!=null&&hS!=null)&&(g.status||{}).abstractGameState!=='Preview';
     var it=rel[g.gamePk], isFav=(a===FAV||h===FAV);
     var imp=st.live&&(it||inRace(a)||inRace(h)||closeLate(g));
-    var chip='';
+    var chip='', race=false;
     if(st.live&&it){ var cp=chipFor(it); chip='<span class="chip '+cp[1]+'">'+esc(cp[0])+'</span>'; }
-    else if(st.live&&(inRace(a)||inRace(h))) chip='<span class="chip split">Playoff race</span>';
+    else if(st.live&&(inRace(a)||inRace(h))){ chip='<span class="chip race">Playoff race</span>'; race=true; }
     else if(st.live&&closeLate(g)) chip='<span class="chip split">Close late</span>';
     function row(id,score,other){
       var rr=S.byId[id], x=sd[id], b='';
@@ -933,7 +975,7 @@ function renderSched(){
     var foot='';
     if(st.live){ var o=ls.offense||{};
       foot='<div class="gfoot"><span>'+(ls.outs!=null?ls.outs+' out':'')+'</span><span class="bases"><span class="bz'+(o.second?' on':'')+'"></span><span class="bz'+(o.third?' on':'')+'"></span><span class="bz'+(o.first?' on':'')+'"></span></span></div>'; }
-    return '<div class="g'+(isFav?' fav':'')+(st.live?' live':'')+(imp?' imp':'')+'"><div class="gtop">'+chip+'<span class="gstat'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+row(a,aS,hS)+row(h,hS,aS)+foot+'</div>';
+    return '<div class="g'+(isFav?' fav':'')+(st.live?' live':'')+(imp?' imp':'')+(race?' race':'')+'"><div class="gtop">'+chip+'<span class="gstat'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+row(a,aS,hS)+row(h,hS,aS)+foot+'</div>';
   }
   function blk(title,sub,list,showSeed){
     return '<div class="sblk"><div class="sh"><h3>'+esc(title)+'</h3><span>'+sub+'</span></div><div class="games">'+list.map(function(g){return card(g,showSeed);}).join('')+'</div></div>';
@@ -941,7 +983,7 @@ function renderSched(){
   function cnt(n){ return n+' game'+(n===1?'':'s'); }
   var lg=function(g,side){ return lgOf(S.byId[g.teams[side].team.id]); };
   var html='';
-  if(!games.length) html='<div class="empty">No games on this day.</div>';
+  if(!games.length) html='<div class="empty">No games'+(S.flt==='all'?'':' in '+FLTN[S.flt])+' on this day.</div>';
   else if(S.ssort==='league'){
     [['American League',function(g){return lg(g,'away')==='AL'&&lg(g,'home')==='AL';}],
      ['National League',function(g){return lg(g,'away')==='NL'&&lg(g,'home')==='NL';}],
@@ -951,6 +993,7 @@ function renderSched(){
     });
   } else if(S.ssort==='division'){
     DIVORDER.forEach(function(dv){
+      if(S.flt!=='all'&&!(S.flt===String(dv)||S.flt===(dv<=202?'AL':'NL'))) return;
       var teams=S.stand.filter(function(r){return r.div===dv;}).sort(cmp);
       if(!teams.length) return;
       var ids={}; teams.forEach(function(r){ids[r.id]=1;});
@@ -963,6 +1006,7 @@ function renderSched(){
   } else {
     var tiers=[['In a playoff spot',function(x){return x.seed<=6;}],['In the hunt',function(x){return x.seed>6&&x.wcgb<=5;}],['Chasing',function(x){return x.seed>6&&x.wcgb>5;}]];
     ['AL','NL'].forEach(function(L){
+      if(S.flt!=='all'&&S.flt!==L&&!(+S.flt>=200&&(+S.flt<=202?'AL':'NL')===L)) return;
       var mine=games.filter(function(g){return lg(g,'away')===L||lg(g,'home')===L;});
       function best(g){ var b=null; ['away','home'].forEach(function(s){ var x=sd[g.teams[s].team.id]; if(x&&x.lg===L&&(!b||x.seed<b.seed)) b=x; }); return b; }
       tiers.forEach(function(t){
@@ -974,6 +1018,12 @@ function renderSched(){
   }
   box.innerHTML=html;
 }
+function syncFlt(){ var f=$('flt'); if(!f) return; f.value=S.flt; if(f.value!==S.flt){ S.flt='all'; f.value='all'; } f.className='flt'+(S.flt==='all'?'':' on'); }
+syncFlt();
+$('flt').addEventListener('change',function(){
+  S.flt=this.value; try{ localStorage.setItem('pc-flt',S.flt); }catch(x){}
+  syncFlt(); renderSched(); renderBoard(); renderStandings();
+});
 document.addEventListener('click',function(e){
   var db=e.target.closest('#daySeg button'); if(db){ S.day=+db.getAttribute('data-day'); return renderSched(); }
   var sb=e.target.closest('#sortSeg button'); if(sb){ S.ssort=sb.getAttribute('data-sort'); try{ localStorage.setItem('pc-sort',S.ssort); }catch(x){} return renderSched(); }
@@ -982,13 +1032,14 @@ document.addEventListener('click',function(e){
 /* ================= views ================= */
 
 function setView(v){
-  S.view=(v==='live'||v==='sched')?v:'home';
+  S.view=(v==='live'||v==='sched'||v==='stand')?v:'home';
   document.body.className='v-'+S.view;
   Array.prototype.forEach.call(document.querySelectorAll('#nav a'),function(a){
     a.className=(a.getAttribute('data-v')===S.view)?'on':'';
   });
   if(S.view==='live') renderBoard();
   if(S.view==='sched') renderSched();
+  if(S.view==='stand') renderStandings();
 }
 function route(){ setView((location.hash||'').replace(/^#/,'')); }
 
@@ -1126,12 +1177,13 @@ function renderWhatIf(){
 
 /* ================= render: tables ================= */
 
-function stTable(title,sub,rows,cutAfter){
+function stTable(title,sub,rows,cutAfter,o){
+  o=o||{};
   var t=tex();
-  var top=rows[0];
+  var top=o.ref||rows[0];
   var body=rows.map(function(r,i){
     var gb=((top.w-r.w)+(r.l-top.l))/2;
-    var gbs=gb<=0?'&mdash;':gb.toFixed(1).replace(/\.0$/,'');
+    var gbs=gb===0&&o.ref?'&mdash;':gb<=0?(o.ref?'+'+num(-gb):'&mdash;'):gb.toFixed(1).replace(/\.0$/,'');
     var m=(r.id===FAV)?null:magic(r,t);
     var sc=(r.streak||'').charAt(0).toLowerCase();
     return '<tr class="'+(r.id===FAV?'fav':'')+(cutAfter&&i===cutAfter-1?' cut':'')+'">'+
@@ -1141,12 +1193,12 @@ function stTable(title,sub,rows,cutAfter){
       '<td>'+(r.pct?r.pct.toFixed(3).replace(/^0/,''):'.000')+'</td>'+
       '<td class="gb'+(gb<=0?' zero':'')+'">'+gbs+'</td>'+
       '<td>'+r.left+'</td>'+
-      '<td>'+(r.id===FAV?'&mdash;':(m>0?m:'<span style="color:var(--bad)">out</span>'))+'</td>'+
+      (o.noE?'':'<td>'+(r.id===FAV?'&mdash;':(m>0?m:'<span style="color:var(--bad)">out</span>'))+'</td>')+
       '<td class="str '+sc+'">'+esc(r.streak||'')+'</td></tr>';
   }).join('');
   return '<div class="tb"><div class="tbh"><h3>'+esc(title)+'</h3><span>'+esc(sub)+'</span></div>'+
     '<div class="scrollx"><table class="st"><thead><tr><th>Team</th><th>W-L</th><th>Pct</th><th>GB</th><th>Left</th>'+
-    '<th title="Combined rival wins and Rangers losses that ends it">E#</th><th>Strk</th></tr></thead>'+
+    (o.noE?'':'<th title="Combined rival wins and Rangers losses that ends it">E#</th>')+'<th>Strk</th></tr></thead>'+
     '<tbody>'+body+'</tbody></table></div></div>';
 }
 
@@ -1155,6 +1207,29 @@ function renderTables(){
   var pool=R.pool.slice(0,7);
   $('tables').innerHTML=stTable('AL West','division winner is in',R.west)+
                         stTable('Wild Card','top three go, line is under the third',pool,3);
+}
+
+/* v8: full league standings */
+function renderStandings(){
+  var box=$('standAll'); if(!box||!S.stand) return;
+  var html='';
+  [['AL','American League',[200,201,202]],['NL','National League',[203,204,205]]].forEach(function(L){
+    if(S.flt!=='all'&&S.flt!==L[0]&&L[2].indexOf(+S.flt)<0) return;
+    var rows=S.stand.filter(function(r){return lgOf(r)===L[0];});
+    var lead={}; rows.forEach(function(r){ var c=lead[r.div]; if(!c||cmp(r,c)<0) lead[r.div]=r; });
+    var ids={}; Object.keys(lead).forEach(function(k){ids[lead[k].id]=1;});
+    var wc=rows.filter(function(r){return !ids[r.id];}).sort(cmp);
+    var t='<div class="stcol">';
+    L[2].forEach(function(dv){
+      if(+S.flt>=200&&+S.flt!==dv) return;
+      var d=rows.filter(function(r){return r.div===dv;}).sort(cmp);
+      if(d.length) t+=stTable(DIVN[dv],'winner is in',d,0,{noE:true});
+    });
+    t+='</div><div class="stcol">';
+    if(wc.length) t+=stTable(L[0]+' Wild Card','top three go; GB is to the third spot',wc,3,{noE:true,ref:wc[2]});
+    html+='<div class="sblk"><div class="sh"><h3>'+L[1]+'</h3></div><div class="stlg">'+t+'</div></div></div>';
+  });
+  box.innerHTML=html||'<div class="empty">No standings for that filter.</div>';
 }
 
 /* ================= render: run-in ================= */
@@ -1288,7 +1363,7 @@ function renderOdds(){
 function renderAll(){
   if(!S.stand||!S.byId[FAV]) return;
   try{
-    renderBar(); renderOdds(); renderTonight(); renderBoard(); renderSched(); renderPath(); renderTables(); renderRunIn();
+    renderBar(); renderOdds(); renderTonight(); renderBoard(); renderSched(); renderPath(); renderTables(); renderStandings(); renderRunIn();
     $('err').innerHTML='';
   }catch(e){
     $('err').innerHTML='<div class="err">Render problem: '+esc(e.message)+'</div>';
