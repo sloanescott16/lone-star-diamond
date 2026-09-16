@@ -475,7 +475,7 @@ svg.dia rect.on{fill:var(--warn); stroke:var(--warn)}
 .lastp span{color:var(--mute)}
 .lastp .mph{margin-left:auto; font-family:var(--display); font-size:20px; color:var(--ink)}
 .zw{display:grid; grid-template-columns:minmax(150px,210px) minmax(0,1fr); gap:14px; align-items:start; margin-top:8px}
-/* v18: v17 reverted, catcher's view back to full size */
+/* v18: v17 reverted, catcher's view back to full size. v19: line score moved to the side column under win probability */
 .zw svg{width:100%; height:auto; display:block}
 .zlab{font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; margin-bottom:6px; display:flex; gap:8px; align-items:center}
 .zlab .lnk{margin-left:auto}
@@ -2101,8 +2101,8 @@ function gcRender(){
     box.innerHTML=head+gcHeader(F)+
       '<div class="gc-grid">'+
         '<div class="gc-col gc-box">'+gcBox(F)+'</div>'+
-        '<div class="gc-col gc-mid">'+gcMatchup(F)+gcLine(F)+gcScoring(F)+gcPBP(F)+'</div>'+
-        '<div class="gc-col gc-side">'+gcWP(F)+gcCompare(F)+gcIL(F)+'</div>'+
+        '<div class="gc-col gc-mid">'+gcMatchup(F)+gcScoring(F)+gcPBP(F)+'</div>'+
+        '<div class="gc-col gc-side">'+gcWP(F)+gcLine(F)+gcCompare(F)+gcIL(F)+'</div>'+
       '</div>';
   }catch(e){
     box.innerHTML=head+'<div class="err">Game Center render problem: '+esc(e.message)+'</div>';
