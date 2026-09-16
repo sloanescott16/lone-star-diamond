@@ -386,6 +386,236 @@ body.v-live #odds{display:none}
   .odds .q{margin-left:0; text-align:left}
   .odds .q p{font-size:22px}
 }
+/* ---------- game center (v10) ---------- */
+#secGame{margin-top:16px; scroll-margin-top:84px}
+body:not(.v-game) #secGame{display:none}
+body.v-game #secLive,body.v-game #secSched,body.v-game #secStand,body.v-game #secTonight,body.v-game #secPath,body.v-game #secRace,body.v-game #secRun,body.v-game #odds{display:none}
+.bg[data-pk]{cursor:pointer; transition:transform .12s, box-shadow .12s}
+.bg[data-pk]:hover{box-shadow:0 0 0 1px #4a5569; transform:translateY(-1px)}
+.gchd{display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-bottom:11px}
+.gchd h2{font-size:21px}
+.gchd .note{margin-left:auto; font-size:11px; color:var(--dim)}
+.gc-back{font:inherit; font-size:11.5px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:#a8c6ff;
+  background:rgba(47,111,224,.14); border:1px solid rgba(47,111,224,.5); border-radius:6px; padding:4px 10px; cursor:pointer}
+.gc-why{font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; padding:3px 8px; border-radius:4px; background:#1d222c; color:var(--mute)}
+.gc-why.fav{background:rgba(47,111,224,.22); color:#8fb6ff} .gc-why.root{background:rgba(232,163,61,.17); color:#f0bd73}
+.gc-why.good{background:rgba(55,192,125,.18); color:#6ee0a8} .gc-why.bad{background:rgba(224,71,91,.16); color:#f18a97}
+.gc-why.split{background:rgba(139,148,165,.16); color:#b9c1d0}
+
+.gch{display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr); align-items:center; gap:18px; margin-bottom:12px;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--ca) 30%,transparent) 0%,var(--card) 34%,var(--card) 66%,color-mix(in srgb,var(--ch) 30%,transparent) 100%);
+  border:1px solid var(--line); border-radius:12px; padding:14px 22px}
+.gct{display:flex; align-items:center; gap:14px; min-width:0}
+.gct.h{flex-direction:row-reverse; text-align:right}
+.gct img{width:58px; height:58px; object-fit:contain; flex:none; filter:drop-shadow(0 0 3px rgba(255,255,255,.22))}
+.gct .tn{font-family:var(--display); font-size:28px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.gct .tr{font-size:11.5px; color:var(--mute); margin-top:3px; white-space:nowrap}
+.gct .ts{font-family:var(--display); font-weight:700; font-size:64px; line-height:.9; margin-left:auto}
+.gct.h .ts{margin-left:0; margin-right:auto}
+.gct.lose .ts,.gct.lose .tn{color:var(--dim)}
+.gcm{display:flex; flex-direction:column; align-items:center; gap:5px; min-width:130px}
+.gcm .gs{font-family:var(--display); font-size:22px; line-height:1; letter-spacing:.03em; text-transform:uppercase}
+.gcm .gs.live{color:var(--live)}
+.gcm .gs2{font-family:var(--display); font-size:18px; color:var(--mute)}
+.gcm .gs3{font-size:10.5px; color:var(--dim); text-align:center}
+svg.dia rect{fill:#262d3a; stroke:#3a4353; stroke-width:1}
+svg.dia rect.on{fill:var(--warn); stroke:var(--warn)}
+.cnt{display:flex; gap:10px; font-size:10.5px; font-weight:700; color:var(--dim); letter-spacing:.05em}
+.cnt span{display:flex; align-items:center; gap:3px}
+.cnt i{width:8px; height:8px; border-radius:50%; border:1px solid #3a4353; display:inline-block}
+.cnt i.b{background:var(--good); border-color:var(--good)} .cnt i.s{background:var(--bad); border-color:var(--bad)} .cnt i.o{background:var(--warn); border-color:var(--warn)}
+
+.gc-grid{display:grid; gap:12px; align-items:start;
+  grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,1fr); grid-template-areas:"box mid side"}
+.gc-col{display:flex; flex-direction:column; gap:12px; min-width:0}
+.gc-box{grid-area:box} .gc-mid{grid-area:mid} .gc-side{grid-area:side}
+@media (max-width:1180px){ .gc-grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); grid-template-areas:"mid side" "box side"} }
+@media (max-width:760px){
+  .gc-grid{grid-template-columns:minmax(0,1fr); grid-template-areas:none}
+  .gc-col{display:contents}
+  .o1{order:1}.o2{order:2}.o3{order:3}.o4{order:4}.o5{order:5}.o6{order:6}.o7{order:7}.o8{order:8}
+  .gch{gap:8px; padding:10px 12px; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+  .gct{gap:7px; flex-wrap:wrap}
+  .gct img{width:32px; height:32px}
+  .gct .tn{font-size:17px} .gct .tr{font-size:10px}
+  .gct .ts{font-size:40px; margin-left:0}
+  .gct.h{flex-direction:row-reverse}
+  .gct>div:nth-child(2){order:3; flex-basis:100%}
+  .gcm{min-width:0} .gcm .gs{font-size:16px} .gcm .gs3{display:none}
+}
+.gcard{background:var(--card); border:1px solid var(--line); border-radius:10px; overflow:hidden; min-width:0}
+.gcard>.gh{display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line); background:var(--card2)}
+.gcard>.gh h3{font-size:15px}
+.gcard>.gh .gn{margin-left:auto; font-size:11px; color:var(--dim)}
+.gcard .gb{padding:12px 14px}
+.gcard .empty{padding:6px 0}
+
+/* matchup */
+.mu{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.pp{display:flex; gap:10px; align-items:flex-start; min-width:0}
+.pp.bat{flex-direction:row-reverse; text-align:right}
+.pp>img{width:58px; height:58px; border-radius:50%; object-fit:cover; background:#1d222c; flex:none; border:1px solid var(--line)}
+.pp .pi{min-width:0}
+.pp .rl{font-size:9.5px; letter-spacing:.09em; text-transform:uppercase; color:var(--dim); font-weight:700; display:flex; align-items:center; gap:5px}
+.pp.bat .rl{justify-content:flex-end}
+.pp .rl img{width:14px; height:14px; object-fit:contain}
+.pp .pn{font-family:var(--display); font-size:20px; line-height:1.05; margin-top:2px}
+.pp .ph{font-size:10.5px; color:var(--dim)}
+.pp .pln{font-size:11.5px; color:var(--ink); margin-top:4px}
+.pp .pss{font-size:11px; color:var(--mute)}
+.deck{display:flex; gap:14px; flex-wrap:wrap; font-size:11px; color:var(--dim); margin-top:10px; padding-top:9px; border-top:1px solid var(--line)}
+.deck b{color:var(--mute); font-weight:600}
+.lastp{display:flex; align-items:center; gap:10px; margin:12px 0 4px; padding:8px 11px; border-radius:7px; background:var(--card2); border-left:3px solid var(--dim); font-size:12px}
+.lastp.b{border-left-color:var(--good)} .lastp.s{border-left-color:var(--bad)} .lastp.ip{border-left-color:#5b8def}
+.lastp b{font-family:var(--display); font-size:17px; letter-spacing:.02em; text-transform:uppercase; font-weight:600}
+.lastp span{color:var(--mute)}
+.lastp .mph{margin-left:auto; font-family:var(--display); font-size:20px; color:var(--ink)}
+.zw{display:grid; grid-template-columns:minmax(150px,210px) minmax(0,1fr); gap:14px; align-items:start; margin-top:8px}
+.zw svg{width:100%; height:auto; display:block}
+.zlab{font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; margin-bottom:6px; display:flex; gap:8px; align-items:center}
+.zlab .lnk{margin-left:auto}
+svg.zone .zb{fill:rgba(255,255,255,.03); stroke:#7c8698; stroke-width:1.4}
+svg.zone .zg{stroke:#2e3542; stroke-width:1}
+svg.zone .plate{fill:#d9dde6; opacity:.85}
+svg.zone .bat{fill:var(--dim); font:700 10px var(--body); letter-spacing:.06em}
+svg.zone circle{stroke:rgba(0,0,0,.55); stroke-width:1}
+svg.zone circle.b{fill:var(--good)} svg.zone circle.s{fill:var(--bad)} svg.zone circle.ip{fill:#5b8def}
+svg.zone circle.last{stroke:#fff; stroke-width:2}
+svg.zone text.n{fill:#08090c; font:700 9px var(--body); text-anchor:middle; dominant-baseline:central}
+ol.pl{list-style:none; margin:0; padding:0; max-height:300px; overflow:auto}
+ol.pl li{display:grid; grid-template-columns:22px minmax(0,1fr) auto; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid #1a1f29; font-size:12px}
+ol.pl li:last-child{border-bottom:none}
+.pb{width:20px; height:20px; border-radius:50%; display:inline-flex; align-items:center; justify-content:center; font-size:10px; font-weight:800; color:#08090c; background:var(--dim)}
+.pb.b{background:var(--good)} .pb.s{background:var(--bad)} .pb.ip{background:#5b8def}
+ol.pl .pr{display:block; font-weight:600}
+ol.pl .pt{display:block; font-size:10.5px; color:var(--dim)}
+ol.pl .pv{text-align:right; font-family:var(--display); font-size:16px; line-height:1}
+ol.pl .pv small{font-family:var(--body); font-size:9.5px; color:var(--dim)}
+ol.pl .pv .pc{display:block; margin-top:2px}
+.lnk{font:inherit; font-size:11px; font-weight:600; color:#8fb6ff; background:none; border:0; padding:0; cursor:pointer}
+.lnk:hover{text-decoration:underline}
+.pres{margin-top:10px; font-size:12.5px; color:var(--ink)}
+.pres b{color:var(--warn)}
+.lu{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:12px}
+.lu h4{margin:0 0 5px; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim)}
+.lu ol{margin:0; padding-left:18px; font-size:12px; color:var(--mute)}
+.lu ol li{padding:2px 0} .lu ol b{color:var(--ink); font-weight:600}
+
+/* tables */
+table.gt{width:100%; border-collapse:collapse; font-size:12.5px; font-variant-numeric:tabular-nums}
+table.gt th{font-size:9.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--dim); font-weight:700; padding:6px 5px; border-bottom:1px solid var(--line); text-align:right}
+table.gt td{padding:6px 5px; border-bottom:1px solid #1a1f29; text-align:right; white-space:nowrap}
+table.gt th:first-child,table.gt td:first-child{text-align:left; padding-left:0}
+table.gt tr:last-child td{border-bottom:none}
+table.gt td.nm{max-width:150px; overflow:hidden; text-overflow:ellipsis}
+table.gt td.nm i{font-style:normal; color:var(--dim); font-size:10.5px; margin-left:4px}
+table.gt tr.sub td.nm{padding-left:12px; color:var(--mute)}
+table.gt tr.cur td{background:rgba(232,163,61,.10)}
+table.gt tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--warn)}
+table.gt tr.tot td{font-weight:700; border-top:1px solid var(--line)}
+table.gt .dec{font-size:9.5px; font-weight:800; padding:1px 4px; border-radius:3px; margin-left:5px; background:#1d222c; color:var(--mute)}
+table.gt .dec.W{background:rgba(55,192,125,.2); color:#6ee0a8} table.gt .dec.L{background:rgba(224,71,91,.18); color:#f18a97} table.gt .dec.S{background:rgba(47,111,224,.22); color:#8fb6ff}
+.gtab{display:flex; gap:2px; margin-left:auto}
+.gtab button{font:inherit; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--mute); background:transparent; border:1px solid transparent; border-radius:5px; padding:3px 8px; cursor:pointer; display:flex; align-items:center; gap:5px}
+.gtab button img{width:15px; height:15px; object-fit:contain}
+.gtab button.on{border-color:var(--line); background:var(--card); color:var(--ink)}
+.bxh{font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; margin:14px 0 2px}
+.bxh:first-child{margin-top:0}
+table.ls{width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums}
+table.ls th{font-size:10px; color:var(--dim); font-weight:700; padding:5px 3px; text-align:center; border-bottom:1px solid var(--line)}
+table.ls td{padding:8px 3px; text-align:center; border-bottom:1px solid #1a1f29; color:var(--mute)}
+table.ls td:first-child,table.ls th:first-child{text-align:left; padding-left:0}
+table.ls td.t{font-family:var(--display); font-size:17px; color:var(--ink); padding-right:10px}
+table.ls td.t span{display:flex; align-items:center; gap:7px}
+table.ls td.t img{width:20px; height:20px; object-fit:contain}
+table.ls td.sc{color:var(--ink); font-weight:700}
+table.ls .cur{background:rgba(255,59,78,.08); color:var(--ink)}
+table.ls .R{font-family:var(--display); font-size:19px; color:var(--ink); border-left:1px solid var(--line)}
+table.ls tr.fav td.t{color:#8fb6ff}
+table.ls tr:last-child td{border-bottom:none}
+.decs{display:flex; gap:16px; flex-wrap:wrap; margin-top:10px; padding-top:9px; border-top:1px solid var(--line); font-size:11.5px; color:var(--mute)}
+.decs b{color:var(--ink); font-weight:600}
+.decs i{font-style:normal; font-weight:800; font-size:10px; margin-right:4px}
+.scroll{overflow-x:auto; -webkit-overflow-scrolling:touch}
+
+/* scoring + pbp */
+.sp{display:grid; grid-template-columns:58px minmax(0,1fr) 34px 34px; gap:8px; align-items:center; padding:8px 0; border-bottom:1px solid #1a1f29; font-size:12.5px}
+.sp:last-child{border-bottom:none}
+.sp.hd{font-size:9.5px; letter-spacing:.07em; text-transform:uppercase; color:var(--dim); font-weight:700; padding-top:0}
+.sp .in{display:flex; align-items:center; gap:5px; color:var(--dim); font-size:11px; font-weight:600}
+.sp .in img{width:18px; height:18px; object-fit:contain}
+.sp .n{text-align:center; font-family:var(--display); font-size:17px}
+.sp .n.up{color:var(--ink)} .sp .n:not(.up){color:var(--dim)}
+.wpa{display:inline-block; font-size:10px; font-weight:800; padding:1px 5px; border-radius:3px; margin-left:6px; vertical-align:1px}
+.wpa.g{background:rgba(55,192,125,.18); color:#6ee0a8} .wpa.r{background:rgba(224,71,91,.16); color:#f18a97}
+details.half{border-bottom:1px solid var(--line)}
+details.half:last-child{border-bottom:none}
+details.half>summary{list-style:none; display:flex; align-items:center; gap:8px; padding:9px 0; cursor:pointer; font-size:12.5px}
+details.half>summary::-webkit-details-marker,details.pa>summary::-webkit-details-marker{display:none}
+details.half>summary::before{content:'\25B8'; color:var(--dim); font-size:11px; transition:transform .15s}
+details.half[open]>summary::before{transform:rotate(90deg)}
+details.half>summary img{width:18px; height:18px; object-fit:contain}
+details.half>summary b{font-family:var(--display); font-size:16px; font-weight:600; letter-spacing:.02em}
+details.half>summary span{color:var(--dim); font-size:11.5px}
+details.half>summary .hr{margin-left:auto; color:var(--mute); font-weight:600}
+.pas{padding:0 0 8px 18px}
+details.pa{border-left:2px solid #232936; margin:0 0 2px; padding-left:10px}
+details.pa.scp{border-left-color:var(--warn)}
+details.pa.now{border-left-color:var(--live)}
+details.pa>summary{list-style:none; display:flex; gap:9px; align-items:baseline; padding:6px 0; cursor:pointer; font-size:12.5px; color:var(--mute)}
+details.pa>summary b{color:var(--ink); font-weight:600}
+details.pa>summary .pcn{flex:none; font-size:10px; color:var(--dim); font-weight:700; min-width:22px}
+details.pa>summary .psc{margin-left:auto; flex:none; font-family:var(--display); font-size:14px; color:var(--warn); white-space:nowrap}
+.pseq{padding:2px 0 8px 31px; font-size:11.5px; color:var(--mute)}
+.pseq div{display:flex; gap:7px; align-items:center; padding:2px 0}
+.pseq .pb{width:17px; height:17px; font-size:9px}
+.pseq .hit{color:var(--ink)}
+.act{font-size:11px; color:var(--dim); padding:3px 0 3px 12px; font-style:italic}
+
+/* win probability */
+.wpt{display:flex; align-items:baseline; gap:10px; margin-bottom:6px}
+.wpt img{width:26px; height:26px; object-fit:contain; align-self:center}
+.wpt .v{font-family:var(--display); font-weight:700; font-size:40px; line-height:1}
+.wpt .l{font-size:11px; color:var(--mute)}
+.wpw{position:relative}
+.wpw svg{width:100%; height:auto; display:block; touch-action:pan-y}
+.wpw .ax{fill:var(--dim); font:600 9px var(--body)}
+.wpw .gl{stroke:#232936; stroke-width:1}
+.wpw .mid{stroke:#3a4353; stroke-dasharray:3 3}
+.wptip{position:absolute; pointer-events:none; background:#0b0e14; border:1px solid var(--line); border-radius:6px; padding:6px 8px; font-size:11px; max-width:220px; color:var(--mute); display:none; z-index:5}
+.wptip b{color:var(--ink); display:block; font-family:var(--display); font-size:15px}
+.swings{margin-top:10px; padding-top:8px; border-top:1px solid var(--line)}
+.swings h4{margin:0 0 4px; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim)}
+.swings div{display:flex; gap:8px; align-items:baseline; padding:4px 0; font-size:12px; color:var(--mute)}
+.swings div .wpa{margin:0; flex:none; min-width:42px; text-align:center}
+.swings div .in{flex:none; color:var(--dim); font-size:10.5px; font-weight:600; min-width:36px}
+
+/* compare */
+.cmp .cr{padding:6px 0}
+.cmp .cl{display:flex; align-items:baseline; font-size:11px; color:var(--mute)}
+.cmp .cl b{font-family:var(--display); font-size:18px; color:var(--ink); min-width:34px}
+.cmp .cl b:last-child{text-align:right}
+.cmp .cl span{flex:1; text-align:center; letter-spacing:.05em; text-transform:uppercase; font-weight:600; font-size:10px}
+.cmp .cb{display:flex; gap:4px; height:6px; margin-top:3px}
+.cmp .cb i{display:block; height:100%; border-radius:3px; background:#2a3140}
+.cmp .cb .a{margin-left:auto} .cmp .cbw{flex:1; display:flex}
+.cmp .cbw.h i{margin-right:auto}
+.cmp .w i{opacity:1} .cmp .dimb{opacity:.45}
+.cmp .ch{display:flex; justify-content:space-between; align-items:center; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; margin:10px 0 2px}
+.cmp .ch:first-child{margin-top:0}
+.cmp .ch img{width:18px; height:18px; object-fit:contain}
+.il h4{display:flex; align-items:center; gap:7px; margin:10px 0 4px; font-size:12px; font-family:var(--display); letter-spacing:.03em; text-transform:uppercase}
+.il h4:first-child{margin-top:0}
+.il h4 img{width:18px; height:18px; object-fit:contain}
+.il div{display:flex; gap:8px; font-size:12px; padding:4px 0; border-bottom:1px solid #1a1f29; color:var(--mute)}
+.il div b{color:var(--ink); font-weight:600}
+.il div span:last-child{margin-left:auto; color:var(--dim); white-space:nowrap}
+@media (max-width:760px){
+  .zw{grid-template-columns:1fr}
+  .zw>div:first-child{max-width:220px; width:100%; margin:0 auto}
+  .mu{gap:8px} .pp>img{width:44px; height:44px} .pp .pn{font-size:17px}
+  .gchd .note{width:100%; margin-left:0}
+}
 :fullscreen{background:var(--ground); overflow:auto}
 </style>
 </head>
@@ -424,6 +654,8 @@ body.v-live #odds{display:none}
       <div class="split" id="oddsSplit"></div></div>
     <div class="q"><p id="oddsQ"></p></div>
   </div>
+
+  <section id="secGame"><div id="gc"></div></section>
 
   <section id="secLive">
     <div class="board" id="board"></div>
@@ -885,7 +1117,7 @@ function renderBoard(){
     else if(st.fin) cls+=' done';
     else if(anyLive) cls+=' soon';
 
-    return '<div class="'+cls+'">'+
+    return '<div class="'+cls+'" data-pk="'+g.gamePk+'" title="Open Game Center">'+
       (it.other&&!it.race?'':'<div class="ribbon">'+(it.isFav?'Rangers':it.race?'Playoff race':'Matters to Texas')+'</div>')+
       '<div class="bt">'+(it.other&&it.race?'':'<span class="bchip '+cp[1]+'">'+esc(cp[0])+'</span>')+
       '<span class="bst'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+
@@ -1037,11 +1269,14 @@ document.addEventListener('click',function(e){
 /* ================= views ================= */
 
 function setView(v){
-  S.view=(v==='live'||v==='sched'||v==='stand')?v:'home';
+  var gm=/^game-(\d+)$/.exec(v||'');
+  S.view=gm?'game':(v==='live'||v==='sched'||v==='stand')?v:'home';
   document.body.className='v-'+S.view;
   Array.prototype.forEach.call(document.querySelectorAll('#nav a'),function(a){
-    a.className=(a.getAttribute('data-v')===S.view)?'on':'';
+    var dv=a.getAttribute('data-v');
+    a.className=(dv===S.view||(S.view==='game'&&dv==='live'))?'on':'';
   });
+  if(gm){ window.scrollTo(0,0); if(+gm[1]!==S.gc.pk) gcSet(+gm[1]); else { gcRender(); gcTick(); } }
   if(S.view==='live') renderBoard();
   if(S.view==='sched') renderSched();
   if(S.view==='stand') renderStandings();
@@ -1364,12 +1599,551 @@ function renderOdds(){
   $('oddsQ').textContent='“'+pick[0]+'”';
 }
 
+/* ================= game center (v10): click a live tile on the Scoreboard ================= */
+
+var API11='https://statsapi.mlb.com/api/v1.1';
+/* team colours, none of them blue: blue belongs to the Rangers */
+var TCOL={108:'#ba0021',109:'#a71930',110:'#df4601',111:'#bd3039',112:'#cc3433',113:'#c6011f',114:'#e50022',
+115:'#8a6bd1',116:'#fa4616',117:'#eb6e1f',118:'#bd9b60',119:'#ef3e42',120:'#ab0003',121:'#ff5910',133:'#00a35c',
+134:'#fdb827',135:'#ffc425',136:'#00a0a0',137:'#fd5a1e',138:'#c41e3a',139:'#f5d130',140:'#2f6fe0',141:'#e8291c',
+142:'#d31145',143:'#e81828',144:'#ce1141',145:'#9aa4b1',146:'#ef3340',147:'#d9dde6',158:'#ffc52f'};
+function hex2(c){ var n=parseInt(c.slice(1),16); return [n>>16,(n>>8)&255,n&255]; }
+function near(a,b){ var x=hex2(a),y=hex2(b); return Math.hypot(x[0]-y[0],x[1]-y[1],x[2]-y[2])<95; }
+function pairCols(a,h){
+  var ca=TCOL[a]||'#9aa4b1', ch=TCOL[h]||'#c9ced8';
+  if(near(ca,ch)){ if(h===FAV) ca='#9aa4b1'; else ch=(ca==='#9aa4b1'?'#d9dde6':'#9aa4b1'); }
+  return [ca,ch];
+}
+function shot(id){ return 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/'+id+'/headshot/67/current'; }
+function ord(n){ var s=['th','st','nd','rd'],v=n%100; return n+(s[(v-20)%10]||s[v]||s[0]); }
+function imgT(id,cls){ return '<img'+(cls?' class="'+cls+'"':'')+' src="'+logo(id)+'" alt="" onerror="this.style.visibility=\'hidden\'">'; }
+
+S.gc={pk:null,feed:null,wp:null,wpFinal:false,il:{},tab:null,open:{},pa:null,at:0,busy:null,n:0,err:null,pts:null};
+
+function gcSet(pk){
+  if(pk===S.gc.pk) return;
+  S.gc.pk=pk; S.gc.feed=null; S.gc.wp=null; S.gc.wpFinal=false; S.gc.tab=null; S.gc.open={}; S.gc.pa=null; S.gc.at=0; S.gc.err=null; S.gc.n=0;
+  gcRender();
+  if(pk) gcLoad();
+}
+
+function gcLoad(){
+  var pk=S.gc.pk;
+  if(!pk||S.gc.busy===pk) return;
+  S.gc.busy=pk;
+  j(API11+'/game/'+pk+'/feed/live').then(function(F){
+    if(pk!==S.gc.pk) return;
+    S.gc.feed=F; S.gc.at=Date.now(); S.gc.err=null;
+    loadIL(F.gameData.teams.away.id); loadIL(F.gameData.teams.home.id);
+    var st=F.gameData.status.abstractGameState;
+    var want = st!=='Preview' && (!S.gc.wp || (st==='Live' && S.gc.n%3===0) || (st==='Final' && !S.gc.wpFinal));
+    S.gc.n++;
+    if(want) return j(API+'/game/'+pk+'/winProbability').then(function(w){
+      if(pk===S.gc.pk && Array.isArray(w)){ S.gc.wp=w; if(st==='Final') S.gc.wpFinal=true; }
+    }).catch(function(){});
+  }).then(function(){
+    if(S.gc.busy===pk) S.gc.busy=null;
+    if(pk===S.gc.pk) gcRender();
+  },function(e){
+    if(S.gc.busy===pk) S.gc.busy=null;
+    if(pk===S.gc.pk){ S.gc.err=e.message; S.gc.at=Date.now(); gcRender(); }
+  });
+}
+
+function gcTick(){
+  if(S.view!=='game'||!S.gc.pk||document.hidden) return;
+  var F=S.gc.feed, st=F&&F.gameData.status.abstractGameState, age=Date.now()-(S.gc.at||0);
+  if(!F&&age>8000) return gcLoad();
+  if((st==='Live'&&age>9000)||(st==='Preview'&&age>60000)||(st==='Final'&&age>600000)) gcLoad();
+}
+
+function loadIL(id){
+  if(S.gc.il[id]) return;
+  S.gc.il[id]='loading';
+  j(API+'/teams/'+id+'/roster?rosterType=40Man&season='+SEASON).then(function(d){
+    S.gc.il[id]=(d.roster||[]).filter(function(r){ return r.status&&/^D\d/.test(r.status.code||''); })
+      .map(function(r){ return {n:(r.person||{}).fullName||'',pos:(r.position||{}).abbreviation||'',st:(r.status.description||'').replace(/^Injured\s*/,'').replace(/-Day$/,'-Day IL'),d:+((r.status.code||'').slice(1))||99}; })
+      .sort(function(a,b){ return a.d-b.d||a.n.localeCompare(b.n); });
+    if(S.view==='game') gcRender();
+  }).catch(function(){ S.gc.il[id]=[]; });
+}
+
+/* ---------- small pieces ---------- */
+
+function pcls(d){ d=d||{}; return d.isInPlay?'ip':d.isBall?'b':(d.isStrike||/^[CSFTLMWOQR]/.test((d.call||{}).code||''))?'s':'b'; }
+function pitchesOf(p){ return ((p&&p.playEvents)||[]).filter(function(e){ return e.isPitch; }); }
+function dots(n,max,cls){ var s=''; for(var i=0;i<max;i++) s+='<i class="'+(i<n?cls:'')+'"></i>'; return s; }
+function countHTML(c){ return '<div class="cnt"><span>B '+dots(c.balls|0,3,'b')+'</span><span>S '+dots(c.strikes|0,2,'s')+'</span><span>O '+dots(c.outs|0,2,'o')+'</span></div>'; }
+function diamond(o,h){
+  function b(x,y,on){ return '<rect x="'+(x-7)+'" y="'+(y-7)+'" width="14" height="14" transform="rotate(45 '+x+' '+y+')"'+(on?' class="on"':'')+'/>'; }
+  return '<svg class="dia" viewBox="0 0 60 44" width="'+Math.round(h*1.36)+'" height="'+h+'">'+b(30,12,o.second)+b(47,28,o.first)+b(13,28,o.third)+'</svg>';
+}
+function card(title,body,cls,extra){
+  return '<div class="gcard '+(cls||'')+'"><div class="gh"><h3>'+title+'</h3>'+(extra||'')+'</div><div class="gb">'+body+'</div></div>';
+}
+function pName(F,id){ var p=F.gameData.players['ID'+id]||{}; return p.boxscoreName||p.lastName||p.fullName||''; }
+function bxP(F,side,id){ return ((F.liveData.boxscore.teams[side]||{}).players||{})['ID'+id]||{}; }
+function sideOf(F,id){ return F.gameData.teams.away.id===id?'away':'home'; }
+function gcPersp(F){
+  var a=F.gameData.teams.away.id,h=F.gameData.teams.home.id;
+  if(a===FAV||h===FAV) return FAV;
+  var it=gcItem();
+  if(it&&it.pull) return it.pull;
+  return h;
+}
+function gcItem(){ return slate().filter(function(x){ return x.g.gamePk===S.gc.pk; })[0]||null; }
+function wpMap(){ var m={}; (S.gc.wp||[]).forEach(function(e){ m[e.atBatIndex!=null?e.atBatIndex:(e.about||{}).atBatIndex]=e; }); return m; }
+function wpaFor(F,e){
+  if(!e||e.homeTeamWinProbabilityAdded==null) return null;
+  var home=F.gameData.teams.home.id===gcPersp(F);
+  return home?e.homeTeamWinProbabilityAdded:-e.homeTeamWinProbabilityAdded;
+}
+function wpaChip(v){ if(v==null||Math.abs(v)<0.5) return ''; return '<span class="wpa '+(v>0?'g':'r')+'">'+(v>0?'+':'')+Math.round(v)+'%</span>'; }
+
+/* ---------- header ---------- */
+
+function gcHeader(F){
+  var gd=F.gameData, ls=F.liveData.linescore||{}, st=gd.status, lt=ls.teams||{};
+  var A=gd.teams.away, H=gd.teams.home, cols=pairCols(A.id,H.id);
+  var pre=st.abstractGameState==='Preview', fin=st.abstractGameState==='Final', live=!pre&&!fin;
+  var ar=(lt.away||{}).runs|0, hr=(lt.home||{}).runs|0;
+  function rec(t){ var r=S.byId[t.id]; if(r) return r.w+'-'+r.l; var x=t.record||{}; return x.wins!=null?x.wins+'-'+x.losses:''; }
+  function side(t,runs,other,cls){
+    return '<div class="gct '+cls+(fin&&runs<other?' lose':'')+'">'+imgT(t.id)+
+      '<div><div class="tn">'+esc(t.teamName||nick(t.id))+'</div><div class="tr">'+esc(rec(t))+' · '+(cls==='a'?'Away':'Home')+'</div></div>'+
+      '<div class="ts">'+(pre?'':runs)+'</div></div>';
+  }
+  var mid='';
+  if(live){
+    var t=/Middle|End/.test(ls.inningState||'')?(ls.inningState==='Middle'?'Mid ':'End ')+ord(ls.currentInning):(ls.isTopInning?'▲ ':'▼ ')+ord(ls.currentInning||1);
+    if(st.detailedState&&!/In Progress|Warmup/.test(st.detailedState)) t=st.detailedState+' · '+t;
+    mid='<div class="gs live">'+esc(t)+'</div>'+diamond(ls.offense||{},34)+countHTML(ls);
+  } else if(fin){
+    var n=(ls.innings||[]).length;
+    mid='<div class="gs">'+esc(/Final|Game Over|Completed/.test(st.detailedState)?'Final':st.detailedState)+(n&&n!==9?'/'+n:'')+'</div>';
+  } else {
+    var d=new Date(gd.datetime.dateTime);
+    mid='<div class="gs">'+esc(d.toLocaleDateString([], {weekday:'short',month:'short',day:'numeric'}))+'</div>'+
+      '<div class="gs2">'+esc(d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}))+'</div>'+
+      (st.detailedState&&st.detailedState!=='Scheduled'?'<div class="gs3">'+esc(st.detailedState)+'</div>':'');
+  }
+  mid+='<div class="gs3">'+esc((gd.venue||{}).name||'')+'</div>';
+  return '<div class="gch" style="--ca:'+cols[0]+';--ch:'+cols[1]+'">'+side(A,ar,hr,'a')+'<div class="gcm">'+mid+'</div>'+side(H,hr,ar,'h')+'</div>';
+}
+
+/* ---------- matchup + strike zone ---------- */
+
+function personCard(F,id,side,role){
+  var p=F.gameData.players['ID'+id]||{}, bp=bxP(F,side,id), s=bp.stats||{}, ss=bp.seasonStats||{};
+  var line='', season='', hand='';
+  if(role==='P'){
+    var x=s.pitching||{}, y=ss.pitching||{};
+    line=(x.inningsPitched||'0.0')+' IP · '+(x.hits|0)+' H · '+(x.earnedRuns|0)+' ER · '+(x.strikeOuts|0)+' K · '+(x.baseOnBalls|0)+' BB';
+    if(x.numberOfPitches) line+=' · '+x.numberOfPitches+' P';
+    season=(y.era?'ERA '+y.era:'')+(y.whip?' · WHIP '+y.whip:'')+(y.wins!=null?' · '+y.wins+'-'+y.losses:'');
+    hand=((p.pitchHand||{}).code||'')+'HP';
+  } else {
+    var b=s.batting||{}, z=ss.batting||{};
+    line=b.summary||((b.hits|0)+'-'+(b.atBats|0));
+    season='AVG '+(z.avg||'-')+' · OPS '+(z.ops||'-')+' · '+(z.homeRuns|0)+' HR';
+    hand='Bats '+((p.batSide||{}).code||'');
+  }
+  var pos=(p.primaryPosition||{}).abbreviation||'';
+  var tid=F.gameData.teams[side].id;
+  return '<div class="pp '+(role==='P'?'pit':'bat')+'"><img src="'+shot(id)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'+
+    '<div class="pi"><div class="rl">'+imgT(tid)+(role==='P'?'Pitching':'At bat')+'</div>'+
+    '<div class="pn">'+esc(p.fullName||'')+'</div><div class="ph">'+esc(hand+(pos&&pos!=='P'?' · '+pos:'')+(bp.jerseyNumber?' · #'+bp.jerseyNumber:''))+'</div>'+
+    '<div class="pln">Today: '+esc(line)+'</div><div class="pss">'+esc(season)+'</div></div></div>';
+}
+
+function zoneSVG(play){
+  var ev=pitchesOf(play), top=3.4, bot=1.6;
+  ev.forEach(function(e){ var pd=e.pitchData||{}; if(pd.strikeZoneTop){ top=pd.strikeZoneTop; bot=pd.strikeZoneBottom; } });
+  var X=function(v){ return Math.max(8,Math.min(192,100+v*46)); };
+  var Y=function(v){ return Math.max(8,Math.min(238,244-v*46)); };
+  var zl=X(-0.708), zr=X(0.708), zt=Y(top), zb=Y(bot), w=zr-zl, h=zb-zt;
+  var s='<svg class="zone" viewBox="0 0 200 270" role="img" aria-label="Pitch locations">';
+  s+='<rect class="zb" x="'+zl+'" y="'+zt+'" width="'+w+'" height="'+h+'"/>';
+  s+='<line class="zg" x1="'+(zl+w/3)+'" y1="'+zt+'" x2="'+(zl+w/3)+'" y2="'+zb+'"/><line class="zg" x1="'+(zl+2*w/3)+'" y1="'+zt+'" x2="'+(zl+2*w/3)+'" y2="'+zb+'"/>';
+  s+='<line class="zg" x1="'+zl+'" y1="'+(zt+h/3)+'" x2="'+zr+'" y2="'+(zt+h/3)+'"/><line class="zg" x1="'+zl+'" y1="'+(zt+2*h/3)+'" x2="'+zr+'" y2="'+(zt+2*h/3)+'"/>';
+  s+='<path class="plate" d="M'+zl+' 250 H'+zr+' V256 L100 264 L'+zl+' 256 Z"/>';
+  var bs=((play&&play.matchup&&play.matchup.batSide)||{}).code;
+  if(bs) s+='<text class="bat" x="'+(bs==='L'?186:14)+'" y="130" text-anchor="middle" transform="rotate(-90 '+(bs==='L'?186:14)+' 130)">'+(bs==='L'?'LEFTY':'RIGHTY')+'</text>';
+  ev.forEach(function(e,i){
+    var c=(e.pitchData||{}).coordinates||{};
+    if(c.pX==null||c.pZ==null) return;
+    var last=i===ev.length-1;
+    s+='<circle class="'+pcls(e.details)+(last?' last':'')+'" cx="'+X(c.pX).toFixed(1)+'" cy="'+Y(c.pZ).toFixed(1)+'" r="8.5"/>'+
+       '<text class="n" x="'+X(c.pX).toFixed(1)+'" y="'+Y(c.pZ).toFixed(1)+'">'+(e.pitchNumber||i+1)+'</text>';
+  });
+  return s+'</svg>';
+}
+
+function hitTxt(e){
+  var hd=e&&e.hitData; if(!hd) return '';
+  var o=[]; if(hd.launchSpeed) o.push(hd.launchSpeed.toFixed(1)+' mph off the bat');
+  if(hd.launchAngle!=null) o.push(Math.round(hd.launchAngle)+'°');
+  if(hd.totalDistance) o.push(Math.round(hd.totalDistance)+' ft');
+  return o.join(' · ');
+}
+
+function pitchList(play){
+  var ev=pitchesOf(play).slice().reverse();
+  if(!ev.length) return '<div class="empty">No pitches yet.</div>';
+  return '<ol class="pl">'+ev.map(function(e){
+    var d=e.details||{}, pd=e.pitchData||{}, c=e.count||{}, br=pd.breaks||{};
+    var sub=[(d.type||{}).description, br.spinRate?br.spinRate+' rpm':'', hitTxt(e)].filter(Boolean).join(' · ');
+    return '<li><span class="pb '+pcls(d)+'">'+(e.pitchNumber||'')+'</span>'+
+      '<span><span class="pr">'+esc((d.call||{}).description||d.description||'')+'</span><span class="pt">'+esc(sub)+'</span></span>'+
+      '<span class="pv">'+(pd.startSpeed?pd.startSpeed.toFixed(1)+'<small> mph</small>':'')+
+      (d.isInPlay?'':'<small class="pc">'+(c.balls|0)+'-'+(c.strikes|0)+'</small>')+'</span></li>';
+  }).join('')+'</ol>';
+}
+
+function gcMatchup(F){
+  var gd=F.gameData, ld=F.liveData, ls=ld.linescore||{}, st=gd.status.abstractGameState;
+  if(st==='Preview') return gcPreview(F);
+  var all=ld.plays.allPlays||[], cur=ld.plays.currentPlay||all[all.length-1];
+  var pinned=S.gc.pa!=null?all[S.gc.pa]:null;
+  var between=st==='Live'&&/Middle|End/.test(ls.inningState||'');
+  var body='', label='';
+
+  if(st==='Live'&&!between&&cur){
+    var top=cur.about.isTopInning;
+    body+='<div class="mu">'+personCard(F,cur.matchup.pitcher.id,top?'home':'away','P')+personCard(F,cur.matchup.batter.id,top?'away':'home','B')+'</div>';
+    var o=ls.offense||{};
+    body+='<div class="deck">'+(o.onDeck?'<span>On deck <b>'+esc(o.onDeck.fullName)+'</b></span>':'')+(o.inHole?'<span>In the hole <b>'+esc(o.inHole.fullName)+'</b></span>':'')+
+      '<span>Pitch count <b>'+((bxP(F,top?'home':'away',cur.matchup.pitcher.id).stats||{}).pitching||{}).numberOfPitches+'</b></span></div>';
+  } else if(between){
+    var o2=ls.offense||{};
+    var due=[o2.batter,o2.onDeck,o2.inHole].filter(Boolean).map(function(p){ return '<b>'+esc(p.fullName)+'</b>'; }).join(', ');
+    body+='<div class="deck" style="border-top:0;margin-top:0;padding-top:0"><span>'+(ls.inningState==='Middle'?'Middle':'End')+' of the '+ord(ls.currentInning)+'.'+(due?' Due up: '+due:'')+'</span></div>';
+  } else if(st==='Final'){
+    body+=decisionsHTML(F);
+  }
+
+  var play=pinned||cur;
+  if(play){
+    var ev=pitchesOf(play), lp=ev[ev.length-1];
+    var done=play.about&&play.about.isComplete;
+    if(pinned) label=esc(pinned.matchup.batter.fullName)+' vs '+esc(pinned.matchup.pitcher.fullName)+', '+ord(pinned.about.inning)+' <button class="lnk" data-gcpa="-1">Back to live</button>';
+    else if(st==='Live'&&!done&&!between) label='This at-bat';
+    else label=(st==='Final'?'Final at-bat: ':'Last at-bat: ')+esc(play.matchup.batter.fullName);
+    if(lp){
+      var d=lp.details||{}, pd=lp.pitchData||{};
+      body+='<div class="lastp '+pcls(d)+'"><b>'+esc((d.call||{}).description||d.description||'')+'</b><span>'+esc([(d.type||{}).description,hitTxt(lp)].filter(Boolean).join(' · '))+'</span>'+
+        (pd.startSpeed?'<span class="mph">'+Math.round(pd.startSpeed)+' <small style="font-size:11px;color:var(--dim)">MPH</small></span>':'')+'</div>';
+    }
+    body+='<div class="zw"><div><div class="zlab">Catcher\'s view</div>'+zoneSVG(play)+'</div><div><div class="zlab">'+label+'</div>'+pitchList(play)+
+      (done&&play.result&&play.result.description?'<div class="pres"><b>'+esc(play.result.event||'')+'.</b> '+esc(play.result.description)+'</div>':'')+'</div></div>';
+  }
+  return card(st==='Final'?'Final':'At the plate',body,'o1');
+}
+
+function decisionsHTML(F){
+  var dc=F.liveData.decisions||{}, out=[];
+  [['winner','W'],['loser','L'],['save','S']].forEach(function(k){
+    var p=dc[k[0]]; if(!p) return;
+    var side=bxP(F,'away',p.id).person?'away':'home', x=(bxP(F,side,p.id).stats||{}).pitching||{};
+    out.push('<span><i>'+k[1]+'</i><b>'+esc(p.fullName)+'</b> '+(x.inningsPitched||'')+' IP, '+(x.earnedRuns|0)+' ER, '+(x.strikeOuts|0)+' K</span>');
+  });
+  return out.length?'<div class="decs" style="margin-top:0;padding-top:0;border-top:0">'+out.join('')+'</div>':'';
+}
+
+function gcPreview(F){
+  var gd=F.gameData, pp=gd.probablePitchers||{}, body='<div class="mu">';
+  ['away','home'].forEach(function(side){
+    var p=pp[side], tid=gd.teams[side].id;
+    if(!p){ body+='<div class="pp '+(side==='home'?'bat':'pit')+'"><div class="pi"><div class="rl">'+imgT(tid)+'Probable</div><div class="pn">TBD</div></div></div>'; return; }
+    var y=(bxP(F,side,p.id).seasonStats||{}).pitching||{}, pl=gd.players['ID'+p.id]||{};
+    body+='<div class="pp '+(side==='home'?'bat':'pit')+'"><img src="'+shot(p.id)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'">'+
+      '<div class="pi"><div class="rl">'+imgT(tid)+'Probable</div><div class="pn">'+esc(p.fullName)+'</div>'+
+      '<div class="ph">'+esc(((pl.pitchHand||{}).code||'')+'HP')+'</div>'+
+      '<div class="pln">'+(y.wins!=null?y.wins+'-'+y.losses+' · ':'')+'ERA '+esc(y.era||'-')+'</div>'+
+      '<div class="pss">'+(y.strikeOuts!=null?y.strikeOuts+' K · ':'')+'WHIP '+esc(y.whip||'-')+(y.inningsPitched?' · '+y.inningsPitched+' IP':'')+'</div></div></div>';
+  });
+  body+='</div><div class="lu">';
+  ['away','home'].forEach(function(side){
+    var T=F.liveData.boxscore.teams[side]||{}, bo=T.battingOrder||[];
+    body+='<div><h4>'+esc(gd.teams[side].teamName)+' lineup</h4>'+(bo.length?'<ol>'+bo.map(function(id){
+      var x=bxP(F,side,id), z=(x.seasonStats||{}).batting||{};
+      return '<li><b>'+esc(pName(F,id))+'</b> '+esc((x.position||{}).abbreviation||'')+' <span style="color:var(--dim)">'+esc(z.avg||'')+'</span></li>';
+    }).join('')+'</ol>':'<div class="empty">Not posted yet.</div>')+'</div>';
+  });
+  return card('Pregame',body+'</div>','o1');
+}
+
+/* ---------- line score ---------- */
+
+function gcLine(F){
+  var ls=F.liveData.linescore||{}, gd=F.gameData, inn=ls.innings||[], n=Math.max(9,inn.length);
+  var live=gd.status.abstractGameState==='Live', fin=gd.status.abstractGameState==='Final', cur=live?ls.currentInning:0;
+  var th='<th></th>'; for(var i=1;i<=n;i++) th+='<th class="'+(i===cur?'cur':'')+'">'+i+'</th>';
+  th+='<th class="R">R</th><th>H</th><th>E</th><th>LOB</th>';
+  function row(side){
+    var t=gd.teams[side], tt=(ls.teams||{})[side]||{};
+    var r='<td class="t"><span>'+imgT(t.id)+esc(ab(t.id))+'</span></td>';
+    for(var i=1;i<=n;i++){
+      var x=inn[i-1], v=x&&x[side]?x[side].runs:null;
+      var txt=v!=null?v:(fin&&side==='home'&&i===inn.length?'X':'');
+      r+='<td class="'+(i===cur?'cur':'')+(v>0?' sc':'')+'">'+txt+'</td>';
+    }
+    r+='<td class="R">'+(tt.runs|0)+'</td><td>'+(tt.hits|0)+'</td><td>'+(tt.errors|0)+'</td><td>'+(tt.leftOnBase|0)+'</td>';
+    return '<tr class="'+(t.id===FAV?'fav':'')+'">'+r+'</tr>';
+  }
+  var body='<div class="scroll"><table class="ls"><thead><tr>'+th+'</tr></thead><tbody>'+row('away')+row('home')+'</tbody></table></div>';
+  if(fin) body+=decisionsHTML(F).replace('style="margin-top:0;padding-top:0;border-top:0"','');
+  return card('Line score',body,'o2');
+}
+
+/* ---------- scoring summary ---------- */
+
+function gcScoring(F){
+  var pl=F.liveData.plays, all=pl.allPlays||[], gd=F.gameData, wm=wpMap();
+  var list=(pl.scoringPlays||[]).map(function(i){ return all[i]; }).filter(Boolean);
+  var A=gd.teams.away.id, H=gd.teams.home.id;
+  if(!list.length) return card('Scoring summary','<div class="empty">'+(gd.status.abstractGameState==='Preview'?'First pitch has not been thrown.':'No runs yet.')+'</div>','o4');
+  var body='<div class="sp hd"><span>Inn</span><span>Play</span><span class="n">'+ab(A)+'</span><span class="n">'+ab(H)+'</span></div>';
+  body+=list.slice().reverse().map(function(p){
+    var a=p.about, r=p.result, bt=a.isTopInning?A:H;
+    return '<div class="sp"><span class="in">'+imgT(bt)+(a.isTopInning?'▲':'▼')+a.inning+'</span>'+
+      '<span>'+esc(r.description)+wpaChip(wpaFor(F,wm[a.atBatIndex]))+'</span>'+
+      '<span class="n'+(a.isTopInning?' up':'')+'">'+r.awayScore+'</span><span class="n'+(a.isTopInning?'':' up')+'">'+r.homeScore+'</span></div>';
+  }).join('');
+  return card('Scoring summary',body,'o4','<span class="gn">win chance swing for '+esc(ab(gcPersp(F)))+'</span>');
+}
+
+/* ---------- play by play ---------- */
+
+function paRow(F,p){
+  var r=p.result||{}, a=p.about||{}, m=p.matchup||{}, gd=F.gameData;
+  var ev=pitchesOf(p), key='pa'+a.atBatIndex, done=a.isComplete;
+  var acts=(p.playEvents||[]).filter(function(e){ return e.type==='action'&&e.details&&e.details.description; })
+    .map(function(e){ return '<div class="act">'+esc(e.details.description)+'</div>'; }).join('');
+  var head=done?'<b>'+esc(r.event||'')+'</b> '+esc(r.description||''):'<b>Now batting</b> '+esc((m.batter||{}).fullName||'')+' vs '+esc((m.pitcher||{}).fullName||'');
+  var sc=a.isScoringPlay?'<span class="psc">'+ab(gd.teams.away.id)+' '+r.awayScore+' · '+ab(gd.teams.home.id)+' '+r.homeScore+'</span>':'';
+  var seq=ev.map(function(e){
+    var d=e.details||{}, pd=e.pitchData||{}, h=hitTxt(e);
+    return '<div><span class="pb '+pcls(d)+'">'+(e.pitchNumber||'')+'</span><span>'+esc((d.call||{}).description||d.description||'')+'</span>'+
+      '<span style="color:var(--dim)">'+esc([(d.type||{}).description,pd.startSpeed?pd.startSpeed.toFixed(1)+' mph':''].filter(Boolean).join(', '))+'</span>'+
+      (h?'<span class="hit">'+esc(h)+'</span>':'')+'</div>';
+  }).join('');
+  return '<details class="pa'+(a.isScoringPlay?' scp':'')+(done?'':' now')+'" data-k="'+key+'"'+(S.gc.open[key]?' open':'')+'>'+
+    '<summary><span class="pcn">'+ev.length+'P</span><span>'+head+'</span>'+sc+'</summary>'+
+    '<div class="pseq">'+(seq||'<div>No pitches</div>')+(ev.length?'<div><button class="lnk" data-gcpa="'+a.atBatIndex+'">Show on the zone</button></div>':'')+'</div></details>'+acts;
+}
+
+function gcPBP(F){
+  var pl=F.liveData.plays, all=pl.allPlays||[], gd=F.gameData, inn=(F.liveData.linescore||{}).innings||[];
+  var halves=[];
+  (pl.playsByInning||[]).forEach(function(x,k){
+    [['top','Top','away'],['bottom','Bottom','home']].forEach(function(h){
+      var ids=x[h[0]]||[]; if(!ids.length) return;
+      var li=(inn[k]||{})[h[2]]||{};
+      halves.push({k:(k+1)+h[0].charAt(0),label:h[1]+' '+ord(k+1),side:h[2],ids:ids,r:li.runs|0,h:li.hits|0});
+    });
+  });
+  if(!halves.length) return card('Play by play','<div class="empty">Nothing yet.</div>','o5');
+  halves.reverse();
+  var body=halves.map(function(hv,ix){
+    var open=S.gc.open[hv.k]!=null?S.gc.open[hv.k]:ix===0;
+    var t=gd.teams[hv.side];
+    return '<details class="half" data-k="'+hv.k+'"'+(open?' open':'')+'><summary>'+imgT(t.id)+'<b>'+hv.label+'</b><span>'+esc(t.teamName)+'</span>'+
+      '<span class="hr">'+hv.r+' R, '+hv.h+' H</span></summary><div class="pas">'+
+      (open?hv.ids.slice().reverse().map(function(i){ return all[i]?paRow(F,all[i]):''; }).join(''):'')+'</div></details>';
+  }).join('');
+  return card('Play by play',body,'o5','<span class="gn">tap an at-bat for every pitch</span>');
+}
+
+/* ---------- box score ---------- */
+
+function gcBox(F){
+  var gd=F.gameData, dc=F.liveData.decisions||{};
+  var side=S.gc.tab||(gd.teams.home.id===FAV?'home':'away');
+  var tabs='<div class="gtab">'+['away','home'].map(function(s){ var t=gd.teams[s]; return '<button type="button" data-gctab="'+s+'" class="'+(s===side?'on':'')+'">'+imgT(t.id)+esc(ab(t.id))+'</button>'; }).join('')+'</div>';
+  var T=F.liveData.boxscore.teams[side]||{}, P=T.players||{};
+  var hit=Object.keys(P).map(function(k){ return P[k]; }).filter(function(x){ return x.battingOrder; })
+    .sort(function(a,b){ return +a.battingOrder - +b.battingOrder; });
+  var body='';
+  if(!hit.length) body+='<div class="empty">Lineup not posted yet.</div>';
+  else {
+    var tot={ab:0,r:0,h:0,rbi:0,bb:0,k:0};
+    body+='<div class="bxh">Hitters</div><div class="scroll"><table class="gt"><thead><tr><th>Batter</th><th>AB</th><th>R</th><th>H</th><th>RBI</th><th>BB</th><th>K</th><th>AVG</th></tr></thead><tbody>'+
+      hit.map(function(x){
+        var b=(x.stats||{}).batting||{}, z=(x.seasonStats||{}).batting||{}, gs=x.gameStatus||{};
+        tot.ab+=b.atBats|0; tot.r+=b.runs|0; tot.h+=b.hits|0; tot.rbi+=b.rbi|0; tot.bb+=b.baseOnBalls|0; tot.k+=b.strikeOuts|0;
+        return '<tr class="'+(+x.battingOrder%100?'sub':'')+(gs.isCurrentBatter?' cur':'')+'"><td class="nm">'+esc(pName(F,x.person.id))+'<i>'+esc((x.position||{}).abbreviation||'')+'</i></td>'+
+          '<td>'+(b.atBats|0)+'</td><td>'+(b.runs|0)+'</td><td>'+(b.hits|0)+'</td><td>'+(b.rbi|0)+'</td><td>'+(b.baseOnBalls|0)+'</td><td>'+(b.strikeOuts|0)+'</td><td>'+esc(z.avg||'')+'</td></tr>';
+      }).join('')+
+      '<tr class="tot"><td>Team</td><td>'+tot.ab+'</td><td>'+tot.r+'</td><td>'+tot.h+'</td><td>'+tot.rbi+'</td><td>'+tot.bb+'</td><td>'+tot.k+'</td><td></td></tr></tbody></table></div>';
+  }
+  var pit=(T.pitchers||[]).map(function(id){ return P['ID'+id]; }).filter(Boolean);
+  if(pit.length){
+    body+='<div class="bxh">Pitchers</div><div class="scroll"><table class="gt"><thead><tr><th>Pitcher</th><th>IP</th><th>H</th><th>R</th><th>ER</th><th>BB</th><th>K</th><th>PC-ST</th><th>ERA</th></tr></thead><tbody>'+
+      pit.map(function(x){
+        var p=(x.stats||{}).pitching||{}, z=(x.seasonStats||{}).pitching||{}, id=x.person.id, gs=x.gameStatus||{};
+        var tag=dc.winner&&dc.winner.id===id?'W':dc.loser&&dc.loser.id===id?'L':dc.save&&dc.save.id===id?'S':'';
+        return '<tr class="'+(gs.isCurrentPitcher&&gd.status.abstractGameState==='Live'?'cur':'')+'"><td class="nm">'+esc(pName(F,id))+(tag?'<span class="dec '+tag+'">'+tag+'</span>':'')+'</td>'+
+          '<td>'+(p.inningsPitched||'0.0')+'</td><td>'+(p.hits|0)+'</td><td>'+(p.runs|0)+'</td><td>'+(p.earnedRuns|0)+'</td><td>'+(p.baseOnBalls|0)+'</td><td>'+(p.strikeOuts|0)+'</td>'+
+          '<td>'+(p.numberOfPitches|0)+'-'+(p.strikes|0)+'</td><td>'+esc(z.era||'')+'</td></tr>';
+      }).join('')+'</tbody></table></div>';
+  }
+  return card('Box score',body,'o6',tabs);
+}
+
+/* ---------- win probability ---------- */
+
+function gcWP(F){
+  var gd=F.gameData, st=gd.status.abstractGameState, persp=gcPersp(F), home=gd.teams.home.id===persp;
+  var col=persp===FAV?'#2f6fe0':(pairCols(gd.teams.away.id,gd.teams.home.id)[home?1:0]);
+  if(st==='Preview') return card('Win probability','<div class="empty">Starts with the first pitch.</div>','o3');
+  var wp=S.gc.wp;
+  if(!wp||!wp.length) return card('Win probability','<div class="empty">'+(wp?'No plays yet.':'Loading')+'</div>','o3');
+  var pv=function(e){ return home?e.homeTeamWinProbability:e.awayTeamWinProbability; };
+  var first=wp[0], start=first.homeTeamWinProbabilityAdded!=null?(home?1:-1)*(first.homeTeamWinProbability-first.homeTeamWinProbabilityAdded)+(home?0:100):50;
+  if(!(start>=0&&start<=100)) start=50;
+  var vals=[start].concat(wp.map(pv));
+  var ls=F.liveData.linescore||{}, lt=ls.teams||{};
+  if(st==='Final'){ var won=home?(lt.home||{}).runs>(lt.away||{}).runs:(lt.away||{}).runs>(lt.home||{}).runs; vals.push(won?100:0); }
+  var W=320,Hh=150,px=22,py=8,iw=W-px-6,ih=Hh-py-18;
+  var ninn=Math.max(9,ls.currentInning||0,(ls.innings||[]).length);
+  // x by inning half so the chart reads like the game clock
+  var xs=[px];
+  wp.forEach(function(e,i){
+    var a=e.about||{}, inn=a.inning||1, topH=a.isTopInning!==false&&a.halfInning!=='bottom';
+    var halfIdx=(inn-1)*2+(topH?0:1);
+    var same=wp.filter(function(x){ var b=x.about||{}; return b.inning===a.inning&&b.isTopInning===a.isTopInning; });
+    var k=same.indexOf(e);
+    xs.push(px+iw*(halfIdx+(k+1)/(same.length+0.001))/(ninn*2));
+  });
+  if(st==='Final') xs.push(Math.min(px+iw,xs[xs.length-1]+4));
+  var Y=function(v){ return py+ih*(1-v/100); };
+  var path=vals.map(function(v,i){ return (i?'L':'M')+xs[i].toFixed(1)+' '+Y(v).toFixed(1); }).join(' ');
+  var area=path+' L'+xs[xs.length-1].toFixed(1)+' '+Y(0)+' L'+px+' '+Y(0)+' Z';
+  var g='';
+  for(var i=0;i<=ninn;i++){ var x=px+iw*i/ninn; g+='<line class="gl" x1="'+x.toFixed(1)+'" y1="'+py+'" x2="'+x.toFixed(1)+'" y2="'+(py+ih)+'"/>'; if(i<ninn) g+='<text class="ax" x="'+(x+iw/ninn/2).toFixed(1)+'" y="'+(Hh-4)+'" text-anchor="middle">'+(i+1)+'</text>'; }
+  g+='<line class="mid" x1="'+px+'" y1="'+Y(50)+'" x2="'+(px+iw)+'" y2="'+Y(50)+'"/>';
+  g+='<text class="ax" x="'+(px-4)+'" y="'+(Y(100)+3)+'" text-anchor="end">100</text><text class="ax" x="'+(px-4)+'" y="'+(Y(50)+3)+'" text-anchor="end">50</text><text class="ax" x="'+(px-4)+'" y="'+(Y(0)+3)+'" text-anchor="end">0</text>';
+  var svg='<svg class="wpsvg" viewBox="0 0 '+W+' '+Hh+'"><defs><linearGradient id="wpg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+col+'" stop-opacity=".35"/><stop offset="1" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>'+
+    g+'<path d="'+area+'" fill="url(#wpg)"/><path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/>'+
+    '<circle id="wpdot" r="4" fill="'+col+'" stroke="#fff" stroke-width="1.5" style="display:none"/></svg>';
+  S.gc.pts={W:W,xs:xs,vals:vals,Y:Y,wp:wp,team:ab(persp)};
+  var now=vals[vals.length-1];
+  // biggest swings, from our side
+  var sw=wp.map(function(e){ return {e:e,v:wpaFor(F,e)}; }).filter(function(x){ return x.v!=null; })
+    .sort(function(a,b){ return Math.abs(b.v)-Math.abs(a.v); }).slice(0,4);
+  var swings=sw.length?'<div class="swings"><h4>Biggest swings</h4>'+sw.map(function(x){
+    var a=x.e.about||{}, r=x.e.result||{};
+    return '<div>'+wpaChip(x.v)+'<span class="in">'+(a.isTopInning?'▲':'▼')+a.inning+'</span><span>'+esc(r.description||r.event||'')+'</span></div>';
+  }).join('')+'</div>':'';
+  var body='<div class="wpt">'+imgT(persp)+'<span class="v" style="color:'+col+'">'+Math.round(now)+'%</span><span class="l">'+esc(nick(persp))+' win chance'+(persp!==FAV&&gd.teams.away.id!==FAV&&gd.teams.home.id!==FAV&&gcItem()&&gcItem().pull===persp?' · the side Texas needs':'')+'</span></div>'+
+    '<div class="wpw">'+svg+'<div class="wptip" id="wptip"></div></div>'+swings;
+  return card('Win probability',body,'o3');
+}
+
+function wpHover(ev){
+  var svg=ev.target.closest&&ev.target.closest('.wpsvg'), P=S.gc.pts;
+  var tip=$('wptip'), dot=document.getElementById('wpdot');
+  if(!svg||!P||!tip){ if(tip) tip.style.display='none'; if(dot) dot.style.display='none'; return; }
+  var r=svg.getBoundingClientRect(), x=(ev.clientX-r.left)*P.W/r.width, best=0;
+  for(var i=1;i<P.xs.length;i++) if(Math.abs(P.xs[i]-x)<Math.abs(P.xs[best]-x)) best=i;
+  var e=P.wp[best-1];
+  dot.style.display=''; dot.setAttribute('cx',P.xs[best]); dot.setAttribute('cy',P.Y(P.vals[best]));
+  var a=(e&&e.about)||{}, res=(e&&e.result)||{};
+  tip.innerHTML='<b>'+P.team+' '+Math.round(P.vals[best])+'%</b>'+(e?(a.isTopInning?'Top ':'Bot ')+ord(a.inning||1)+': '+esc(res.description||res.event||''):'First pitch');
+  tip.style.display='block';
+  var left=(P.xs[best]/P.W)*r.width;
+  tip.style.left=Math.max(0,Math.min(r.width-220,left-110))+'px';
+  tip.style.top=(r.height+4)+'px';
+}
+
+/* ---------- team stats + injured list ---------- */
+
+function gcCompare(F){
+  var gd=F.gameData, bt=F.liveData.boxscore.teams, A=gd.teams.away.id, H=gd.teams.home.id, cols=pairCols(A,H);
+  if(gd.status.abstractGameState==='Preview') return '';
+  var ab_=((bt.away||{}).teamStats||{}).batting||{}, hb=((bt.home||{}).teamStats||{}).batting||{};
+  var ap=((bt.away||{}).teamStats||{}).pitching||{}, hp=((bt.home||{}).teamStats||{}).pitching||{};
+  function tb(b){ return b.totalBases!=null?b.totalBases:(b.hits|0)+(b.doubles|0)+2*(b.triples|0)+3*(b.homeRuns|0); }
+  function sp(p){ return p.numberOfPitches?Math.round(100*(p.strikes|0)/p.numberOfPitches):0; }
+  function row(lbl,a,h,low,sfx){
+    a=+a||0; h=+h||0; var m=Math.max(a,h,1);
+    var aw=low?a<h:a>h, hw=low?h<a:h>a;
+    return '<div class="cr"><div class="cl"><b>'+a+(sfx||'')+'</b><span>'+lbl+'</span><b>'+h+(sfx||'')+'</b></div>'+
+      '<div class="cb"><div class="cbw" style="justify-content:flex-end"><i class="'+(aw?'':'dimb')+'" style="width:'+(100*a/m)+'%;background:'+cols[0]+'"></i></div>'+
+      '<div class="cbw h"><i class="'+(hw?'':'dimb')+'" style="width:'+(100*h/m)+'%;background:'+cols[1]+'"></i></div></div></div>';
+  }
+  var head='<div class="ch">'+imgT(A)+'<span>Hitting</span>'+imgT(H)+'</div>';
+  var body=head+
+    row('Hits',ab_.hits,hb.hits)+row('Home runs',ab_.homeRuns,hb.homeRuns)+row('Total bases',tb(ab_),tb(hb))+
+    row('Walks',ab_.baseOnBalls,hb.baseOnBalls)+row('Strikeouts',ab_.strikeOuts,hb.strikeOuts,true)+
+    row('Left on base',ab_.leftOnBase,hb.leftOnBase,true)+row('Stolen bases',ab_.stolenBases,hb.stolenBases)+
+    '<div class="ch"><span></span><span>Pitching</span><span></span></div>'+
+    row('Pitches',ap.numberOfPitches,hp.numberOfPitches,true)+row('Strike rate',sp(ap),sp(hp),false,'%')+
+    row('Pitchers used',((bt.away||{}).pitchers||[]).length,((bt.home||{}).pitchers||[]).length,true);
+  return card('Team stats','<div class="cmp">'+body+'</div>','o7');
+}
+
+function gcIL(F){
+  var gd=F.gameData;
+  var body=['away','home'].map(function(s){
+    var t=gd.teams[s], L=S.gc.il[t.id];
+    var rows=L==='loading'||!L?'<div><span>Loading</span></div>':!L.length?'<div><span>Nobody on the IL.</span></div>':
+      L.map(function(x){ return '<div><b>'+esc(x.n)+'</b><span>'+esc(x.pos)+'</span><span>'+esc(x.st)+'</span></div>'; }).join('');
+    return '<h4>'+imgT(t.id)+esc(t.teamName)+'</h4>'+rows;
+  }).join('');
+  return card('Injured list','<div class="il">'+body+'</div>','o8');
+}
+
+/* ---------- render ---------- */
+
+function gcRender(){
+  var box=$('gc'); if(!box) return;
+  if(S.view!=='game') return;
+  var F=S.gc.feed, it=gcItem();
+  var why='';
+  if(it){ var cp=chipFor(it); why='<span class="gc-why '+cp[1]+'">'+esc(cp[0])+'</span>'; }
+  var head='<div class="gchd"><button class="gc-back" type="button" data-gcback>&larr; Scoreboard</button><h2>Game Center</h2>'+why+
+    '<span class="note">'+(S.gc.err?'Could not refresh ('+esc(S.gc.err)+'), retrying':F?'updated '+new Date(S.gc.at).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'}):'')+'</span></div>';
+  if(!S.gc.pk){ box.innerHTML=head+'<div class="empty">Pick a game on the Scoreboard.</div>'; return; }
+  if(!F){ box.innerHTML=head+'<div class="empty">'+(S.gc.err?'Could not load this game ('+esc(S.gc.err)+'). Retrying.':'Loading the game')+'</div>'; return; }
+  try{
+    box.innerHTML=head+gcHeader(F)+
+      '<div class="gc-grid">'+
+        '<div class="gc-col gc-box">'+gcBox(F)+'</div>'+
+        '<div class="gc-col gc-mid">'+gcMatchup(F)+gcLine(F)+gcScoring(F)+gcPBP(F)+'</div>'+
+        '<div class="gc-col gc-side">'+gcWP(F)+gcCompare(F)+gcIL(F)+'</div>'+
+      '</div>';
+  }catch(e){
+    box.innerHTML=head+'<div class="err">Game Center render problem: '+esc(e.message)+'</div>';
+    if(window.console) console.error(e);
+  }
+}
+
+document.addEventListener('click',function(e){
+  var t=e.target;
+  var tile=t.closest('#board .bg[data-pk]');
+  if(tile){ location.hash='#game-'+tile.getAttribute('data-pk'); return; }
+  if(t.closest('[data-gcback]')){ location.hash='#live'; return; }
+  var tb=t.closest('[data-gctab]'); if(tb){ S.gc.tab=tb.getAttribute('data-gctab'); return gcRender(); }
+  var pa=t.closest('[data-gcpa]');
+  if(pa){ var v=+pa.getAttribute('data-gcpa'); S.gc.pa=v<0?null:v; gcRender(); var c=document.querySelector('#gc .o1'); if(c&&v>=0) c.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+  var sm=t.closest('#gc details>summary');
+  if(sm){
+    var d=sm.parentNode, k=d.getAttribute('data-k'); S.gc.open[k]=!d.open;
+    if(d.classList.contains('half')&&!d.open){ e.preventDefault(); gcRender(); }
+  }
+});
+document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&S.view==='game') location.hash='#live'; });
+document.addEventListener('pointermove',function(e){ if(S.view==='game') wpHover(e); });
+setInterval(gcTick,3000);
+
 /* ================= boot ================= */
 
 function renderAll(){
   if(!S.stand||!S.byId[FAV]) return;
   try{
-    renderBar(); renderOdds(); renderTonight(); renderBoard(); renderSched(); renderPath(); renderTables(); renderStandings(); renderRunIn();
+    renderBar(); renderOdds(); renderTonight(); renderBoard(); renderSched(); renderPath(); renderTables(); renderStandings(); renderRunIn(); gcRender();
     $('err').innerHTML='';
   }catch(e){
     $('err').innerHTML='<div class="err">Render problem: '+esc(e.message)+'</div>';
