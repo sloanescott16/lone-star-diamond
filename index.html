@@ -1660,7 +1660,7 @@ function gcTick(){
   if(S.view!=='game'||!S.gc.pk||document.hidden) return;
   var F=S.gc.feed, st=F&&F.gameData.status.abstractGameState, age=Date.now()-(S.gc.at||0);
   if(!F&&age>8000) return gcLoad();
-  if((st==='Live'&&age>9000)||(st==='Preview'&&age>60000)||(st==='Final'&&age>600000)) gcLoad();
+  if((st==='Live'&&age>4500)||(st==='Preview'&&age>60000)||(st==='Final'&&age>600000)) gcLoad();
 }
 
 function loadIL(id){
@@ -2143,7 +2143,7 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&S.view==='game') location.hash='#live'; });
 document.addEventListener('pointermove',function(e){ if(S.view==='game') wpHover(e); });
-setInterval(gcTick,3000);
+setInterval(gcTick,1000);   /* v14: live game detail refreshes about every 5 s */
 
 /* ================= boot ================= */
 
@@ -2191,9 +2191,19 @@ window.addEventListener('hashchange',route);
 route();
 
 Promise.all([loadStandings(),loadRest(),loadToday()])
-  .then(renderAll).catch(fail);
+  .then(renderAll).catch(fail).then(function(){ fastLoop(); });
 
-setInterval(function(){ tickFast(); }, 25000);
+/* v14: scores every 5 s while any game is live, 25 s otherwise */
+var fastTimer;
+function fastLoop(){
+  clearTimeout(fastTimer);
+  var anyLive=(S.games||[]).some(function(g){return g.status&&g.status.abstractGameState==='Live';});
+  fastTimer=setTimeout(function(){
+    if(document.hidden) return fastLoop();
+    loadToday().then(function(){ renderBar(); renderTonight(); renderBoard(); if(S.day===0) renderSched(); }).catch(fail).then(fastLoop);
+  }, anyLive?5000:25000);
+}
+fastLoop();
 setInterval(function(){ tickSlow(); }, 180000);
 
 window.LSD=S;
