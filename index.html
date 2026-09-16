@@ -257,7 +257,7 @@ body.v-sched #secLive,body.v-sched #secTonight,body.v-sched #secPath,body.v-sche
 .flt{display:none; font:inherit; font-size:12px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
   color:var(--ink); background:var(--card); border:1px solid var(--line); border-radius:7px; padding:5px 8px; cursor:pointer}
 .flt.on{border-color:var(--blue); color:#a8c6ff}
-body.v-sched .flt,body.v-live .flt,body.v-stand .flt{display:inline-block}
+body.v-live .flt{display:inline-block}
 @media (max-width:640px){ .sch-head .note{margin-left:0; width:100%} .seg button{padding:4px 8px; font-size:11px} }
 body.v-live{overflow:hidden}
 body.v-live .wrap{max-width:none}
@@ -1168,7 +1168,8 @@ function closeLate(g){
 
 function dayStr(off){ var d=new Date(); d.setDate(d.getDate()+off); return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
 S.day=0; S.dayCache={};
-S.ssort=(function(){ try{ return localStorage.getItem('pc-sort')||'league'; }catch(e){ return 'league'; } })();
+/* v16: Schedule is unfiltered; sorts are All games (first pitch order) or Wildcard race */
+S.ssort=(function(){ try{ var v=localStorage.getItem('pc-sort'); return v==='wildcard'?v:'time'; }catch(e){ return 'time'; } })();
 function dayGames(){
   if(S.day===0) return S.games;
   return S.dayCache[dayStr(S.day)]||null;
@@ -1182,14 +1183,13 @@ function loadDay(off){
   });
 }
 
-var SORTS=[['league','League'],['division','Division'],['wildcard','Wildcard race']];
+var SORTS=[['time','All games'],['wildcard','Wildcard race']];
 function renderSched(){
   var box=$('sched'); if(!box||!S.stand) return;
   var days=[[-1,'Yesterday'],[0,'Today'],[1,'Tomorrow']];
   $('daySeg').innerHTML=days.map(function(d){return '<button type="button" data-day="'+d[0]+'" class="'+(d[0]===S.day?'on':'')+'">'+d[1]+'</button>';}).join('');
   $('sortSeg').innerHTML=SORTS.map(function(x){return '<button type="button" data-sort="'+x[0]+'" class="'+(x[0]===S.ssort?'on':'')+'">'+x[1]+'</button>';}).join('');
   var games=dayGames();
-  if(games) games=games.filter(gameIn);
   if(!games){ box.innerHTML='<div class="empty">Loading</div>'; loadDay(S.day).then(renderSched).catch(function(e){ box.innerHTML='<div class="empty">Could not load that day ('+esc(e.message)+')</div>'; }); return; }
   var sd=seeds();
   var rel={}; if(S.day===0) slate().forEach(function(it){ rel[it.g.gamePk]=it; });
@@ -1197,7 +1197,7 @@ function renderSched(){
   var live=games.filter(function(g){return g.status&&g.status.abstractGameState==='Live';}).length;
   var fin=games.filter(function(g){return g.status&&g.status.abstractGameState==='Final';}).length;
   var d=new Date(dayStr(S.day)+'T12:00:00');
-  $('schNote').textContent=d.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+(S.flt==='all'?'':' · '+$('flt').selectedOptions[0].textContent)+' · '+games.length+' game'+(games.length===1?'':'s')+' · '+live+' live · '+fin+' final';
+  $('schNote').textContent=d.toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'})+' · '+games.length+' game'+(games.length===1?'':'s')+' · '+live+' live · '+fin+' final';
 
   function card(g,showSeed){
     var a=g.teams.away.team.id,h=g.teams.home.team.id, st=gameStatus(g), ls=g.linescore||{};
@@ -1227,30 +1227,13 @@ function renderSched(){
   function cnt(n){ return n+' game'+(n===1?'':'s'); }
   var lg=function(g,side){ return lgOf(S.byId[g.teams[side].team.id]); };
   var html='';
-  if(!games.length) html='<div class="empty">No games'+FLTN[S.flt]+' on this day.</div>';
-  else if(S.ssort==='league'){
-    [['American League',function(g){return lg(g,'away')==='AL'&&lg(g,'home')==='AL';}],
-     ['National League',function(g){return lg(g,'away')==='NL'&&lg(g,'home')==='NL';}],
-     ['Interleague',function(g){return lg(g,'away')!==lg(g,'home');}]].forEach(function(p){
-      var gs=games.filter(p[1]).sort(byTime);
-      if(gs.length) html+=blk(p[0],cnt(gs.length)+' · first pitch order',gs,false);
-    });
-  } else if(S.ssort==='division'){
-    DIVORDER.forEach(function(dv){
-      if(!wide()&&!(S.flt===String(dv)||S.flt===(dv<=202?'AL':'NL'))) return;
-      var teams=S.stand.filter(function(r){return r.div===dv;}).sort(cmp);
-      if(!teams.length) return;
-      var ids={}; teams.forEach(function(r){ids[r.id]=1;});
-      var gs=games.filter(function(g){return ids[g.teams.away.team.id]||ids[g.teams.home.team.id];}).sort(byTime);
-      if(!gs.length) return;
-      var top=teams[0];
-      var recs=teams.map(function(r){ var gb=gapBetween(top,r); return '<b class="'+(r.id===FAV?'fav':'')+'">'+ab(r.id)+'</b> '+r.w+'-'+r.l+(gb>0?' ('+num(gb)+')':''); }).join(' · ');
-      html+=blk(DIVN[dv],cnt(gs.length)+' · <span class="dr">'+recs+'</span>',gs,false);
-    });
+  if(!games.length) html='<div class="empty">No games on this day.</div>';
+  else if(S.ssort==='time'){
+    var gs=games.slice().sort(function(x,y){ var fx=(x.teams.away.team.id===FAV||x.teams.home.team.id===FAV)?0:1, fy=(y.teams.away.team.id===FAV||y.teams.home.team.id===FAV)?0:1; return byTime(x,y)||fx-fy; });
+    html+=blk('Every game',cnt(gs.length)+' · first pitch order',gs,false);
   } else {
     var tiers=[['In a playoff spot',function(x){return x.seed<=6;}],['In the hunt',function(x){return x.seed>6&&x.wcgb<=5;}],['Chasing',function(x){return x.seed>6&&x.wcgb>5;}]];
     ['AL','NL'].forEach(function(L){
-      if(!wide()&&S.flt!==L&&!(+S.flt>=200&&(+S.flt<=202?'AL':'NL')===L)) return;
       var mine=games.filter(function(g){return lg(g,'away')===L||lg(g,'home')===L;});
       function best(g){ var b=null; ['away','home'].forEach(function(s){ var x=sd[g.teams[s].team.id]; if(x&&x.lg===L&&(!b||x.seed<b.seed)) b=x; }); return b; }
       tiers.forEach(function(t){
@@ -1266,10 +1249,10 @@ function syncFlt(){ var f=$('flt'); if(!f) return; f.value=S.flt; if(f.value!==S
 syncFlt();
 $('flt').addEventListener('change',function(){
   S.flt=this.value; try{ localStorage.setItem('pc-flt',S.flt); }catch(x){}
-  syncFlt(); renderSched(); renderBoard(); renderStandings();
+  syncFlt(); renderBoard();
 });
 document.addEventListener('click',function(e){
-  if(e.target.closest('#stBtn')){ S.flt='all'; try{ localStorage.setItem('pc-flt','all'); }catch(x){} syncFlt(); renderSched(); renderBoard(); renderStandings(); return; }
+  if(e.target.closest('#stBtn')){ S.flt='all'; try{ localStorage.setItem('pc-flt','all'); }catch(x){} syncFlt(); renderBoard(); return; }
   var db=e.target.closest('#daySeg button'); if(db){ S.day=+db.getAttribute('data-day'); return renderSched(); }
   var sb=e.target.closest('#sortSeg button'); if(sb){ S.ssort=sb.getAttribute('data-sort'); try{ localStorage.setItem('pc-sort',S.ssort); }catch(x){} return renderSched(); }
 });
@@ -1462,15 +1445,12 @@ function renderStandings(){
   var box=$('standAll'); if(!box||!S.stand) return;
   var html='';
   [['AL','American League',[200,201,202]],['NL','National League',[203,204,205]]].forEach(function(L){
-    if(S.flt==='tex'&&L[0]!=='AL') return;
-    if(!wide()&&S.flt!==L[0]&&L[2].indexOf(+S.flt)<0) return;
     var rows=S.stand.filter(function(r){return lgOf(r)===L[0];});
     var lead={}; rows.forEach(function(r){ var c=lead[r.div]; if(!c||cmp(r,c)<0) lead[r.div]=r; });
     var ids={}; Object.keys(lead).forEach(function(k){ids[lead[k].id]=1;});
     var wc=rows.filter(function(r){return !ids[r.id];}).sort(cmp);
     var t='<div class="stcol">';
     L[2].forEach(function(dv){
-      if(+S.flt>=200&&+S.flt!==dv) return;
       var d=rows.filter(function(r){return r.div===dv;}).sort(cmp);
       if(d.length) t+=stTable(DIVN[dv],'winner is in',d,0,{noE:true});
     });
