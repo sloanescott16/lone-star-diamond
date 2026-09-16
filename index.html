@@ -1267,6 +1267,7 @@ $('flt').addEventListener('change',function(){
   syncFlt(); renderSched(); renderBoard(); renderStandings();
 });
 document.addEventListener('click',function(e){
+  if(e.target.closest('#stBtn')){ S.flt='all'; try{ localStorage.setItem('pc-flt','all'); }catch(x){} syncFlt(); renderSched(); renderBoard(); renderStandings(); return; }
   var db=e.target.closest('#daySeg button'); if(db){ S.day=+db.getAttribute('data-day'); return renderSched(); }
   var sb=e.target.closest('#sortSeg button'); if(sb){ S.ssort=sb.getAttribute('data-sort'); try{ localStorage.setItem('pc-sort',S.ssort); }catch(x){} return renderSched(); }
 });
