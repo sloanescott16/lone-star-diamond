@@ -2023,7 +2023,7 @@ function preStarter(F,side){
   var y=(bxP(F,side,p.id).seasonStats||{}).pitching||{}, pl=gd.players['ID'+p.id]||{}, D=S.pre.pit[p.id];
   var h='<div class="pp"><img src="'+shot(p.id)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'"><div class="pi"><div class="rl">'+imgT(tid)+esc(gd.teams[side].teamName)+' starter</div><div class="pn">'+esc(p.fullName)+'</div>'+
     '<div class="ph">'+esc(((pl.pitchHand||{}).code||'')+'HP')+(pl.currentAge?' · age '+pl.currentAge:'')+(pl.primaryNumber?' · #'+esc(pl.primaryNumber):'')+'</div></div></div>';
-  var cells=[[y.wins!=null?y.wins+'-'+y.losses:'-','W-L'],[f3(y.era),'ERA'],[f3(y.whip),'WHIP'],[f3(y.inningsPitched),'IP'],[f3(y.strikeoutsPer9Inn),'K / 9'],[f3(y.walksPer9Inn),'BB / 9'],[f3(y.homeRunsPer9),'HR / 9'],[f3(y.avg),'Opp AVG']];
+  var cells=[[y.wins!=null?y.wins+'-'+y.losses:'-','W-L'],[f3(y.era),'ERA'],[f3(y.whip),'WHIP'],[f3(y.inningsPitched),'IP'],[f3(y.strikeoutsPer9Inn),'K / 9'],[f3(y.walksPer9Inn),'BB / 9'],[f3(y.homeRunsPer9),'HR / 9'],[f3(y.gamesStarted),'Starts']];
   h+='<div class="pgrid">'+cells.map(function(c){ return '<div><b>'+esc(c[0])+'</b><span>'+c[1]+'</span></div>'; }).join('')+'</div>';
   if(!D) return '<div>'+h+'<div class="empty">Loading his numbers</div></div>';
   if(D.spl.length){
@@ -2035,10 +2035,10 @@ function preStarter(F,side){
     var t=x.stat, o=(x.opponent||{}).id, dec=t.wins?'W':t.losses?'L':'ND';
     return '<tr><td>'+md(x.date)+' '+(x.isHome?'vs':'@')+' '+esc(ab(o))+'</td><td><b>'+f3(t.inningsPitched)+'</b></td><td>'+(t.hits|0)+'</td><td><b>'+(t.earnedRuns|0)+'</b></td><td>'+(t.baseOnBalls|0)+'</td><td>'+(t.strikeOuts|0)+'</td><td class="'+dec+'">'+dec+'</td></tr>';
   }).join('')+'</tbody></table>';
-  var ars=D.ars.slice().sort(function(a,b){ return (b.stat.percentage||0)-(a.stat.percentage||0); }).slice(0,6);
+  var ars=D.ars.slice().sort(function(a,b){ return (b.stat.percentage||0)-(a.stat.percentage||0); }).slice(0,6), top=ars.length?Math.round((ars[0].stat.percentage||0)*100)||1:1;
   if(ars.length) h+='<div class="psub">Arsenal</div><div class="ars">'+ars.map(function(x){
     var pc=Math.round((x.stat.percentage||0)*100);
-    return '<div><span class="nm"><span>'+esc(((x.stat.type||{}).description)||'')+'</span><span>'+(x.stat.averageSpeed?x.stat.averageSpeed.toFixed(1)+' mph':'')+'</span></span><span><i style="width:'+Math.max(2,pc*1.6)+'%"></i></span><span style="text-align:right">'+pc+'%</span><span style="text-align:right;color:var(--dim)">'+(x.stat.count||'')+'</span></div>';
+    return '<div><span class="nm"><span>'+esc(((x.stat.type||{}).description)||'')+'</span><span>'+(x.stat.averageSpeed?x.stat.averageSpeed.toFixed(1)+' mph':'')+'</span></span><span><i style="width:'+Math.max(3,100*pc/top)+'%"></i></span><span style="text-align:right">'+pc+'%</span><span style="text-align:right;color:var(--dim)">'+(x.stat.count||'')+'</span></div>';
   }).join('')+'</div>';
   if(D.tot&&D.tot.atBats) h+='<div class="vsn">Career vs '+esc(nick(D.opp))+': <b>'+f3(D.tot.avg)+'</b> AVG, <b>'+f3(D.tot.ops)+'</b> OPS, '+(D.tot.homeRuns|0)+' HR, '+(D.tot.strikeOuts|0)+' K in '+D.tot.atBats+' AB</div>';
   return '<div>'+h+'</div>';
