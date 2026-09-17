@@ -35,7 +35,7 @@ h1,h2,h3{margin:0; font-family:var(--display); letter-spacing:.02em; text-transf
   border-bottom:1px solid var(--line);
   backdrop-filter:blur(8px);
 }
-.brand{display:flex; align-items:center; gap:10px; min-width:0}
+.brand{display:flex; align-items:center; gap:10px; min-width:0; color:inherit; text-decoration:none} /* v21: brand links to the Press Box */
 .brand img{width:30px; height:30px; object-fit:contain; filter:drop-shadow(0 0 3px rgba(255,255,255,.28))}
 .brand h1{font-size:23px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:clip}
 .brand img,.bar .rec,.nav{flex-shrink:0}
@@ -690,10 +690,10 @@ details.pa>summary .psc{margin-left:auto; flex:none; font-family:var(--display);
 <body>
 
 <div class="bar">
-  <div class="brand">
+  <a class="brand" href="https://sloanescott16.github.io/" title="Back to the Press Box" aria-label="Pennant Chase, back to the Press Box">
     <img id="favLogo" src="https://www.mlbstatic.com/team-logos/140.svg" alt="" onerror="this.remove()">
     <h1>Pennant <b>Chase</b></h1>
-  </div>
+  </a>
   <div class="rec" id="favRec">--<span id="favLeft"></span></div>
   <nav class="nav" id="nav">
     <a href="#home" data-v="home">Race</a>
