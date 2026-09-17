@@ -1737,10 +1737,10 @@ function renderWhatIf(){
     var cls,txt,rec;
     if(cap>=o.left){
       cls='ok'; rec=o.left+'-0';
-      txt='Texas finishes ahead of <b>'+nick(o.id)+'</b> even if they run the table.';
+      txt='Texas finishes ahead of the <b>'+nick(o.id)+'</b> even if they run the table.';
     } else if(cap<0){
       cls='no'; rec='&mdash;';
-      txt='<b>'+nick(o.id)+'</b> finishes ahead no matter what. Texas needs more wins.';
+      txt='<b>'+nick(o.id)+'</b> finish ahead no matter what. Texas needs more wins.';
     } else {
       cls=(cap<=o.left/3)?'tight':'';
       rec=cap+'-'+(o.left-cap);
@@ -3293,8 +3293,8 @@ function snWestLine(id){
   var west=S.stand.filter(function(r){ return r.div===200; }).sort(cmp), lead=west[0];
   if(!lead) return '';
   if(lead.id===FAV) return 'Texas leads the AL West';
-  if(lead.id===id) return esc(nick(id))+' leads the AL West';
-  return esc(nick(lead.id))+' leads the West by '+snGBTxt(((lead.w-S.byId[id].w)+(S.byId[id].l-lead.l))/2)+' over '+esc(nick(id));
+  if(lead.id===id) return esc(nick(id))+' lead the AL West';
+  return esc(nick(lead.id))+' lead the West by '+snGBTxt(((lead.w-S.byId[id].w)+(S.byId[id].l-lead.l))/2)+' over the '+esc(nick(id));
 }
 function renderWatch(){
   var el=$('watch'); if(!el) return;
