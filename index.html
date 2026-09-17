@@ -2174,8 +2174,8 @@ function gcRender(){
   try{
     box.innerHTML=head+gcHeader(F)+
       '<div class="gc-grid">'+
-        '<div class="gc-col gc-box">'+gcBox(F)+'</div>'+
-        '<div class="gc-col gc-mid">'+gcMatchup(F)+gcScoring(F)+gcPBP(F)+'</div>'+
+        '<div class="gc-col gc-box">'+gcBox(F)+gcPBP(F)+'</div>'+ /* v22: play by play under the box score */
+        '<div class="gc-col gc-mid">'+gcMatchup(F)+gcScoring(F)+'</div>'+
         '<div class="gc-col gc-side">'+gcWP(F)+gcLine(F)+gcCompare(F)+gcIL(F)+'</div>'+
       '</div>';
   }catch(e){
