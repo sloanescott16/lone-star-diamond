@@ -922,15 +922,6 @@ table.rs .pl.lgo img{border-radius:0; background:none; object-fit:contain; width
 }
 @media (max-width:1180px) and (min-width:641px){ .bar .rec span{display:none} .bar .st:not(.go) #stText{display:none} .nav a{padding:5px 9px} .bar{gap:10px} }
 @media (max-width:950px) and (min-width:641px){ .bar .rec{display:none} #fsBtn{display:none} }
-.wnow{display:flex; align-items:center; gap:10px; padding:8px 11px; border-radius:8px; background:var(--card2); border-left:3px solid var(--dim); margin-bottom:10px; cursor:pointer; font-size:13px}
-.wnow.lv{border-left-color:var(--live)} .wnow.good{border-left-color:var(--good)} .wnow.bad{border-left-color:var(--bad)}
-.wnow em{font-style:normal; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700}
-.wnow img{width:22px; height:22px; object-fit:contain}
-.wnow b{font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
-.wnow span{margin-left:auto; font-family:var(--display); font-size:17px; white-space:nowrap}
-.tmk.wk2{margin-bottom:8px} .tmk.wk2 div{min-width:84px; padding:6px 10px} .tmk.wk2 b{font-size:20px}
-body.v-live #secWatch,body.v-sched #secWatch,body.v-stand #secWatch,body.v-game #secWatch,body.v-season #secWatch{display:none}
-#secWatch{margin-top:16px}
 </style>
 </head>
 <body>
@@ -1015,7 +1006,6 @@ body.v-live #secWatch,body.v-sched #secWatch,body.v-stand #secWatch,body.v-game 
     <div id="standAll"><div class="empty">Loading the standings</div></div>
   </section>
 
-  <section id="secWatch"><div id="watch"></div></section>
   <section id="secTonight">
     <div class="head">
       <h2>Tonight</h2><span class="sub">what has to happen</span>
@@ -1225,9 +1215,9 @@ function rivals(){
   });
 }
 
-/* rivals currently ahead of Texas: the ones that have to be passed */
+/* rivals ahead of or level with Texas: the ones that have to be passed (v27: a tie still blocks) */
 function blockers(){
-  return rivals().filter(function(r){ return cmp(r,tex())<0; }).sort(cmp);
+  return rivals().filter(function(r){ return cmp(r,tex())<=0; }).sort(cmp);
 }
 function blockerIds(){
   var m={}; blockers().forEach(function(r){m[r.id]=1;}); return m;
@@ -1656,7 +1646,7 @@ function pathCard(kind,title,lede,holder,others,bump){
     if(mm<=0){
       txt='<b>Out of reach.</b> They cannot be caught.';
     } else {
-      txt='<b>'+num(Math.abs(gp))+' '+(gp>=0?'ahead':'behind')+'</b>, '+o.left+' left. '+
+      txt='<b>'+(gp===0?'Level':num(Math.abs(gp))+' '+(gp>0?'ahead':'behind'))+'</b>, '+o.left+' left. '+
           (h2h?'<b>'+h2h+'</b> left against Texas.':'No games left against Texas.');
     }
     return '<li><span class="k'+(mm<=0?' dead':'')+'">'+(mm<=0?'&mdash;':mm)+'</span><span>'+
@@ -3280,56 +3270,6 @@ document.addEventListener('change',function(e){ var s=e.target.closest&&e.target
 document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&S.pl.id){ e.stopImmediatePropagation(); snClosePlayer(); } },true);
 document.addEventListener('mousemove',function(e){ if(S.view==='season'&&e.target.closest&&e.target.closest('#snChw')) snHover(e); else { var tp=$('snTip'); if(tp&&tp.style.display==='block'){ tp.style.display='none'; var c=$('snCur'); if(c) c.style.display='none'; } } });
 
-/* ---------- v22: the division leader watch box on the Race page ---------- */
-function snWatchId(){
-  var t=tex(); if(!t) return null;
-  if(FAV!==117&&S.byId[117]) return 117;            /* the Astros are the one he watches */
-  var west=S.stand.filter(function(r){ return r.div===200; }).sort(cmp);
-  var lead=west[0];
-  if(lead&&lead.id!==FAV) return lead.id;
-  return (west[1]||{}).id||null;
-}
-function snWestLine(id){
-  var west=S.stand.filter(function(r){ return r.div===200; }).sort(cmp), lead=west[0];
-  if(!lead) return '';
-  if(lead.id===FAV) return 'Texas leads the AL West';
-  if(lead.id===id) return esc(nick(id))+' lead the AL West';
-  return esc(nick(lead.id))+' lead the West by '+snGBTxt(((lead.w-S.byId[id].w)+(S.byId[id].l-lead.l))/2)+' over the '+esc(nick(id));
-}
-function renderWatch(){
-  var el=$('watch'); if(!el) return;
-  var t=tex(), id=snWatchId();
-  if(!t||!id){ el.innerHTML=''; return; }
-  var r=S.byId[id], lead=r.w-t.w+((t.l-r.l))>0, gap=((r.w-t.w)+(t.l-r.l))/2;
-  var mine=gap<0;
-  var mag=mine?magic(t,r):magic(r,t);
-  var today=(S.games||[]).filter(function(g){ return g.teams.home.team.id===id||g.teams.away.team.id===id; })[0];
-  var sched=(S.restBy[id]||[]).filter(function(x){ return x.g.state!=='Final'; }).slice(0,7);
-  var h2h=(S.restBy[FAV]||[]).filter(function(x){ return x.opp===id&&x.g.state!=='Final'; }).length;
-  var k=[[r.w+'-'+r.l,'Record'],[(gap>0?gap:-gap)===0?'Level':snGBTxt(gap)+(mine?' up':' back'),'On Texas'],[mag,mine?'Magic number':'Elimination number'],
-    [r.rd==null?'-':(r.rd>0?'+':'')+r.rd,'Run diff',r.rd>0?'up':r.rd<0?'dn':''],[r.l10||'-','Last 10'],[r.streak||'-','Streak',/^W/.test(r.streak)?'up':/^L/.test(r.streak)?'dn':''],
-    [r.left,'To play'],[h2h,'Left vs Texas']];
-  var now='';
-  if(today){
-    var st=(today.status||{}).abstractGameState, ls=today.linescore||{};
-    var home=today.teams.home.team.id===id, me=home?today.teams.home:today.teams.away, op=home?today.teams.away:today.teams.home;
-    var line=st==='Preview'?new Date(today.gameDate).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):
-      (me.score|0)+'-'+(op.score|0)+' '+(st==='Live'?((ls.isTopInning?'Top ':'Bot ')+ord(ls.currentInning||1)):'Final');
-    var good=st!=='Preview'&&(me.score|0)<(op.score|0);
-    now='<div class="wnow '+(st==='Live'?'lv ':'')+(st==='Preview'?'':(good?'good':'bad'))+'" data-pk="'+today.gamePk+'">'+
-      '<em>'+(st==='Live'?'Live now':st==='Final'?'Today':'Today')+'</em>'+imgT(op.team.id)+'<b>'+(home?'vs ':'@ ')+esc(nick(op.team.id))+'</b><span>'+esc(line)+'</span></div>';
-  } else now='<div class="wnow"><em>Today</em><b>Off day</b></div>';
-  var rows=sched.map(function(x){
-    var o=S.byId[x.opp], d=new Date(x.date+'T12:00');
-    return '<li data-pk="'+x.g.pk+'"><span class="d">'+(d.getMonth()+1)+'/'+d.getDate()+'</span><span class="va">'+(x.home?'vs':'@')+'</span>'+imgT(x.opp)+
-      '<span class="o">'+esc(nick(x.opp))+'</span><span class="r">'+(o?o.w+'-'+o.l:'')+'</span></li>';
-  }).join('');
-  el.innerHTML='<div class="gcard"><div class="gh"><h3 data-tid="'+id+'" style="cursor:pointer">'+esc(nick(id))+' watch</h3>'+
-    '<span class="gn">'+snWestLine(id)+'</span></div><div class="gb">'+
-    now+'<div class="tmk wk2">'+k.map(function(x){ return '<div><b class="'+(x[2]||'')+'">'+esc(x[0])+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>'+
-    '<ul class="wk">'+rows+'</ul></div></div>';
-}
-
 /* ================= v20: team pop-up (schedule, division, stats) ================= */
 S.tm={id:null,sch:{},lg:null,lgAt:0,view:'near'};
 function onErr(){ return 'onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}"'; }
@@ -3450,7 +3390,7 @@ window.addEventListener('hashchange',function(){ if(!$('tmod').hidden) closeTeam
 function renderAll(){
   if(!S.stand||!S.byId[FAV]) return;
   try{
-    renderBar(); renderOdds(); renderTonight(); renderWatch(); renderBoard(); renderSched(); renderPath(); renderTables(); renderStandings(); renderRunIn(); renderSeason(); gcRender();
+    renderBar(); renderOdds(); renderTonight(); renderBoard(); renderSched(); renderPath(); renderTables(); renderStandings(); renderRunIn(); renderSeason(); gcRender();
     $('err').innerHTML='';
   }catch(e){
     $('err').innerHTML='<div class="err">Render problem: '+esc(e.message)+'</div>';
@@ -3465,7 +3405,7 @@ function fail(e){
 }
 
 function tickFast(){
-  loadToday().then(function(){ renderBar(); renderTonight(); renderWatch(); renderBoard(); if(S.day===0) renderSched(); if(S.view==='season') renderSeason(); }).catch(fail);
+  loadToday().then(function(){ renderBar(); renderTonight(); renderBoard(); if(S.day===0) renderSched(); if(S.view==='season') renderSeason(); }).catch(fail);
 }
 function tickSlow(){
   Promise.all([loadStandings(),loadRest()]).then(renderAll).catch(fail);
@@ -3500,7 +3440,7 @@ function fastLoop(){
   var anyLive=(S.games||[]).some(function(g){return g.status&&g.status.abstractGameState==='Live';});
   fastTimer=setTimeout(function(){
     if(document.hidden) return fastLoop();
-    loadToday().then(function(){ renderBar(); renderTonight(); renderWatch(); renderBoard(); if(S.day===0) renderSched(); if(S.view==='season') renderSeason(); }).catch(fail).then(fastLoop);
+    loadToday().then(function(){ renderBar(); renderTonight(); renderBoard(); if(S.day===0) renderSched(); if(S.view==='season') renderSeason(); }).catch(fail).then(fastLoop);
   }, anyLive?5000:25000);
 }
 fastLoop();
