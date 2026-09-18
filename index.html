@@ -1777,7 +1777,7 @@ function renderTables(){
   var R=races();
   var pool=R.pool.slice(0,7);
   $('tables').innerHTML=stTable('AL West','division winner is in',R.west)+
-                        stTable('Wild Card','top three go, line is under the third',pool,3);
+                        stTable('Wild Card','top three go, GB is to the third spot',pool,3,{ref:pool[2]||pool[0]}); /* v28: GB measured to the cut line, not the leader */
 }
 
 /* v8: full league standings */
