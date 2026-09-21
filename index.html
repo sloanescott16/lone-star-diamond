@@ -235,6 +235,25 @@ table.st td.pos{color:var(--good)} table.st td.neg{color:var(--bad)}
 table.st td.faint{color:var(--dim)}
 .stkey{font-size:11px; color:var(--dim); margin:-4px 0 14px}
 .stkey b{color:var(--mute); font-weight:700}
+/* v32: phones. Cells never wrap, the team column stays put while a full table scrolls sideways, Race tables drop Pct and Left */
+table.st th,table.st td{white-space:nowrap}
+table.st.full th:first-child,table.st.full td:first-child{position:sticky; left:0; z-index:1; background:var(--card)}
+table.st.full tr.fav td:first-child{background:#141c2c}
+table.st.full td:first-child{box-shadow:inset -1px 0 0 var(--line)}
+table.st.full tr.fav td:first-child{box-shadow:inset 3px 0 0 var(--blue), inset -1px 0 0 var(--line)}
+@media (max-width:640px){
+  table.st{min-width:0}
+  table.st th,table.st td{padding:7px 5px}
+  table.st td:first-child,table.st th:first-child{padding-left:8px}
+  table.st .ph{display:none}
+  table.st td.od{min-width:42px; font-size:14px}
+  table.st .rec{font-size:14px}
+  table.st .tm{gap:6px} table.st .tm img{width:18px; height:18px}
+  table.st.full{min-width:0}
+  table.st.full th,table.st.full td{padding-left:6px; padding-right:6px}
+  .tb .tbh{padding:9px 10px}
+  .stkey{margin-top:2px}
+}
 .stlg{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; align-items:start}
 .stcol{display:flex; flex-direction:column; gap:12px; min-width:0}
 @media (max-width:900px){ .stlg{grid-template-columns:1fr} }
@@ -1797,15 +1816,15 @@ function stTable(title,sub,rows,cutAfter,o){
       '<td><span class="tm"><img src="'+logo(r.id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
       esc(nick(r.id))+clinchTag(r)+'</span></td>'+
       '<td class="rec">'+r.w+'-'+r.l+'</td>'+
-      '<td>'+(r.pct?r.pct.toFixed(3).replace(/^0/,''):'.000')+'</td>'+
+      '<td class="ph">'+(r.pct?r.pct.toFixed(3).replace(/^0/,''):'.000')+'</td>'+
       '<td class="gb'+(gb<=0?' zero':'')+'">'+gbs+'</td>'+
       oddsCell(od[r.id],'all',r.clinch)+
-      '<td>'+r.left+'</td>'+
+      '<td class="ph">'+r.left+'</td>'+
       (o.noE?'':'<td>'+(r.id===FAV?'&mdash;':(m>0?m:'<span style="color:var(--bad)">out</span>'))+'</td>')+
       '<td class="str '+sc+'">'+esc(r.streak||'')+'</td></tr>';
   }).join('');
   return '<div class="tb"><div class="tbh"><h3>'+esc(title)+'</h3><span>'+esc(sub)+'</span></div>'+
-    '<div class="scrollx"><table class="st"><thead><tr><th>Team</th><th>W-L</th><th>Pct</th><th>GB</th><th title="Chance of making the postseason">Odds</th><th>Left</th>'+
+    '<div class="scrollx"><table class="st"><thead><tr><th>Team</th><th>W-L</th><th class="ph">Pct</th><th>GB</th><th title="Chance of making the postseason">Odds</th><th class="ph">Left</th>'+
     (o.noE?'':'<th title="Combined rival wins and Rangers losses that ends it">E#</th>')+'<th>Strk</th></tr></thead>'+
     '<tbody>'+body+'</tbody></table></div></div>';
 }
