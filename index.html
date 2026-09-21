@@ -899,6 +899,17 @@ table.rs .pl.lgo img{border-radius:0; background:none; object-fit:contain; width
 .pmh .sub{color:var(--mute); font-size:13px; margin-top:4px; display:flex; align-items:center; gap:6px; flex-wrap:wrap}
 .pmh .sub img{width:18px; height:18px; object-fit:contain}
 .pmh .sub a{cursor:pointer; text-decoration:underline; text-underline-offset:3px}
+/* v30: player card everywhere */
+.pmh{flex-wrap:wrap}
+.pmh .pmx{margin-left:auto; display:flex; gap:6px; align-items:center}
+.pmh .pmx a.tmx{text-decoration:none}
+.plg{display:flex; flex-wrap:wrap; gap:6px 16px; font-size:13px; color:var(--mute)}
+.plg span i{font-style:normal; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); margin-right:5px}
+.pnl{cursor:pointer; text-decoration:underline dotted; text-underline-offset:3px; text-decoration-color:var(--dim)}
+.pnl:hover{color:#8fb6ff; text-decoration-color:#8fb6ff}
+.il div[data-plid],.ptw .p[data-plid],table.gt tr[data-plid]{cursor:pointer}
+.il div[data-plid]:hover b,.ptw .p[data-plid]:hover b,table.gt tr[data-plid]:hover td.nm{color:#8fb6ff}
+@media (max-width:640px){ .pmh .pmx{width:100%; justify-content:flex-end} }
 .pbars{display:flex; align-items:flex-end; gap:2px; height:70px; margin:6px 0 2px; border-bottom:1px solid var(--line)}
 .pbars i{flex:1; min-width:3px; background:#2a3140; border-radius:2px 2px 0 0; cursor:pointer; position:relative}
 .pbars i.p{background:var(--blue)} .pbars i.z{height:3px!important; background:#2a3140}
@@ -2011,7 +2022,7 @@ function loadIL(id){
   j(API+'/teams/'+id+'/roster?rosterType=40Man&season='+SEASON).then(function(d){
     S.gc.act=S.gc.act||{}; (d.roster||[]).forEach(function(r){ if(r.person&&(!r.status||r.status.code==='A')) S.gc.act[r.person.id]=id; });
     S.gc.il[id]=(d.roster||[]).filter(function(r){ return r.status&&/^D\d/.test(r.status.code||''); })
-      .map(function(r){ return {n:(r.person||{}).fullName||'',pos:(r.position||{}).abbreviation||'',st:(r.status.description||'').replace(/^Injured\s*/,'').replace(/-Day$/,'-Day IL'),d:+((r.status.code||'').slice(1))||99}; })
+      .map(function(r){ return {id:(r.person||{}).id||'',n:(r.person||{}).fullName||'',pos:(r.position||{}).abbreviation||'',st:(r.status.description||'').replace(/^Injured\s*/,'').replace(/-Day$/,'-Day IL'),d:+((r.status.code||'').slice(1))||99}; })
       .sort(function(a,b){ return a.d-b.d||a.n.localeCompare(b.n); });
     if(S.view==='game') gcRender();
   }).catch(function(){ S.gc.il[id]=[]; });
@@ -2102,7 +2113,7 @@ function personCard(F,id,side,role){
   var tid=F.gameData.teams[side].id;
   return '<div class="pp '+(role==='P'?'pit':'bat')+'"><img src="'+shot(id)+'" alt="" loading="lazy" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
     '<div class="pi"><div class="rl">'+imgT(tid)+(role==='P'?'Pitching':'At bat')+'</div>'+
-    '<div class="pn">'+esc(p.fullName||'')+'</div><div class="ph">'+esc(hand+(pos&&pos!=='P'?' · '+pos:'')+(bp.jerseyNumber?' · #'+bp.jerseyNumber:''))+'</div>'+
+    '<div class="pn">'+plx(id,p.fullName||'')+'</div><div class="ph">'+esc(hand+(pos&&pos!=='P'?' · '+pos:'')+(bp.jerseyNumber?' · #'+bp.jerseyNumber:''))+'</div>'+
     '<div class="pln">Today: '+esc(line)+'</div><div class="pss">'+esc(season)+'</div></div></div>';
 }
 
@@ -2162,11 +2173,11 @@ function gcMatchup(F){
     var top=cur.about.isTopInning;
     body+='<div class="mu">'+personCard(F,cur.matchup.pitcher.id,top?'home':'away','P')+personCard(F,cur.matchup.batter.id,top?'away':'home','B')+'</div>';
     var o=ls.offense||{};
-    body+='<div class="deck">'+(o.onDeck?'<span>On deck <b>'+esc(o.onDeck.fullName)+'</b></span>':'')+(o.inHole?'<span>In the hole <b>'+esc(o.inHole.fullName)+'</b></span>':'')+
+    body+='<div class="deck">'+(o.onDeck?'<span>On deck <b>'+plx(o.onDeck.id,o.onDeck.fullName)+'</b></span>':'')+(o.inHole?'<span>In the hole <b>'+plx(o.inHole.id,o.inHole.fullName)+'</b></span>':'')+
       '<span>Pitch count <b>'+((bxP(F,top?'home':'away',cur.matchup.pitcher.id).stats||{}).pitching||{}).numberOfPitches+'</b></span></div>';
   } else if(between){
     var o2=ls.offense||{};
-    var due=[o2.batter,o2.onDeck,o2.inHole].filter(Boolean).map(function(p){ return '<b>'+esc(p.fullName)+'</b>'; }).join(', ');
+    var due=[o2.batter,o2.onDeck,o2.inHole].filter(Boolean).map(function(p){ return '<b>'+plx(p.id,p.fullName)+'</b>'; }).join(', ');
     body+='<div class="deck" style="border-top:0;margin-top:0;padding-top:0"><span>'+(ls.inningState==='Middle'?'Middle':'End')+' of the '+ord(ls.currentInning)+'.'+(due?' Due up: '+due:'')+'</span></div>';
   } else if(st==='Final'){
     body+=decisionsHTML(F);
@@ -2176,9 +2187,9 @@ function gcMatchup(F){
   if(play){
     var ev=pitchesOf(play), lp=ev[ev.length-1];
     var done=play.about&&play.about.isComplete;
-    if(pinned) label=esc(pinned.matchup.batter.fullName)+' vs '+esc(pinned.matchup.pitcher.fullName)+', '+ord(pinned.about.inning)+' <button class="lnk" data-gcpa="-1">Back to live</button>';
+    if(pinned) label=plx(pinned.matchup.batter.id,pinned.matchup.batter.fullName)+' vs '+plx(pinned.matchup.pitcher.id,pinned.matchup.pitcher.fullName)+', '+ord(pinned.about.inning)+' <button class="lnk" data-gcpa="-1">Back to live</button>';
     else if(st==='Live'&&!done&&!between) label='This at-bat';
-    else label=(st==='Final'?'Final at-bat: ':'Last at-bat: ')+esc(play.matchup.batter.fullName);
+    else label=(st==='Final'?'Final at-bat: ':'Last at-bat: ')+plx(play.matchup.batter.id,play.matchup.batter.fullName);
     if(lp){
       var d=lp.details||{}, pd=lp.pitchData||{};
       body+='<div class="lastp '+pcls(d)+'"><b>'+esc((d.call||{}).description||d.description||'')+'</b><span>'+esc([(d.type||{}).description,hitTxt(lp)].filter(Boolean).join(' · '))+'</span>'+
@@ -2195,7 +2206,7 @@ function decisionsHTML(F){
   [['winner','W'],['loser','L'],['save','S']].forEach(function(k){
     var p=dc[k[0]]; if(!p) return;
     var side=bxP(F,'away',p.id).person?'away':'home', x=(bxP(F,side,p.id).stats||{}).pitching||{};
-    out.push('<span><i>'+k[1]+'</i><b>'+esc(p.fullName)+'</b> '+(x.inningsPitched||'')+' IP, '+(x.earnedRuns|0)+' ER, '+(x.strikeOuts|0)+' K</span>');
+    out.push('<span><i>'+k[1]+'</i><b>'+plx(p.id,p.fullName)+'</b> '+(x.inningsPitched||'')+' IP, '+(x.earnedRuns|0)+' ER, '+(x.strikeOuts|0)+' K</span>');
   });
   return out.length?'<div class="decs" style="margin-top:0;padding-top:0;border-top:0">'+out.join('')+'</div>':'';
 }
@@ -2207,7 +2218,7 @@ function gcPreview(F){
     if(!p){ body+='<div class="pp '+(side==='home'?'bat':'pit')+'"><div class="pi"><div class="rl">'+imgT(tid)+'Probable</div><div class="pn">TBD</div></div></div>'; return; }
     var y=(bxP(F,side,p.id).seasonStats||{}).pitching||{}, pl=gd.players['ID'+p.id]||{};
     body+='<div class="pp '+(side==='home'?'bat':'pit')+'"><img src="'+shot(p.id)+'" alt="" loading="lazy" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
-      '<div class="pi"><div class="rl">'+imgT(tid)+'Probable</div><div class="pn">'+esc(p.fullName)+'</div>'+
+      '<div class="pi"><div class="rl">'+imgT(tid)+'Probable</div><div class="pn">'+plx(p.id,p.fullName)+'</div>'+
       '<div class="ph">'+esc(((pl.pitchHand||{}).code||'')+'HP')+'</div>'+
       '<div class="pln">'+(y.wins!=null?y.wins+'-'+y.losses+' · ':'')+'ERA '+esc(y.era||'-')+'</div>'+
       '<div class="pss">'+(y.strikeOuts!=null?y.strikeOuts+' K · ':'')+'WHIP '+esc(y.whip||'-')+(y.inningsPitched?' · '+y.inningsPitched+' IP':'')+'</div></div></div>';
@@ -2256,7 +2267,7 @@ function preStarter(F,side){
   var gd=F.gameData, p=(gd.probablePitchers||{})[side], tid=gd.teams[side].id;
   if(!p) return '<div><div class="pp"><div class="pi"><div class="rl">'+imgT(tid)+esc(gd.teams[side].teamName)+'</div><div class="pn">TBD</div><div class="pss">Starter not announced yet</div></div></div></div>';
   var y=(bxP(F,side,p.id).seasonStats||{}).pitching||{}, pl=gd.players['ID'+p.id]||{}, D=S.pre.pit[p.id];
-  var h='<div class="pp"><img src="'+shot(p.id)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'"><div class="pi"><div class="rl">'+imgT(tid)+esc(gd.teams[side].teamName)+' starter</div><div class="pn">'+esc(p.fullName)+'</div>'+
+  var h='<div class="pp"><img src="'+shot(p.id)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'"><div class="pi"><div class="rl">'+imgT(tid)+esc(gd.teams[side].teamName)+' starter</div><div class="pn">'+plx(p.id,p.fullName)+'</div>'+
     '<div class="ph">'+esc(((pl.pitchHand||{}).code||'')+'HP')+(pl.currentAge?' · age '+pl.currentAge:'')+(pl.primaryNumber?' · #'+esc(pl.primaryNumber):'')+'</div></div></div>';
   var cells=[[y.wins!=null?y.wins+'-'+y.losses:'-','W-L'],[f3(y.era),'ERA'],[f3(y.whip),'WHIP'],[f3(y.inningsPitched),'IP'],[f3(y.strikeoutsPer9Inn),'K / 9'],[f3(y.walksPer9Inn),'BB / 9'],[f3(y.homeRunsPer9),'HR / 9'],[f3(y.gamesStarted),'Starts']];
   h+='<div class="pgrid">'+cells.map(function(c){ return '<div><b>'+esc(c[0])+'</b><span>'+c[1]+'</span></div>'; }).join('')+'</div>';
@@ -2290,7 +2301,7 @@ function preBvP(F){
       .sort(function(a,b){ return (b.stat.plateAppearances||0)-(a.stat.plateAppearances||0); }).slice(0,8);
     if(!rows.length) return; any=true;
     out+='<div class="psub" style="display:flex;gap:6px;align-items:center">'+imgT(D.opp).replace('<img','<img style="width:16px;height:16px;object-fit:contain"')+esc(nick(D.opp))+' vs '+esc(p.fullName)+'</div><table class="ptab"><thead><tr><th>Batter</th><th>PA</th><th>H</th><th>HR</th><th>BB</th><th>K</th><th>AVG</th><th>OPS</th></tr></thead><tbody>'+rows.map(function(x){ var t=x.stat;
-      return '<tr><td><b>'+esc(x.batter.fullName)+'</b></td><td>'+(t.plateAppearances|0)+'</td><td>'+(t.hits|0)+'</td><td>'+(t.homeRuns|0)+'</td><td>'+(t.baseOnBalls|0)+'</td><td>'+(t.strikeOuts|0)+'</td><td><b>'+f3(t.avg)+'</b></td><td>'+f3(t.ops)+'</td></tr>'; }).join('')+'</tbody></table>';
+      return '<tr><td><b>'+plx(x.batter.id,x.batter.fullName)+'</b></td><td>'+(t.plateAppearances|0)+'</td><td>'+(t.hits|0)+'</td><td>'+(t.homeRuns|0)+'</td><td>'+(t.baseOnBalls|0)+'</td><td>'+(t.strikeOuts|0)+'</td><td><b>'+f3(t.avg)+'</b></td><td>'+f3(t.ops)+'</td></tr>'; }).join('')+'</tbody></table>';
   });
   return any?card('Batters vs the starters',out,'o6','<span class="gn">career, current rosters, 3+ PA</span>'):'';
 }
@@ -2300,7 +2311,7 @@ function preLineups(F){
     var T=F.liveData.boxscore.teams[side]||{}, bo=T.battingOrder||[];
     body+='<div><h4>'+esc(gd.teams[side].teamName)+'</h4>'+(bo.length?'<table class="ptab"><thead><tr><th></th><th>Pos</th><th>AVG</th><th>HR</th><th>OPS</th></tr></thead><tbody>'+bo.map(function(id,i){
       var x=bxP(F,side,id), z=(x.seasonStats||{}).batting||{};
-      return '<tr><td>'+(i+1)+'. <b>'+esc(pName(F,id))+'</b></td><td>'+esc((x.position||{}).abbreviation||'')+'</td><td>'+f3(z.avg)+'</td><td>'+(z.homeRuns|0)+'</td><td>'+f3(z.ops)+'</td></tr>';
+      return '<tr><td>'+(i+1)+'. <b>'+plx(id,pName(F,id))+'</b></td><td>'+esc((x.position||{}).abbreviation||'')+'</td><td>'+f3(z.avg)+'</td><td>'+(z.homeRuns|0)+'</td><td>'+f3(z.ops)+'</td></tr>';
     }).join('')+'</tbody></table>':'<div class="empty">Not posted yet. Usually a few hours before first pitch.</div>')+'</div>';
   });
   return card('Lineups',body+'</div>','o5');
@@ -2339,7 +2350,7 @@ function prePlayers(F){
     return '<div><h4>'+imgT(id)+esc(nick(id))+'</h4>'+want.map(function(w){
       var c=Ls.filter(function(x){ return x.leaderCategory===w[0]&&x.statGroup===w[1]; })[0], x=c&&c.leaders&&c.leaders[0];
       if(!x||!x.person) return '';
-      return '<div class="p"><img src="'+shot(x.person.id)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'"><div><i>'+lab[w[0]]+'</i><b>'+esc(x.person.fullName)+'</b><em>'+esc(x.value)+'</em></div></div>';
+      return '<div class="p" data-plid="'+esc(x.person.id)+'" data-pname="'+esc(x.person.fullName)+'" title="Player card"><img src="'+shot(x.person.id)+'" alt="" loading="lazy" onerror="this.style.visibility=\'hidden\'"><div><i>'+lab[w[0]]+'</i><b>'+esc(x.person.fullName)+'</b><em>'+esc(x.value)+'</em></div></div>';
     }).join('')+'</div>';
   });
   return card('Players to watch','<div class="ptw">'+cols.join('')+'</div>','o7','<span class="gn">team leaders</span>');
@@ -2454,7 +2465,7 @@ function gcScoring(F){
   body+=list.slice().reverse().map(function(p){
     var a=p.about, r=p.result, bt=a.isTopInning?A:H;
     return '<div class="sp"><span class="in">'+imgT(bt)+(a.isTopInning?'▲':'▼')+a.inning+'</span>'+
-      '<span>'+esc(r.description)+wpaChip(wpaFor(F,wm[a.atBatIndex]))+'</span>'+
+      '<span>'+linkNames(esc(r.description))+wpaChip(wpaFor(F,wm[a.atBatIndex]))+'</span>'+
       '<span class="n'+(a.isTopInning?' up':'')+'">'+r.awayScore+'</span><span class="n'+(a.isTopInning?'':' up')+'">'+r.homeScore+'</span></div>';
   }).join('');
   return card('Scoring summary',body,'o4','<span class="gn">win chance swing for '+esc(ab(gcPersp(F)))+'</span>');
@@ -2467,7 +2478,7 @@ function paRow(F,p){
   var ev=pitchesOf(p), key='pa'+a.atBatIndex, done=a.isComplete;
   var acts=(p.playEvents||[]).filter(function(e){ return e.type==='action'&&e.details&&e.details.description; })
     .map(function(e){ return '<div class="act">'+esc(e.details.description)+'</div>'; }).join('');
-  var head=done?'<b>'+esc(r.event||'')+'</b> '+esc(r.description||''):'<b>Now batting</b> '+esc((m.batter||{}).fullName||'')+' vs '+esc((m.pitcher||{}).fullName||'');
+  var head=done?'<b>'+esc(r.event||'')+'</b> '+linkNames(esc(r.description||'')):'<b>Now batting</b> '+plx((m.batter||{}).id,(m.batter||{}).fullName||'')+' vs '+plx((m.pitcher||{}).id,(m.pitcher||{}).fullName||'');
   var sc=a.isScoringPlay?'<span class="psc">'+ab(gd.teams.away.id)+' '+r.awayScore+' · '+ab(gd.teams.home.id)+' '+r.homeScore+'</span>':'';
   var seq=ev.map(function(e){
     var d=e.details||{}, pd=e.pitchData||{}, h=hitTxt(e);
@@ -2480,6 +2491,35 @@ function paRow(F,p){
     '<div class="pseq">'+(seq||'<div>No pitches</div>')+(ev.length?'<div><button class="lnk" data-gcpa="'+a.atBatIndex+'">Show on the zone</button></div>':'')+'</div></details>'+acts;
 }
 
+/* v30: every player name opens the card */
+function plx(id,name){ return id?'<span class="pnl" data-plid="'+esc(id)+'" data-pname="'+esc(name||'')+'" title="Player card">'+esc(name||'')+'</span>':esc(name||''); }
+function plNameMap(){
+  var F=S.gc&&S.gc.feed, P=F&&F.gameData&&F.gameData.players, key=(S.gc&&S.gc.pk)+':'+(P?Object.keys(P).length:0);
+  if(S.pl.nmap&&S.pl.nmap.key===key) return S.pl.nmap;
+  var m={}, amb={};
+  function add(k,id,nm){ if(!k) return; if(m[k]&&m[k].id!==id) amb[k]=1; else m[k]={id:id,nm:nm}; }
+  Object.keys(P||{}).forEach(function(k){ var p=P[k]; if(!p||!p.id) return; var id=String(p.id), full=p.fullName||'';
+    add(full,id,full); if(p.boxscoreName&&p.boxscoreName!==full) add(p.boxscoreName,id,full); var parts=full.split(' '); if(parts.length>=2){ add(parts[0][0]+'. '+parts.slice(1).join(' '),id,full); } });
+  Object.keys(amb).forEach(function(k){ delete m[k]; });
+  var keys=Object.keys(m).filter(function(k){return k.length>3}).sort(function(a,b){return b.length-a.length});
+  S.pl.nmap={key:key, m:m, re:keys.length?new RegExp("(^|[^A-Za-z.'])("+keys.map(function(k){return k.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}).join('|')+")(?![A-Za-z'])",'g'):null};
+  return S.pl.nmap;
+}
+function linkNames(html){
+  var nm=plNameMap(); if(!nm.re) return html;
+  return html.replace(nm.re,function(all,pre,k){ var hit=nm.m[k]; return hit?pre+'<span class="pnl" data-plid="'+hit.id+'" data-pname="'+esc(hit.nm)+'" title="Player card">'+k+'</span>':all; });
+}
+function snPlInGame(id){
+  var F=S.gc&&S.gc.feed; if(!F||!F.liveData||!F.liveData.boxscore) return '';
+  var side=bxP(F,'away',id).person?'away':bxP(F,'home',id).person?'home':null; if(!side) return '';
+  var x=bxP(F,side,id), st=x.stats||{}, b=st.batting||{}, p=st.pitching||{}, out='';
+  if(b.plateAppearances|0||b.atBats|0) out+='<span><i>AB</i>'+(b.atBats|0)+'</span><span><i>H</i>'+(b.hits|0)+'</span><span><i>R</i>'+(b.runs|0)+'</span><span><i>HR</i>'+(b.homeRuns|0)+'</span><span><i>RBI</i>'+(b.rbi|0)+'</span><span><i>BB</i>'+(b.baseOnBalls|0)+'</span><span><i>K</i>'+(b.strikeOuts|0)+'</span>'+(b.stolenBases|0?'<span><i>SB</i>'+(b.stolenBases|0)+'</span>':'');
+  if(p.inningsPitched) out+='<span><i>IP</i>'+esc(p.inningsPitched)+'</span><span><i>H</i>'+(p.hits|0)+'</span><span><i>R</i>'+(p.runs|0)+'</span><span><i>ER</i>'+(p.earnedRuns|0)+'</span><span><i>BB</i>'+(p.baseOnBalls|0)+'</span><span><i>K</i>'+(p.strikeOuts|0)+'</span><span><i>Pitches</i>'+(p.numberOfPitches|0)+'</span>';
+  if(!out) return '';
+  var gd=F.gameData, ls=F.liveData.linescore||{}, live=gd.status.abstractGameState==='Live', fin=gd.status.abstractGameState==='Final';
+  var sc=live||fin?ab(gd.teams.away.id)+' '+(((ls.teams||{}).away||{}).runs|0)+' · '+ab(gd.teams.home.id)+' '+(((ls.teams||{}).home||{}).runs|0):ab(gd.teams.away.id)+' at '+ab(gd.teams.home.id);
+  return '<div class="tmc"><h3>'+(live?'In this game':'In the game')+'<small>'+esc(sc)+'</small></h3><div class="plg">'+out+'</div></div>';
+}
 function gcPBP(F){
   var pl=F.liveData.plays, all=pl.allPlays||[], gd=F.gameData, inn=(F.liveData.linescore||{}).innings||[];
   var halves=[];
@@ -2519,7 +2559,7 @@ function gcBox(F){
       hit.map(function(x){
         var b=(x.stats||{}).batting||{}, z=(x.seasonStats||{}).batting||{}, gs=x.gameStatus||{};
         tot.ab+=b.atBats|0; tot.r+=b.runs|0; tot.h+=b.hits|0; tot.rbi+=b.rbi|0; tot.bb+=b.baseOnBalls|0; tot.k+=b.strikeOuts|0;
-        return '<tr class="'+(+x.battingOrder%100?'sub':'')+(gs.isCurrentBatter?' cur':'')+'"><td class="nm">'+esc(pName(F,x.person.id))+'<i>'+esc((x.position||{}).abbreviation||'')+'</i></td>'+
+        return '<tr data-plid="'+esc(x.person.id)+'" data-pname="'+esc((x.person||{}).fullName||pName(F,x.person.id))+'" title="Player card" class="'+(+x.battingOrder%100?'sub':'')+(gs.isCurrentBatter?' cur':'')+'"><td class="nm">'+esc(pName(F,x.person.id))+'<i>'+esc((x.position||{}).abbreviation||'')+'</i></td>'+
           '<td>'+(b.atBats|0)+'</td><td>'+(b.runs|0)+'</td><td>'+(b.hits|0)+'</td><td>'+(b.rbi|0)+'</td><td>'+(b.baseOnBalls|0)+'</td><td>'+(b.strikeOuts|0)+'</td><td>'+esc(z.avg||'')+'</td></tr>';
       }).join('')+
       '<tr class="tot"><td>Team</td><td>'+tot.ab+'</td><td>'+tot.r+'</td><td>'+tot.h+'</td><td>'+tot.rbi+'</td><td>'+tot.bb+'</td><td>'+tot.k+'</td><td></td></tr></tbody></table></div>';
@@ -2530,7 +2570,7 @@ function gcBox(F){
       pit.map(function(x){
         var p=(x.stats||{}).pitching||{}, z=(x.seasonStats||{}).pitching||{}, id=x.person.id, gs=x.gameStatus||{};
         var tag=dc.winner&&dc.winner.id===id?'W':dc.loser&&dc.loser.id===id?'L':dc.save&&dc.save.id===id?'S':'';
-        return '<tr class="'+(gs.isCurrentPitcher&&gd.status.abstractGameState==='Live'?'cur':'')+'"><td class="nm">'+esc(pName(F,id))+(tag?'<span class="dec '+tag+'">'+tag+'</span>':'')+'</td>'+
+        return '<tr data-plid="'+esc(id)+'" data-pname="'+esc(((F.gameData.players||{})['ID'+id]||{}).fullName||pName(F,id))+'" title="Player card" class="'+(gs.isCurrentPitcher&&gd.status.abstractGameState==='Live'?'cur':'')+'"><td class="nm">'+esc(pName(F,id))+(tag?'<span class="dec '+tag+'">'+tag+'</span>':'')+'</td>'+
           '<td>'+(p.inningsPitched||'0.0')+'</td><td>'+(p.hits|0)+'</td><td>'+(p.runs|0)+'</td><td>'+(p.earnedRuns|0)+'</td><td>'+(p.baseOnBalls|0)+'</td><td>'+(p.strikeOuts|0)+'</td>'+
           '<td>'+(p.numberOfPitches|0)+'-'+(p.strikes|0)+'</td><td>'+esc(z.era||'')+'</td></tr>';
       }).join('')+'</tbody></table></div>';
@@ -2636,7 +2676,7 @@ function gcIL(F){
   var body=['away','home'].map(function(s){
     var t=gd.teams[s], L=S.gc.il[t.id];
     var rows=L==='loading'||!L?'<div><span>Loading</span></div>':!L.length?'<div><span>Nobody on the IL.</span></div>':
-      L.map(function(x){ return '<div><b>'+esc(x.n)+'</b><span>'+esc(x.pos)+'</span><span>'+esc(x.st)+'</span></div>'; }).join('');
+      L.map(function(x){ return '<div'+(x.id?' data-plid="'+esc(x.id)+'" data-pname="'+esc(x.n)+'" title="Player card"':'')+'><b>'+esc(x.n)+'</b><span>'+esc(x.pos)+'</span><span>'+esc(x.st)+'</span></div>'; }).join('');
     return '<h4>'+imgT(t.id)+esc(t.teamName)+'</h4>'+rows;
   }).join('');
   return card('Injured list','<div class="il">'+body+'</div>','o8');
@@ -3221,7 +3261,9 @@ function snPlRender(){
   if(per&&per.batSide&&per.pitchHand) bits.push('B/T '+per.batSide.code+'/'+per.pitchHand.code);
   if(per&&per.height) bits.push(per.height+', '+per.weight+' lb');
   if(per&&per.currentAge) bits.push(per.currentAge+' years old');
-  var h='<div class="pmh">'+snHs(id,'hs')+'<div style="min-width:0"><h2>'+esc(name)+'</h2><div class="sub">'+esc(bits.filter(Boolean).join(' · '))+(TEAM[tid]?' '+imgT(tid)+'<a data-tid="'+tid+'">'+esc(nick(tid))+'</a>':'')+'</div></div><button class="tmx" type="button" data-plclose style="margin-left:auto">Close</button></div>';
+  var h='<div class="pmh">'+snHs(id,'hs')+'<div style="min-width:0"><h2>'+esc(name)+'</h2><div class="sub">'+esc(bits.filter(Boolean).join(' · '))+(TEAM[tid]?' '+imgT(tid)+'<a data-tid="'+tid+'">'+esc(nick(tid))+'</a>':'')+'</div></div>'+
+    '<span class="pmx"><a class="tmx" href="https://x.com/search?src=typed_query&q='+encodeURIComponent(name)+'" target="_blank" rel="noopener noreferrer" title="Latest posts about '+esc(name)+' on X">Search X</a><button class="tmx" type="button" data-plclose>Close</button></span></div>';
+  h+=snPlInGame(id);
   // season by season
   if(per&&per.stats){
     per.stats.filter(function(s){ return s.type.displayName==='yearByYear'; }).forEach(function(s){
@@ -3267,7 +3309,7 @@ function snClick(e){
   if((b=t.closest('[data-plm]'))){ S.pl.mode=b.getAttribute('data-plm'); snPlRender(); return true; }
   if((b=t.closest('#pmod [data-tid]'))){ var tid=b.getAttribute('data-tid'); snClosePlayer(); openTeam(tid); return true; }
   if((b=t.closest('#pmod [data-pk]'))){ var pk=b.getAttribute('data-pk'); snClosePlayer(); openGame(+pk); return true; }
-  if((b=t.closest('[data-plid]'))){ var nm=b.querySelector('b'); if(nm&&!S.pl.nm[b.getAttribute('data-plid')]) S.pl.nm[b.getAttribute('data-plid')]=nm.textContent; if(S.tm&&S.tm.id) closeTeam(); snOpenPlayer(b.getAttribute('data-plid')); return true; }
+  if((b=t.closest('[data-plid]'))){ var nm=b.getAttribute('data-pname')||(b.querySelector('b')||{}).textContent; if(nm&&!S.pl.nm[b.getAttribute('data-plid')]) S.pl.nm[b.getAttribute('data-plid')]=nm; if(S.tm&&S.tm.id) closeTeam(); snOpenPlayer(b.getAttribute('data-plid')); return true; }
   if((b=t.closest('.ldr [data-tid]'))){ openTeam(b.getAttribute('data-tid')); return true; }
   if((b=t.closest('[data-sea]'))){ S.sn.sea=b.getAttribute('data-sea'); S.sn.mon=null; S.sn.split=null; S.sn.onKey=''; renderSeason(); return true; }
   if((b=t.closest('[data-snto]'))){ snGo(b.getAttribute('data-snto')); return true; }
