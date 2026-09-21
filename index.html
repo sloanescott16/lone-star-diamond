@@ -222,6 +222,19 @@ body.v-home #secSched,body.v-live #secSched,body.v-stand #secSched{display:none}
 body.v-home #secStand,body.v-live #secStand,body.v-sched #secStand{display:none}
 body.v-stand #secLive,body.v-stand #secTonight,body.v-stand #secPath,body.v-stand #secRace,body.v-stand #secRun,body.v-stand #odds{display:none}
 #secStand{margin-top:16px}
+/* v31: full standings, every column plus playoff odds */
+table.st.full{min-width:880px}
+table.st.full td,table.st.full th{padding-left:7px; padding-right:7px}
+table.st td.od{font-family:var(--display); font-size:15px; font-weight:600; min-width:52px}
+table.st td.od.hi{color:var(--good)} table.st td.od.mid{color:var(--warn)} table.st td.od.lo{color:var(--mute)} table.st td.od.out{color:var(--bad)} table.st td.od.in{color:#6ee0a8}
+table.st td.od .ob{display:block; height:3px; border-radius:2px; background:#232936; margin-top:3px; overflow:hidden}
+table.st td.od .ob i{display:block; height:100%; border-radius:2px; background:currentColor}
+table.st .tm i.cl{font-style:normal; font-size:9.5px; font-weight:800; color:var(--good); border:1px solid rgba(55,192,125,.5); border-radius:3px; padding:0 4px; margin-left:2px}
+table.st .tm i.cl.e{color:var(--bad); border-color:rgba(224,71,91,.5)}
+table.st td.pos{color:var(--good)} table.st td.neg{color:var(--bad)}
+table.st td.faint{color:var(--dim)}
+.stkey{font-size:11px; color:var(--dim); margin:-4px 0 14px}
+.stkey b{color:var(--mute); font-weight:700}
 .stlg{display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; align-items:start}
 .stcol{display:flex; flex-direction:column; gap:12px; min-width:0}
 @media (max-width:900px){ .stlg{grid-template-columns:1fr} }
@@ -910,9 +923,11 @@ table.rs .pl.lgo img{border-radius:0; background:none; object-fit:contain; width
 .il div[data-plid],.ptw .p[data-plid],table.gt tr[data-plid]{cursor:pointer}
 .il div[data-plid]:hover b,.ptw .p[data-plid]:hover b,table.gt tr[data-plid]:hover td.nm{color:#8fb6ff}
 @media (max-width:640px){ .pmh .pmx{width:100%; justify-content:flex-end} }
-.pbars{display:flex; align-items:flex-end; gap:2px; height:70px; margin:6px 0 2px; border-bottom:1px solid var(--line)}
-.pbars i{flex:1; min-width:3px; background:#2a3140; border-radius:2px 2px 0 0; cursor:pointer; position:relative}
-.pbars i.p{background:var(--blue)} .pbars i.z{height:3px!important; background:#2a3140}
+/* v31: the bars share the card width whatever the game count, so the pop-up never scrolls sideways */
+.pbars{display:flex; align-items:flex-end; gap:1px; height:70px; margin:6px 0 2px; border-bottom:1px solid var(--line); overflow:hidden; min-width:0}
+.pbars i{flex:1 1 0; min-width:0; background:#2a3140; border-radius:2px 2px 0 0; cursor:pointer; position:relative}
+.tsheet{overflow-x:hidden}
+.pbars i.hit{background:var(--blue)} .pbars i.z{height:3px!important; background:#2a3140} /* v31: was .p, which collided with the Path card's .p padding and blew the bars up to 36px each */
 .pbars i:hover{outline:1px solid #fff}
 .pbk{font-size:10.5px; color:var(--dim); display:flex; justify-content:space-between}
 .sn-more{font:inherit; font-size:11px; font-weight:600; color:#8fb6ff; background:none; border:0; padding:6px 0 0; cursor:pointer}
@@ -1013,7 +1028,7 @@ table.rs .pl.lgo img{border-radius:0; background:none; object-fit:contain; width
 
   <section id="secStand">
     <div class="head"><h2>Standings</h2><span class="sub">all of MLB</span>
-      <span class="note">Ties sorted on record, not the official tiebreakers.</span></div>
+      <span class="note">Odds from 20,000 simulated finishes of the real remaining schedule. Ties sorted on record, not the official tiebreakers.</span></div>
     <div id="standAll"><div class="empty">Loading the standings</div></div>
   </section>
 
@@ -1121,7 +1136,8 @@ function loadStandings(){
                pct:(w+l)?w/(w+l):0,
                streak:(tr.streak&&tr.streak.streakCode)||'',
                left:null,
-               divRank:+tr.divisionRank||0, gb:tr.gamesBack, wcgb:tr.wildCardGamesBack, rd:tr.runDifferential, rs:tr.runsScored, ra:tr.runsAllowed};
+               divRank:+tr.divisionRank||0, gb:tr.gamesBack, wcgb:tr.wildCardGamesBack, rd:tr.runDifferential, rs:tr.runsScored, ra:tr.runsAllowed,
+               clinch:(tr.clinchIndicator||'').toLowerCase()}; /* v31: x playoffs, y division, z best record, w wild card, e eliminated */
         ((tr.records||{}).splitRecords||[]).forEach(function(s){ if(s.type==='lastTen') r.l10=s.wins+'-'+s.losses; if(s.type==='home') r.home=s.wins+'-'+s.losses; if(s.type==='away') r.away=s.wins+'-'+s.losses; });
         rows.push(r); byId[r.id]=r;
       });
@@ -1759,9 +1775,18 @@ function renderWhatIf(){
 
 /* ================= render: tables ================= */
 
+/* v31: playoff-odds cell shared by every standings table */
+function oddsCell(p,key,clinch){
+  if(clinch&&clinch!=='e') return '<td class="od in" title="Clinched">100%</td>';
+  if(clinch==='e') return '<td class="od out">out</td>';
+  if(!p) return '<td class="od lo">&mdash;</td>';
+  var v=p[key||'all'], c=v>=0.995?'in':v>=0.75?'hi':v>=0.25?'mid':v<=0?'out':'lo';
+  return '<td class="od '+c+'">'+pctTxt(v)+'<span class="ob"><i style="width:'+Math.round(v*100)+'%"></i></span></td>';
+}
+function clinchTag(r){ return r.clinch?'<i class="cl '+r.clinch+'" title="'+({x:'Clinched a playoff spot',y:'Clinched the division',z:'Clinched the best record',w:'Clinched a wild card',e:'Eliminated'}[r.clinch]||'')+'">'+r.clinch+'</i>':''; }
 function stTable(title,sub,rows,cutAfter,o){
   o=o||{};
-  var t=tex();
+  var t=tex(), od=oddsMap()||{};
   var top=o.ref||rows[0];
   var body=rows.map(function(r,i){
     var gb=((top.w-r.w)+(r.l-top.l))/2;
@@ -1770,17 +1795,53 @@ function stTable(title,sub,rows,cutAfter,o){
     var sc=(r.streak||'').charAt(0).toLowerCase();
     return '<tr data-tid="'+r.id+'" class="'+(r.id===FAV?'fav':'')+(o.me&&r.id===o.me?' me':'')+(cutAfter&&i===cutAfter-1?' cut':'')+'">'+
       '<td><span class="tm"><img src="'+logo(r.id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
-      esc(nick(r.id))+'</span></td>'+
+      esc(nick(r.id))+clinchTag(r)+'</span></td>'+
       '<td class="rec">'+r.w+'-'+r.l+'</td>'+
       '<td>'+(r.pct?r.pct.toFixed(3).replace(/^0/,''):'.000')+'</td>'+
       '<td class="gb'+(gb<=0?' zero':'')+'">'+gbs+'</td>'+
+      oddsCell(od[r.id],'all',r.clinch)+
       '<td>'+r.left+'</td>'+
       (o.noE?'':'<td>'+(r.id===FAV?'&mdash;':(m>0?m:'<span style="color:var(--bad)">out</span>'))+'</td>')+
       '<td class="str '+sc+'">'+esc(r.streak||'')+'</td></tr>';
   }).join('');
   return '<div class="tb"><div class="tbh"><h3>'+esc(title)+'</h3><span>'+esc(sub)+'</span></div>'+
-    '<div class="scrollx"><table class="st"><thead><tr><th>Team</th><th>W-L</th><th>Pct</th><th>GB</th><th>Left</th>'+
+    '<div class="scrollx"><table class="st"><thead><tr><th>Team</th><th>W-L</th><th>Pct</th><th>GB</th><th title="Chance of making the postseason">Odds</th><th>Left</th>'+
     (o.noE?'':'<th title="Combined rival wins and Rangers losses that ends it">E#</th>')+'<th>Strk</th></tr></thead>'+
+    '<tbody>'+body+'</tbody></table></div></div>';
+}
+
+/* v31: the full standings table, MLB.com columns plus playoff odds. o.wc: wild card table (GB to the cut, WC odds instead of division odds) */
+function stFull(title,sub,rows,cutAfter,o){
+  o=o||{};
+  var top=o.ref||rows[0], sd=seeds(), od=oddsMap()||{};
+  function rec(s){ return s||'&mdash;'; }
+  var body=rows.map(function(r,i){
+    var gb=gapBetween(top,r);
+    var gbs=gb===0&&o.ref?'&mdash;':gb<=0?(o.ref?'+'+num(-gb):'&mdash;'):num(gb);
+    var x=sd[r.id]||{}, wcs;
+    if(x.seed&&x.seed<=3) wcs='<td class="faint" title="Leads the division">&mdash;</td>';
+    else { var wg=x.wcgb||0; wcs='<td class="gb'+(wg<=0?' zero':'')+'">'+(wg===0?'&mdash;':wg<0?'+'+num(-wg):num(wg))+'</td>'; }
+    var sc=(r.streak||'').charAt(0).toLowerCase(), rd=r.rd|0;
+    return '<tr data-tid="'+r.id+'" class="'+(r.id===FAV?'fav':'')+(cutAfter&&i===cutAfter-1?' cut':'')+'">'+
+      '<td><span class="tm"><img src="'+logo(r.id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
+      esc(nick(r.id))+clinchTag(r)+'</span></td>'+
+      '<td class="rec">'+r.w+'-'+r.l+'</td>'+
+      '<td>'+(r.pct?r.pct.toFixed(3).replace(/^0/,''):'.000')+'</td>'+
+      '<td class="gb'+(gb<=0?' zero':'')+'">'+gbs+'</td>'+
+      oddsCell(od[r.id],'all',r.clinch)+
+      oddsCell(od[r.id],o.wc?'wc':'div',o.wc?(r.clinch==='w'||r.clinch==='e'?r.clinch:''):(r.clinch==='y'||r.clinch==='e'?r.clinch:''))+
+      (o.wc?'':wcs)+
+      '<td>'+rec(r.l10)+'</td>'+
+      '<td class="str '+sc+'">'+esc(r.streak||'')+'</td>'+
+      '<td>'+rec(r.home)+'</td><td>'+rec(r.away)+'</td>'+
+      '<td>'+(r.rs==null?'&mdash;':r.rs)+'</td><td>'+(r.ra==null?'&mdash;':r.ra)+'</td>'+
+      '<td class="'+(rd>0?'pos':rd<0?'neg':'')+'">'+(rd>0?'+':'')+(r.rd==null?'&mdash;':rd)+'</td>'+
+      '<td>'+r.left+'</td></tr>';
+  }).join('');
+  return '<div class="tb"><div class="tbh"><h3>'+esc(title)+'</h3><span>'+esc(sub)+'</span></div>'+
+    '<div class="scrollx"><table class="st full"><thead><tr><th>Team</th><th>W-L</th><th>Pct</th><th>GB</th>'+
+    '<th title="Chance of making the postseason">Playoff</th><th title="'+(o.wc?'Chance of a wild card':'Chance of winning the division')+'">'+(o.wc?'Wild card':'Division')+'</th>'+(o.wc?'':'<th title="Games back of the last wild card">WCGB</th>')+
+    '<th>L10</th><th>Strk</th><th>Home</th><th>Away</th><th>RS</th><th>RA</th><th>Diff</th><th>Left</th></tr></thead>'+
     '<tbody>'+body+'</tbody></table></div></div>';
 }
 
@@ -1800,15 +1861,16 @@ function renderStandings(){
     var lead={}; rows.forEach(function(r){ var c=lead[r.div]; if(!c||cmp(r,c)<0) lead[r.div]=r; });
     var ids={}; Object.keys(lead).forEach(function(k){ids[lead[k].id]=1;});
     var wc=rows.filter(function(r){return !ids[r.id];}).sort(cmp);
-    var t='<div class="stcol">';
+    var t='<div class="stcol">'; /* v31: full tables stacked, one column */
     L[2].forEach(function(dv){
       var d=rows.filter(function(r){return r.div===dv;}).sort(cmp);
-      if(d.length) t+=stTable(DIVN[dv],'winner is in',d,0,{noE:true});
+      if(d.length) t+=stFull(DIVN[dv],'winner is in',d,0,{});
     });
-    t+='</div><div class="stcol">';
-    if(wc.length) t+=stTable(L[0]+' Wild Card','top three go; GB is to the third spot',wc,3,{noE:true,ref:wc[2]});
-    html+='<div class="sblk"><div class="sh"><h3>'+L[1]+'</h3></div><div class="stlg">'+t+'</div></div></div>';
+    if(wc.length) t+=stFull(L[0]+' Wild Card','top three go; GB is to the third spot',wc,3,{wc:true,ref:wc[2]});
+    t+='</div>';
+    html+='<div class="sblk"><div class="sh"><h3>'+L[1]+'</h3></div>'+t+'</div>';
   });
+  if(html) html+='<p class="stkey"><b>x</b> clinched a playoff spot &middot; <b>y</b> division &middot; <b>z</b> best record &middot; <b>w</b> wild card &middot; <b>e</b> eliminated. Odds: each team\'s win rate pulled toward .500, every remaining game played out 20,000 times, ties split at random.</p>';
   box.innerHTML=html||'<div class="empty">No standings for that filter.</div>';
 }
 
@@ -1816,10 +1878,11 @@ function renderStandings(){
 
 function renderRunIn(){
   var t=tex(); if(!t) return;
-  var rid=blockerIds();
-  var show=[t].concat(blockers().sort(function(a,b){
+  var rid=blockerIds(); rivals().forEach(function(r){ rid[r.id]=1; });
+  /* v31: every live rival, ahead or right behind (the Astros), nearest first */
+  var show=[t].concat(rivals().sort(function(a,b){
     return Math.abs(gapVs(a))-Math.abs(gapVs(b)) || cmp(a,b);
-  })).slice(0,5);
+  })).slice(0,6);
   $('runin').innerHTML=show.map(function(r){
     var sch=(S.restBy[r.id]||[]).filter(function(x){return x.g.state!=='Final';});
     var oppW=0,oppL=0;
@@ -1861,11 +1924,11 @@ function rng(seed){
 }
 function strength(r){ var K=80; return (r.w+K/2)/(r.gp+K); }
 
-function simOdds(N){
-  var al=S.stand.filter(function(r){return r.div>=200&&r.div<=202;});
+/* v31: one league at a time, every team's chance of the division, a wild card, and the postseason */
+function simLeague(al,N){
   var idx={}; al.forEach(function(r,i){idx[r.id]=i;});
-  var n=al.length, fi=idx[FAV];
-  if(fi==null) return null;
+  var n=al.length;
+  if(!n) return {};
   var ga=[],gh=[],gp=[];
   S.rest.forEach(function(g){
     if(g.state==='Final') return;
@@ -1879,8 +1942,8 @@ function simOdds(N){
   });
   var seed=gp.length*7919; al.forEach(function(r){seed=(seed*31+r.w*3+r.l)|0;});
   var R=rng(seed), base=al.map(function(r){return r.w;}), divs=al.map(function(r){return r.div;});
-  var w=new Float64Array(n), div=0, wc=0, ord=[];
-  for(var i=0;i<n;i++) ord.push(i);
+  var w=new Float64Array(n), dc=new Float64Array(n), wcc=new Float64Array(n), i;
+  if(!N) N=Math.max(3000,Math.min(20000,Math.round(4e6/Math.max(1,gp.length))));
   for(var s=0;s<N;s++){
     for(i=0;i<n;i++) w[i]=base[i]+R()*0.5;        // fractional part breaks ties at random
     for(var k=0;k<gp.length;k++){
@@ -1889,15 +1952,34 @@ function simOdds(N){
     }
     var best={};
     for(i=0;i<n;i++){ var d=divs[i]; if(best[d]==null||w[i]>w[best[d]]) best[d]=i; }
-    if(best[divs[fi]]===fi){ div++; continue; }
-    var above=0;
+    // three wild cards: the best three records among the non-winners
+    var w1=-1,w2=-1,w3=-1;
     for(i=0;i<n;i++){
-      if(i===fi||best[divs[i]]===i) continue;
-      if(w[i]>w[fi]) above++;
+      if(best[divs[i]]===i){ dc[i]++; continue; }
+      if(w1<0||w[i]>w[w1]){ w3=w2; w2=w1; w1=i; }
+      else if(w2<0||w[i]>w[w2]){ w3=w2; w2=i; }
+      else if(w3<0||w[i]>w[w3]){ w3=i; }
     }
-    if(above<3) wc++;
+    if(w1>=0) wcc[w1]++; if(w2>=0) wcc[w2]++; if(w3>=0) wcc[w3]++;
   }
-  return {all:(div+wc)/N, div:div/N, wc:wc/N};
+  var out={};
+  al.forEach(function(r,i){ out[r.id]={all:(dc[i]+wcc[i])/N, div:dc[i]/N, wc:wcc[i]/N}; });
+  return out;
+}
+function simOdds(N){
+  var out={};
+  [[200,202],[203,205]].forEach(function(rg){
+    var lg=S.stand.filter(function(r){return r.div>=rg[0]&&r.div<=rg[1];});
+    var m=simLeague(lg,N); Object.keys(m).forEach(function(k){ out[k]=m[k]; });
+  });
+  return out;
+}
+/* cached map of every team's odds, recomputed only when a result or the schedule changes */
+function oddsMap(){
+  if(!S.stand||!S.rest||!S.rest.length) return null;
+  var key=S.stand.map(function(r){return r.w+'-'+r.l;}).join()+'|'+S.rest.length;
+  if(S.oddsKey!==key){ S.odds=simOdds(); S.oddsKey=key; }
+  return S.odds;
 }
 
 /* movie lines by playoff-odds tier, film titles never shown. One line a day from the tier's pool:
@@ -1939,9 +2021,7 @@ function pctTxt(p){
 }
 function renderOdds(){
   var t=tex(); if(!t||!S.rest.length) return;
-  var key=S.stand.map(function(r){return r.w+'-'+r.l;}).join()+'|'+S.rest.length;
-  if(S.oddsKey!==key){ S.odds=simOdds(20000); S.oddsKey=key; }
-  var o=S.odds; if(!o) return;
+  var o=oddsMap(); o=o&&o[FAV]; if(!o) return;
   var R=races(), lead=R.lead[200], cut=R.pool[2];
   var dead=o.all===0 && (!lead||lead.id===FAV||magic(lead,t)<=0) && (!cut||cut.id===FAV||magic(cut,t)<=0)
            && lead&&lead.id!==FAV;
@@ -2948,7 +3028,7 @@ function snPulse(){
   cells.push([r.streak||'-','Streak','','',/^W/.test(r.streak)?'up':/^L/.test(r.streak)?'dn':'','rib']);
   if(one.length) cells.push([snRecOf(one).txt,'One-run games','','','','log:one']);
   if(ex.length) cells.push([snRecOf(ex).txt,'Extra innings','','','','log:extra']);
-  if(!snPrevView()&&S.odds) cells.push([Math.round(S.odds.all*100)+'%','Playoff odds','from the Race page','','gr','#home']);
+  if(!snPrevView()&&S.odds&&S.odds[FAV]) cells.push([Math.round(S.odds[FAV].all*100)+'%','Playoff odds','from the Race page','','gr','#home']);
   $('snPulse').innerHTML=cells.map(function(c){ return '<button data-snto="'+esc(c[5])+'" class="'+c[3]+'"><b class="'+c[4]+'">'+esc(c[0])+'</b><span>'+esc(c[1])+'</span>'+(c[2]?'<em>'+esc(c[2])+'</em>':'')+'</button>'; }).join('');
 }
 function snFlags(x){
@@ -3281,7 +3361,7 @@ function snPlRender(){
     var key=g.kind==='pit'?'strikeOuts':'hits';
     var mx=Math.max(1,Math.max.apply(null,g.rows.map(function(r){ return +r.st[key]||0; })));
     var bars='<div class="pbars">'+g.rows.map(function(r){ var v=+r.st[key]||0;
-      return '<i data-pk="'+r.pk+'" class="'+(v?'p':'z')+'" style="height:'+(v/mx*100)+'%" title="'+esc(r.date+' '+(r.home?'vs ':'@ ')+(TEAM[r.opp]?ab(r.opp):'')+': '+(r.st.summary||v))+'"></i>'; }).join('')+'</div>'+
+      return '<i data-pk="'+r.pk+'" class="'+(v?'hit':'z')+'" style="height:'+(v/mx*100)+'%" title="'+esc(r.date+' '+(r.home?'vs ':'@ ')+(TEAM[r.opp]?ab(r.opp):'')+': '+(r.st.summary||v))+'"></i>'; }).join('')+'</div>'+
       '<div class="pbk"><span>'+esc(g.rows[0].date)+'</span><span>'+(g.kind==='pit'?'strikeouts':'hits')+' per game, tap a bar</span><span>'+esc(g.rows[g.rows.length-1].date)+'</span></div>';
     var cols=g.kind==='pit'?SN_GLP:SN_GLH;
     var list=S.pl.mode==='l10'?g.rows.slice(-10).reverse():g.rows.slice().reverse();
@@ -3375,7 +3455,9 @@ function tmRender(){
   // key numbers
   if(r){
     var gb=r.gb&&r.gb!=='-'?r.gb+' GB':'Leader';
+    var po=(oddsMap()||{})[id];
     var k=[[gb,'Division'],[r.wcgb==null||r.wcgb==='-'?(lgOf(r)?'In':'-'):(String(r.wcgb).charAt(0)==='+'?r.wcgb:r.wcgb+' GB'),'Wild card'],
+      [r.clinch&&r.clinch!=='e'?'100%':r.clinch==='e'?'Out':po?pctTxt(po.all):'-','Playoff odds',po&&(po.all>=0.75||(r.clinch&&r.clinch!=='e'))?'up':(po&&po.all<0.25)||r.clinch==='e'?'dn':''],
       [(r.rd>0?'+':'')+(r.rd==null?'-':r.rd),'Run diff',r.rd>0?'up':r.rd<0?'dn':''],[r.l10||'-','Last 10'],[r.streak||'-','Streak',/^W/.test(r.streak)?'up':/^L/.test(r.streak)?'dn':''],
       [r.home||'-','Home'],[r.away||'-','Road'],[r.left,'To play']];
     html+='<div class="tmk">'+k.map(function(x){ return '<div><b class="'+(x[2]||'')+'">'+esc(x[0])+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>';
