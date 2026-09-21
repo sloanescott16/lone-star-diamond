@@ -198,6 +198,15 @@ table.st tr:last-child td{border-bottom:none}
 table.st tr.fav td{background:rgba(47,111,224,.11)}
 table.st tr.fav td:first-child{box-shadow:inset 3px 0 0 var(--blue)}
 table.st tr.cut td{border-bottom:2px dashed #55607d}
+/* v34: the flat league tables */
+table.st td.rkn,table.st th.rkn{color:var(--mute); text-align:right; width:26px; padding-right:2px}
+table.st.full tr.inpo td{background:rgba(90,160,255,.055)}
+table.st.full tr.inpo.fav td{background:#141c2c}
+table.st.full th.rkn,table.st.full td.rkn{position:sticky; left:0; z-index:1; background:var(--card); box-shadow:none}
+table.st.full tr.inpo td.rkn{background:var(--card)}
+table.st.full.rk th:nth-child(2),table.st.full.rk td:nth-child(2){position:sticky; left:26px; z-index:1; background:var(--card)}
+table.st.full.rk tr.fav td:nth-child(2){background:#141c2c}
+.stkey .pod{display:inline-block; width:9px; height:9px; border-radius:2px; background:rgba(90,160,255,.4); vertical-align:middle; margin-right:3px}
 table.st .tm{display:flex; align-items:center; gap:8px; font-weight:600}
 table.st .tm img{width:20px; height:20px; object-fit:contain; flex:none}
 table.st .tm i{font-style:normal; font-size:10px; color:var(--dim); font-weight:600}
@@ -1084,7 +1093,10 @@ table.rs .pl.lgo img{border-radius:0; background:none; object-fit:contain; width
   </section>
 
   <section id="secStand">
-    <div class="head"><h2>Standings</h2><span class="sub">all of MLB</span>
+    <div class="head"><h2>Standings</h2><span class="sub" id="standSub">all of MLB</span>
+      <span class="seg" id="standSeg" role="group" aria-label="Standings view">
+        <button type="button" data-stm="div">Divisions</button><button type="button" data-stm="lg">League</button><button type="button" data-stm="all">All MLB</button>
+      </span>
       <span class="note">Odds from 20,000 simulated finishes of the real remaining schedule. Ties sorted on record, not the official tiebreakers.</span></div>
     <div id="standAll"><div class="empty">Loading the standings</div></div>
   </section>
@@ -1593,6 +1605,8 @@ function dayStr(off){ var d=new Date(); d.setDate(d.getDate()+off); return d.get
 S.day=0; S.dayCache={};
 /* v16: Schedule is unfiltered; sorts are All games (first pitch order) or Wildcard race */
 S.ssort=(function(){ try{ var v=localStorage.getItem('pc-sort'); return v==='wildcard'?v:'time'; }catch(e){ return 'time'; } })();
+/* v34: Divisions / League / All MLB on the Standings tab */
+S.stm=(function(){ try{ var v=localStorage.getItem('pc-stm'); return (v==='lg'||v==='all')?v:'div'; }catch(e){ return 'div'; } })();
 function dayGames(){
   if(S.day===0) return S.games;
   return S.dayCache[dayStr(S.day)]||null;
@@ -1678,6 +1692,7 @@ document.addEventListener('click',function(e){
   if(e.target.closest('#stBtn')){ S.flt='all'; try{ localStorage.setItem('pc-flt','all'); }catch(x){} syncFlt(); renderBoard(); return; }
   var db=e.target.closest('#daySeg button'); if(db){ S.day=+db.getAttribute('data-day'); return renderSched(); }
   var sb=e.target.closest('#sortSeg button'); if(sb){ S.ssort=sb.getAttribute('data-sort'); try{ localStorage.setItem('pc-sort',S.ssort); }catch(x){} return renderSched(); }
+  var mb=e.target.closest('#standSeg button'); if(mb){ S.stm=mb.getAttribute('data-stm'); try{ localStorage.setItem('pc-stm',S.stm); }catch(x){} return renderStandings(); }   /* v34 */
 });
 
 /* ================= views ================= */
@@ -1874,12 +1889,14 @@ function stFull(title,sub,rows,cutAfter,o){
   function rec(s){ return s||'&mdash;'; }
   var body=rows.map(function(r,i){
     var gb=gapBetween(top,r);
+    var rkc=o.rank?'<td class="rkn">'+(i+1)+'</td>':'';
     var gbs=gb===0&&o.ref?'&mdash;':gb<=0?(o.ref?'+'+num(-gb):'&mdash;'):num(gb);
     var x=sd[r.id]||{}, wcs;
     if(x.seed&&x.seed<=3) wcs='<td class="faint" title="Leads the division">&mdash;</td>';
     else { var wg=x.wcgb||0; wcs='<td class="gb'+(wg<=0?' zero':'')+'">'+(wg===0?'&mdash;':wg<0?'+'+num(-wg):num(wg))+'</td>'; }
     var sc=(r.streak||'').charAt(0).toLowerCase(), rd=r.rd|0;
-    return '<tr data-tid="'+r.id+'" class="'+(r.id===FAV?'fav':'')+(cutAfter&&i===cutAfter-1?' cut':'')+'">'+
+    return '<tr data-tid="'+r.id+'" class="'+(r.id===FAV?'fav':'')+(cutAfter&&i===cutAfter-1?' cut':'')+(o.po&&o.po[r.id]?' inpo':'')+'">'+
+      rkc+
       '<td><span class="tm"><img src="'+logo(r.id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
       esc(nick(r.id))+clinchTag(r)+'</span></td>'+
       '<td class="rec">'+r.w+'-'+r.l+'</td>'+
@@ -1896,7 +1913,7 @@ function stFull(title,sub,rows,cutAfter,o){
       '<td>'+r.left+'</td></tr>';
   }).join('');
   return '<div class="tb"><div class="tbh"><h3>'+esc(title)+'</h3><span>'+esc(sub)+'</span></div>'+
-    '<div class="scrollx"><table class="st full"><thead><tr><th>Team</th><th>W-L</th><th>Pct</th><th>GB</th>'+
+    '<div class="scrollx"><table class="st full'+(o.rank?' rk':'')+'"><thead><tr>'+(o.rank?'<th class="rkn">#</th>':'')+'<th>Team</th><th>W-L</th><th>Pct</th><th>GB</th>'+
     '<th title="Chance of making the postseason">Playoff</th><th title="'+(o.wc?'Chance of a wild card':'Chance of winning the division')+'">'+(o.wc?'Wild card':'Division')+'</th>'+(o.wc?'':'<th title="Games back of the last wild card">WCGB</th>')+
     '<th>L10</th><th>Strk</th><th>Home</th><th>Away</th><th>RS</th><th>RA</th><th>Diff</th><th>Left</th></tr></thead>'+
     '<tbody>'+body+'</tbody></table></div></div>';
@@ -1909,25 +1926,52 @@ function renderTables(){
                         stTable('Wild Card','top three go, GB is to the third spot',pool,3,{ref:pool[2]||pool[0]}); /* v28: GB measured to the cut line, not the leader */
 }
 
-/* v8: full league standings */
+/* v8: full league standings. v34: Divisions, League (each league ranked flat)
+   or All MLB (all 30 ranked together). */
 function renderStandings(){
   var box=$('standAll'); if(!box||!S.stand) return;
-  var html='';
-  [['AL','American League',[200,201,202]],['NL','National League',[203,204,205]]].forEach(function(L){
-    var rows=S.stand.filter(function(r){return lgOf(r)===L[0];});
-    var lead={}; rows.forEach(function(r){ var c=lead[r.div]; if(!c||cmp(r,c)<0) lead[r.div]=r; });
-    var ids={}; Object.keys(lead).forEach(function(k){ids[lead[k].id]=1;});
-    var wc=rows.filter(function(r){return !ids[r.id];}).sort(cmp);
-    var t='<div class="stcol">'; /* v31: full tables stacked, one column */
-    L[2].forEach(function(dv){
-      var d=rows.filter(function(r){return r.div===dv;}).sort(cmp);
-      if(d.length) t+=stFull(DIVN[dv],'winner is in',d,0,{});
-    });
-    if(wc.length) t+=stFull(L[0]+' Wild Card','top three go; GB is to the third spot',wc,3,{wc:true,ref:wc[2]});
-    t+='</div>';
-    html+='<div class="sblk"><div class="sh"><h3>'+L[1]+'</h3></div>'+t+'</div>';
+  var mode=(S.stm==='lg'||S.stm==='all')?S.stm:'div';
+  Array.prototype.forEach.call(document.querySelectorAll('#standSeg button'),function(b){
+    b.className=b.getAttribute('data-stm')===mode?'on':'';
   });
-  if(html) html+='<p class="stkey"><b>x</b> clinched a playoff spot &middot; <b>y</b> division &middot; <b>z</b> best record &middot; <b>w</b> wild card &middot; <b>e</b> eliminated. Odds: each team\'s win rate pulled toward .500, every remaining game played out 20,000 times, ties split at random.</p>';
+  var sub=$('standSub'); if(sub) sub.textContent=mode==='div'?'by division':mode==='lg'?'each league, ranked':'all 30, ranked';
+  var sd=seeds(), po={};
+  Object.keys(sd).forEach(function(id){ if(sd[id].seed<=6) po[id]=1; });
+  var html='';
+  if(mode==='div'){
+    [['AL','American League',[200,201,202]],['NL','National League',[203,204,205]]].forEach(function(L){
+      var rows=S.stand.filter(function(r){return lgOf(r)===L[0];});
+      var lead={}; rows.forEach(function(r){ var c=lead[r.div]; if(!c||cmp(r,c)<0) lead[r.div]=r; });
+      var ids={}; Object.keys(lead).forEach(function(k){ids[lead[k].id]=1;});
+      var wc=rows.filter(function(r){return !ids[r.id];}).sort(cmp);
+      var t='<div class="stcol">'; /* v31: full tables stacked, one column */
+      L[2].forEach(function(dv){
+        var d=rows.filter(function(r){return r.div===dv;}).sort(cmp);
+        if(d.length) t+=stFull(DIVN[dv],'winner is in',d,0,{});
+      });
+      if(wc.length) t+=stFull(L[0]+' Wild Card','top three go; GB is to the third spot',wc,3,{wc:true,ref:wc[2]});
+      t+='</div>';
+      html+='<div class="sblk"><div class="sh"><h3>'+L[1]+'</h3></div>'+t+'</div>';
+    });
+  } else if(mode==='lg'){
+    [['AL','American League'],['NL','National League']].forEach(function(L){
+      var rows=S.stand.filter(function(r){return lgOf(r)===L[0];}).sort(cmp);
+      if(!rows.length) return;
+      html+='<div class="sblk"><div class="stcol">'+
+        stFull(L[1],'all '+rows.length+', best record first; GB is to the league leader',rows,0,{rank:true,po:po})+
+        '</div></div>';
+    });
+  } else {
+    var all=S.stand.slice().sort(cmp);
+    if(all.length) html='<div class="sblk"><div class="stcol">'+
+      stFull('All of MLB','all '+all.length+', best record first; GB is to the best record in baseball',all,0,{rank:true,po:po})+
+      '</div></div>';
+  }
+  if(html){
+    html+='<p class="stkey">'+(mode==='div'?'':'<span class="pod"></span> in a playoff spot as it stands &middot; ')+
+      '<b>x</b> clinched a playoff spot &middot; <b>y</b> division &middot; <b>z</b> best record &middot; <b>w</b> wild card &middot; <b>e</b> eliminated. '+
+      'Odds: each team\'s win rate pulled toward .500, every remaining game played out 20,000 times, ties split at random.</p>';
+  }
   box.innerHTML=html||'<div class="empty">No standings for that filter.</div>';
 }
 
