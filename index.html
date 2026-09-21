@@ -3739,6 +3739,20 @@ setInterval(function(){ tickSlow(); }, 180000);
 
 window.LSD=S; window.LSD.openPlayer=snOpenPlayer; window.LSD.closePlayer=snClosePlayer; /* v33: test hook */
 })();
+
+/* Search X and any other new-tab link: iOS quietly drops window.open from a touch, so on a
+   touch device the click falls back to navigating in place rather than doing nothing at all. */
+(function () {
+  if (!(window.matchMedia && window.matchMedia("(pointer: coarse)").matches)) return;
+  document.addEventListener("click", function (e) {
+    var t = e.target, a = t && t.closest ? t.closest('a[target="_blank"]') : null;
+    if (!a || !/^https?:/.test(a.href)) return;
+    e.preventDefault();
+    var w = null;
+    try { w = window.open(a.href, "_blank"); } catch (err) { w = null; }
+    if (!w) window.location.href = a.href;
+  }, true);
+})();
 </script>
 </body>
 </html>
