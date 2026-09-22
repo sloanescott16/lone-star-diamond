@@ -455,8 +455,29 @@ body.v-game #secLive,body.v-game #secSched,body.v-game #secStand,body.v-game #se
 .gct img{width:58px; height:58px; object-fit:contain; flex:none; filter:drop-shadow(0 0 3px rgba(255,255,255,.22))}
 .gct .tn{font-family:var(--display); font-size:28px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
 .gct .tr{font-size:11.5px; color:var(--mute); margin-top:3px; white-space:nowrap}
-.gct .ts{font-family:var(--display); font-weight:700; font-size:64px; line-height:.9; margin-left:auto}
-.gct.h .ts{margin-left:0; margin-right:auto}
+/* v36: the score belongs beside its own logo and name, the way ESPN and the Real app draw it.
+   The auto margin used to shove both numbers into the middle, miles from the team they belong to. */
+.gct .ts{font-family:var(--display); font-weight:700; font-size:64px; line-height:.9; margin-left:2px}
+/* v36: the momentum wave, the same strip The Crease got. Top side is the favourite when they are
+   playing, otherwise the home side; every event fades over a couple of minutes. */
+.mflow{margin:0}
+.mfw{position:relative; height:124px; border-radius:10px; overflow:hidden; background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(0,0,0,.18))}
+.mfw svg{position:absolute; inset:0; width:100%; height:100%; display:block}
+.mfw .mfax{stroke:#454e60}
+.mfw .mfdiv{stroke:#2b3241; stroke-dasharray:3 4}
+.mft{position:absolute; left:9px; display:inline-flex; align-items:center; gap:5px; font-family:var(--display);
+  font-size:13px; letter-spacing:.06em; text-shadow:0 1px 3px rgba(0,0,0,.65); pointer-events:none}
+.mft img{width:17px; height:17px; object-fit:contain}
+.mft.h{top:7px} .mft.a{bottom:7px}
+.mfg{position:absolute; top:50%; width:12px; height:12px; margin:-6px 0 0 -6px; border-radius:50%;
+  border:2px solid #0b0e14; box-shadow:0 0 0 1px rgba(255,255,255,.85), 0 0 9px rgba(255,255,255,.3)}
+.mfx{position:relative; height:14px; margin-top:3px}
+.mfp{position:absolute; top:0; transform:translateX(-50%); font-size:9.5px; letter-spacing:.09em;
+  text-transform:uppercase; color:var(--dim); font-weight:700; white-space:nowrap}
+.mfnote{font-size:11.5px; color:var(--mute); margin-top:4px}
+.mfnote b{color:var(--ink); font-weight:600}
+@media (max-width:760px){ .mfw{height:98px} .mft{font-size:12px} .mft img{width:15px;height:15px} }
+
 .gct.lose .ts,.gct.lose .tn{color:var(--dim)}
 .gcm{display:flex; flex-direction:column; align-items:center; gap:5px; min-width:130px}
 .gcm .gs{font-family:var(--display); font-size:22px; line-height:1; letter-spacing:.03em; text-transform:uppercase}
@@ -483,11 +504,8 @@ svg.dia rect.on{fill:var(--warn); stroke:var(--warn)}
   .gct{gap:7px; flex-wrap:wrap}
   .gct img{width:32px; height:32px}
   .gct .tn{font-size:17px} .gct .tr{font-size:10px}
-  /* v35: both scores sit against the middle block, each a mirror of the other.
-     margin-left:0 here left the away score parked beside its logo while the home score
-     kept its auto margin and hugged the centre, so the two numbers never lined up. */
-  .gct .ts{font-size:40px; margin-left:auto}
-  .gct.h .ts{margin-left:0; margin-right:auto}
+  /* v36: logo then score on one line, the name under it. Mirrored on the home side. */
+  .gct .ts{font-size:40px}
   .gct.h{flex-direction:row-reverse}
   .gct>div:nth-child(2){order:3; flex-basis:100%}
   .gcm{min-width:0} .gcm .gs{font-size:16px} .gcm .gs3{display:none}
@@ -2869,6 +2887,81 @@ function gcIL(F){
 
 /* ---------- render ---------- */
 
+/* ---------- v36: momentum wave ---------- */
+/* Baseball has no clock, so the wave runs on at-bats. Every plate appearance pushes the line toward
+   the team it helped, runs hardest of all, and each one fades over about five batters. */
+function mfEvents(F){
+  var pl=F.liveData.plays||{}, all=pl.allPlays||[], gd=F.gameData;
+  var A=gd.teams.away.id, H=gd.teams.home.id, out=[];
+  all.forEach(function(p,i){
+    var r=p.result||{}, a=p.about||{};
+    if(!r.eventType&&!r.rbi) return;
+    var bat=a.isTopInning?A:H, pit=a.isTopInning?H:A, t=a.atBatIndex!=null?a.atBatIndex:i;
+    var ev=String(r.eventType||'').toLowerCase(), w=0, team=bat;
+    if(/home_run/.test(ev)) w=10;
+    else if(ev==='triple') w=5;
+    else if(ev==='double') w=4;
+    else if(ev==='single') w=3;
+    else if(/walk|hit_by_pitch/.test(ev)) w=1.5;
+    else if(/error/.test(ev)) w=2;
+    else if(/strikeout/.test(ev)){ team=pit; w=1.8; }
+    else if(/double_play/.test(ev)){ team=pit; w=2.5; }
+    else if(/out|fielders_choice|sac_/.test(ev)){ team=pit; w=1; }
+    if(w) out.push({t:t, w:w, team:team, p:p, inn:a.inning||1});
+    if(r.rbi) out.push({t:t, w:4*r.rbi, team:bat, p:p, inn:a.inning||1, runs:r.rbi});
+  });
+  return out;
+}
+function gcMomentum(F){
+  var gd=F.gameData, A=gd.teams.away.id, H=gd.teams.home.id;
+  var ev=mfEvents(F); if(ev.length<4) return '';
+  var C=pairCols(A,H), up=gcPersp(F); if(up!==A&&up!==H) up=H;
+  var dn=up===H?A:H, cu=up===H?C[1]:C[0], cd=up===H?C[0]:C[1];
+  var all=(F.liveData.plays||{}).allPlays||[], live=gd.status.abstractGameState==='Live';
+  var endT=0, innAt={};
+  ev.forEach(function(e){ if(e.t>endT) endT=e.t; });
+  all.forEach(function(p){ var a=p.about||{}; if(a.atBatIndex==null||!a.inning) return; if(innAt[a.inning]==null) innAt[a.inning]=a.atBatIndex; });
+  endT=Math.max(endT,6);
+  var W=1000,H2=100,MID=50,AMP=43,N=340,SIG=5,step=endT/N,lo=0,m=[],maxA=0,i,k;
+  for(i=0;i<=N;i++){
+    var t=i*step, v=0;
+    while(lo<ev.length&&ev[lo].t<t-3*SIG) lo++;
+    for(k=lo;k<ev.length&&ev[k].t<t+3*SIG;k++){ var d=(t-ev[k].t)/SIG, sg=ev[k].team===up?1:-1; v+=sg*ev[k].w*Math.exp(-d*d); }
+    m.push(v); if(Math.abs(v)>maxA) maxA=Math.abs(v);
+  }
+  maxA=Math.max(maxA,8);
+  function X(t){ return t/endT*W; }
+  function Y(v){ return MID-(v/maxA)*AMP; }
+  var dd=m.map(function(v,i){ return X(i*step).toFixed(2)+' '+Y(v).toFixed(2); });
+  var line='M'+dd.join('L'), area='M0 '+MID+'L'+dd.join('L')+'L'+W+' '+MID+'Z';
+  var innings=Object.keys(innAt).map(Number).sort(function(a,b){ return a-b; });
+  var grid='', labs='';
+  innings.forEach(function(n2,ix){
+    var st=innAt[n2], en=innings[ix+1]!=null?innAt[innings[ix+1]]:endT;
+    if(ix) grid+='<line class="mfdiv" x1="'+X(st).toFixed(1)+'" x2="'+X(st).toFixed(1)+'" y1="5" y2="'+(H2-5)+'" vector-effect="non-scaling-stroke"/>';
+    if(en-st>=1||innings.length<=9) labs+='<span class="mfp" style="left:'+((st+en)/2/endT*100).toFixed(2)+'%">'+n2+'</span>';
+  });
+  var svg='<svg viewBox="0 0 '+W+' '+H2+'" preserveAspectRatio="none" aria-hidden="true">'+
+    '<defs><clipPath id="mfT"><rect x="0" y="0" width="'+W+'" height="'+MID+'"/></clipPath>'+
+    '<clipPath id="mfB"><rect x="0" y="'+MID+'" width="'+W+'" height="'+(H2-MID)+'"/></clipPath></defs>'+grid+
+    '<g clip-path="url(#mfT)"><path d="'+area+'" fill="'+cu+'" opacity=".4"/><path d="'+line+'" fill="none" stroke="'+cu+'" stroke-width="2" vector-effect="non-scaling-stroke"/></g>'+
+    '<g clip-path="url(#mfB)"><path d="'+area+'" fill="'+cd+'" opacity=".4"/><path d="'+line+'" fill="none" stroke="'+cd+'" stroke-width="2" vector-effect="non-scaling-stroke"/></g>'+
+    '<line class="mfax" x1="0" x2="'+W+'" y1="'+MID+'" y2="'+MID+'" vector-effect="non-scaling-stroke"/></svg>';
+  var dots=ev.filter(function(e){ return e.runs; }).slice(0,40).map(function(e){
+    var a=e.p.about||{}, r=e.p.result||{};
+    return '<span class="mfg" style="left:'+Math.min(99.5,Math.max(.5,e.t/endT*100)).toFixed(2)+'%;background:'+(e.team===up?cu:cd)+'" '+
+      'title="'+esc((a.isTopInning?'Top ':'Bot ')+ord(a.inning||1)+' · '+(r.description||''))+'"></span>';
+  }).join('');
+  var chips='<span class="mft h" style="color:'+cu+'">'+imgT(up)+esc(ab(up))+'</span>'+
+    '<span class="mft a" style="color:'+cd+'">'+imgT(dn)+esc(ab(dn))+'</span>';
+  var lastInn=innings.length?innings[innings.length-1]:1, ru=0, rd=0;
+  ev.forEach(function(e){ if(!e.runs||e.inn<lastInn-2) return; if(e.team===up) ru+=e.runs; else rd+=e.runs; });
+  var now=m[m.length-1], rel=Math.abs(now)/maxA, who=now>0?up:dn;
+  var head=rel<0.15?'Nothing doing either way':(nick(who)+(rel>0.55?' all over them':' with the better of it'));
+  var note='<b>'+esc(head)+'</b>'+(live?' right now.':' at the last out.')+' Last three innings '+esc(ab(up))+' '+ru+', '+esc(ab(dn))+' '+rd+'.';
+  var body='<div class="mflow"><div class="mfw">'+svg+chips+dots+'</div><div class="mfx">'+labs+'</div><div class="mfnote">'+note+'</div></div>';
+  return card('Game flow',body,'','<span class="gn">at-bat by at-bat, dots are runs</span>');
+}
 function gcRender(){
   var box=$('gc'); if(!box) return;
   if(S.view!=='game') return;
@@ -2893,7 +2986,7 @@ function gcRender(){
     return;
   }
   try{
-    box.innerHTML=head+gcHeader(F)+
+    box.innerHTML=head+gcHeader(F)+gcMomentum(F)+
       '<div class="gc-grid">'+
         '<div class="gc-col gc-box">'+gcBox(F)+gcPBP(F)+'</div>'+ /* v22: play by play under the box score */
         '<div class="gc-col gc-mid">'+gcMatchup(F)+gcScoring(F)+'</div>'+
@@ -3743,6 +3836,7 @@ setInterval(function(){ tickSlow(); }, 180000);
 
 window.LSD=S; window.LSD.openPlayer=snOpenPlayer; window.LSD.closePlayer=snClosePlayer; /* v33: test hook */
 window.LSD.gcHeader=gcHeader; /* v35: test hook, the header renders from a feed with no network */
+window.LSD.gcMomentum=gcMomentum; window.LSD.gcRender=gcRender; /* v36 */
 })();
 
 /* Search X and any other new-tab link: iOS quietly drops window.open from a touch, so on a
