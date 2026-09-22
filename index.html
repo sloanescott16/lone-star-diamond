@@ -483,7 +483,11 @@ svg.dia rect.on{fill:var(--warn); stroke:var(--warn)}
   .gct{gap:7px; flex-wrap:wrap}
   .gct img{width:32px; height:32px}
   .gct .tn{font-size:17px} .gct .tr{font-size:10px}
-  .gct .ts{font-size:40px; margin-left:0}
+  /* v35: both scores sit against the middle block, each a mirror of the other.
+     margin-left:0 here left the away score parked beside its logo while the home score
+     kept its auto margin and hugged the centre, so the two numbers never lined up. */
+  .gct .ts{font-size:40px; margin-left:auto}
+  .gct.h .ts{margin-left:0; margin-right:auto}
   .gct.h{flex-direction:row-reverse}
   .gct>div:nth-child(2){order:3; flex-basis:100%}
   .gcm{min-width:0} .gcm .gs{font-size:16px} .gcm .gs3{display:none}
@@ -3738,6 +3742,7 @@ fastLoop();
 setInterval(function(){ tickSlow(); }, 180000);
 
 window.LSD=S; window.LSD.openPlayer=snOpenPlayer; window.LSD.closePlayer=snClosePlayer; /* v33: test hook */
+window.LSD.gcHeader=gcHeader; /* v35: test hook, the header renders from a feed with no network */
 })();
 
 /* Search X and any other new-tab link: iOS quietly drops window.open from a touch, so on a
