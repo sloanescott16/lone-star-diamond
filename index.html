@@ -479,6 +479,9 @@ body.v-game #secLive,body.v-game #secSched,body.v-game #secStand,body.v-game #se
 .mfnote{font-size:11.5px; color:var(--mute); margin-top:4px}
 /* v40: innings still to come are dimmer; a thin marker shows where the game is now */
 .mfp.fut{opacity:.45}
+/* v42: the plot sits in exactly the Win probability plot area (x 22..314 of 320) so the two lines start together */
+.mfpl{position:absolute; top:0; bottom:0; left:6.875%; right:1.875%}
+.mfx{margin-left:6.875%; margin-right:1.875%}
 .mfnow{position:absolute; top:6px; bottom:6px; width:0; border-left:1px dashed rgba(255,255,255,.35); pointer-events:none}
 .mfnote b{color:var(--ink); font-weight:600}
 @media (max-width:760px){ .mfw{height:98px} .mft{font-size:12px} .mft img{width:15px;height:15px} }
@@ -2827,17 +2830,19 @@ function gcWP(F){
   var ls=F.liveData.linescore||{}, lt=ls.teams||{};
   if(st==='Final'){ var won=home?(lt.home||{}).runs>(lt.away||{}).runs:(lt.away||{}).runs>(lt.home||{}).runs; vals.push(won?100:0); }
   var W=320,Hh=150,px=22,py=8,iw=W-px-6,ih=Hh-py-18;
-  var ninn=Math.max(9,ls.currentInning||0,(ls.innings||[]).length);
-  // x by inning half so the chart reads like the game clock
+  /* v42: x comes from the same map as Game flow, so both lines start together and grow at the same rate */
+  var XM=mfXMap(F), ninn=XM.nInn;
   var xs=[px];
   wp.forEach(function(e,i){
-    var a=e.about||{}, inn=a.inning||1, topH=a.isTopInning!==false&&a.halfInning!=='bottom';
-    var halfIdx=(inn-1)*2+(topH?0:1);
-    var same=wp.filter(function(x){ var b=x.about||{}; return b.inning===a.inning&&b.isTopInning===a.isTopInning; });
-    var k=same.indexOf(e);
-    xs.push(px+iw*(halfIdx+(k+1)/(same.length+0.001))/(ninn*2));
+    var a=e.about||{}, x=XM.map[a.atBatIndex];
+    if(x==null){
+      var topH=a.isTopInning!==false&&a.halfInning!=='bottom', halfIdx=((a.inning||1)-1)*2+(topH?0:1);
+      var same=wp.filter(function(y){ var b=y.about||{}; return b.inning===a.inning&&b.isTopInning===a.isTopInning; });
+      x=halfIdx/2+0.5*(same.indexOf(e)+1)/same.length;
+    }
+    xs.push(px+iw*Math.min(x,ninn)/ninn);
   });
-  if(st==='Final') xs.push(Math.min(px+iw,xs[xs.length-1]+4));
+  if(st==='Final') xs.push(xs[xs.length-1]);
   var Y=function(v){ return py+ih*(1-v/100); };
   var path=vals.map(function(v,i){ return (i?'L':'M')+xs[i].toFixed(1)+' '+Y(v).toFixed(1); }).join(' ');
   var area=path+' L'+xs[xs.length-1].toFixed(1)+' '+Y(0)+' L'+px+' '+Y(0)+' Z';
@@ -2953,7 +2958,7 @@ function mfEvents(F){
 function mfXMap(F){
   var all=(F.liveData.plays||{}).allPlays||[], ls=F.liveData.linescore||{}, halves={}, keys=[];
   all.forEach(function(p,i){
-    var a=p.about||{}; if(!a.inning) return;
+    var a=p.about||{}; if(!a.inning||a.isComplete===false) return; /* v42: completed PAs only, same as the WP feed */
     var top=a.isTopInning!==false&&a.halfInning!=='bottom', k=(a.inning-1)*2+(top?0:1);
     if(!halves[k]){ halves[k]=[]; keys.push(k); }
     halves[k].push({ab:a.atBatIndex!=null?a.atBatIndex:i, done:a.isComplete!==false, outs:(p.count||{}).outs});
@@ -2978,7 +2983,8 @@ function gcMomentum(F){
   var C=pairCols(A,H), up=gcPersp(F); if(up!==A&&up!==H) up=H;
   var dn=up===H?A:H, cu=up===H?C[1]:C[0], cd=up===H?C[0]:C[1];
   var live=gd.status.abstractGameState==='Live', XM=mfXMap(F), nInn=XM.nInn, endX=0;
-  ev.forEach(function(e){ e.x=XM.map[e.t]!=null?XM.map[e.t]:0; if(e.x>endX) endX=e.x; });
+  ev=ev.filter(function(e){ return XM.map[e.t]!=null; }); if(ev.length<4) return '';
+  ev.forEach(function(e){ e.x=XM.map[e.t]; if(e.x>endX) endX=e.x; });
   endX=Math.max(endX,XM.cur,0.05);
   var W=1000,H2=100,MID=50,AMP=43,SIG=0.45,N=Math.max(24,Math.round(420*endX/nInn)),step=endX/N,lo=0,m=[],maxA=0,i,k;
   ev.sort(function(a,b){ return a.x-b.x; });
@@ -3017,7 +3023,7 @@ function gcMomentum(F){
   var now=m[m.length-1], rel=Math.abs(now)/maxA, who=now>0?up:dn;
   var head=rel<0.15?'Nothing doing either way':(nick(who)+(rel>0.55?' all over them':' with the better of it'));
   var note='<b>'+esc(head)+'</b>'+(live?' right now.':' at the last out.')+' Last three innings '+esc(ab(up))+' '+ru+', '+esc(ab(dn))+' '+rd+'.';
-  var body='<div class="mflow"><div class="mfw">'+svg+nowMark+chips+dots+'</div><div class="mfx">'+labs+'</div><div class="mfnote">'+note+'</div></div>';
+  var body='<div class="mflow"><div class="mfw"><div class="mfpl">'+svg+nowMark+dots+'</div>'+chips+'</div><div class="mfx">'+labs+'</div><div class="mfnote">'+note+'</div></div>';
   return card('Game flow',body,'o3','<span class="gn">dots are runs</span>');
 }
 function gcRender(){
@@ -3895,6 +3901,7 @@ setInterval(function(){ tickSlow(); }, 180000);
 window.LSD=S; window.LSD.openPlayer=snOpenPlayer; window.LSD.closePlayer=snClosePlayer; /* v33: test hook */
 window.LSD.gcHeader=gcHeader; /* v35: test hook, the header renders from a feed with no network */
 window.LSD.gcMomentum=gcMomentum; window.LSD.gcRender=gcRender; /* v36 */
+window.LSD.gcWP=gcWP; /* v42: test hook */
 })();
 
 /* Search X and any other new-tab link: iOS quietly drops window.open from a touch, so on a
