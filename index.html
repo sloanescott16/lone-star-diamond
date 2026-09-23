@@ -617,7 +617,9 @@ svg.zone .zg{stroke:#2e3542; stroke-width:1}
 svg.zone .plate{fill:#d9dde6; opacity:.85}
 svg.zone .bat{fill:var(--dim); font:700 10px var(--body); letter-spacing:.06em}
 /* v46: hot and cold zones */
-svg.zone .hzt{fill:#fff; font:700 8.6px var(--body); letter-spacing:-.15px; text-anchor:middle; dominant-baseline:central; paint-order:stroke; stroke:rgba(0,0,0,.45); stroke-width:1.6px; pointer-events:none}
+svg.zone .hzc{stroke:rgba(11,14,20,.55); stroke-width:1}
+svg.zone .zb.hzon{fill:none; stroke:rgba(255,255,255,.9); stroke-width:1.8}
+svg.zone .hzt{fill:#fff; font:700 10.5px var(--body); letter-spacing:-.15px; text-anchor:middle; dominant-baseline:central; paint-order:stroke; stroke:rgba(0,0,0,.45); stroke-width:1.6px; pointer-events:none}
 svg.zone .hz.quiet .hzc{fill-opacity:.3}
 svg.zone .hz.quiet .hzt{opacity:0; transition:opacity .15s}
 svg.zone:hover .hz.quiet .hzt{opacity:1}
@@ -2413,7 +2415,7 @@ function hzCells(hz,zl,zt,w,h,quiet){
   var s='<g class="hz'+(quiet?' quiet':'')+'">';
   for(var i=1;i<=9;i++){
     var q=z[i]; if(!q) continue;
-    var c=HZCOL[q.t]||HZCOL.lukewarm, cx=zl+((i-1)%3)*w/3, cy=zt+Math.floor((i-1)/3)*h/3;
+    var c=HZCOL[q.t]||HZCOL.lukewarm, cx=zl+(2-(i-1)%3)*w/3, cy=zt+Math.floor((i-1)/3)*h/3; /* v47: zones are numbered from the catcher's side, drawn from the pitcher's */
     s+='<rect class="hzc" x="'+cx.toFixed(1)+'" y="'+cy.toFixed(1)+'" width="'+(w/3).toFixed(1)+'" height="'+(h/3).toFixed(1)+'" fill="'+c[0]+'" fill-opacity="'+c[1]+'"/>'+
        '<text class="hzt" x="'+(cx+w/6).toFixed(1)+'" y="'+(cy+h/6).toFixed(1)+'">'+esc(String(q.v).replace(/^0\./,'.'))+'</text>';
   }
@@ -2422,24 +2424,29 @@ function hzCells(hz,zl,zt,w,h,quiet){
 function hzKey(hz){
   var st=hzStat();
   return '<div class="hzk">'+HZSTAT.map(function(x){ return '<button type="button" data-hzs="'+x[0]+'" class="'+(x[0]===st?'on':'')+'">'+x[1]+'</button>'; }).join('')+
-    '<span>'+(hz.yr!==SEASON?hz.yr+' ':'')+'by zone</span></div>';
+    (hz.yr!==SEASON?'<span>'+hz.yr+'</span>':'')+'</div>';
 }
 function zoneSVG(play){
   var ev=pitchesOf(play), top=3.4, bot=1.6;
   ev.forEach(function(e){ var pd=e.pitchData||{}; if(pd.strikeZoneTop){ top=pd.strikeZoneTop; bot=pd.strikeZoneBottom; } });
-  /* v46: 56 units a foot (was 46) so the zone, and the heat painted in it, reads bigger */
-  var X=function(v){ return Math.max(8,Math.min(192,100+v*56)); };
+  /* v46: 56 units a foot (was 46) so the zone, and the heat painted in it, reads bigger.
+     v47: drawn from the pitcher's side, like ESPN, so pX (catcher's right is +) is mirrored */
+  var X=function(v){ return Math.max(8,Math.min(192,100-v*56)); };
   var Y=function(v){ return Math.max(8,Math.min(238,236-v*56)); };
-  var zl=X(-0.708), zr=X(0.708), zt=Y(top), zb=Y(bot), w=zr-zl, h=zb-zt;
+  var zl=X(0.708), zr=X(-0.708), zt=Y(top), zb=Y(bot), w=zr-zl, h=zb-zt;
   var s='<svg class="zone" viewBox="0 0 200 270" role="img" aria-label="Pitch locations">';
   var hz=play&&play.matchup&&play.matchup.batter?hzLoad(play.matchup.batter.id):null;
-  if(hz) s+=hzCells(hz,zl,zt,w,h,ev.some(function(e){ var c=(e.pitchData||{}).coordinates||{}; return c.pX!=null; }));
-  s+='<rect class="zb" x="'+zl+'" y="'+zt+'" width="'+w+'" height="'+h+'"/>';
-  s+='<line class="zg" x1="'+(zl+w/3)+'" y1="'+zt+'" x2="'+(zl+w/3)+'" y2="'+zb+'"/><line class="zg" x1="'+(zl+2*w/3)+'" y1="'+zt+'" x2="'+(zl+2*w/3)+'" y2="'+zb+'"/>';
-  s+='<line class="zg" x1="'+zl+'" y1="'+(zt+h/3)+'" x2="'+zr+'" y2="'+(zt+h/3)+'"/><line class="zg" x1="'+zl+'" y1="'+(zt+2*h/3)+'" x2="'+zr+'" y2="'+(zt+2*h/3)+'"/>';
-  s+='<path class="plate" d="M'+zl+' 250 H'+zr+' V256 L100 264 L'+zl+' 256 Z"/>';
+  /* v47: like ESPN the heat spills past the zone, which is drawn as a box on top of it */
+  var hzOn=false;
+  if(hz){ var mx=w*0.2, my=h*0.07, cells=hzCells(hz,zl-mx,zt-my,w+2*mx,h+2*my,ev.some(function(e){ var c=(e.pitchData||{}).coordinates||{}; return c.pX!=null; })); if(cells){ s+=cells; hzOn=true; } }
+  s+='<rect class="zb'+(hzOn?' hzon':'')+'" x="'+zl+'" y="'+zt+'" width="'+w+'" height="'+h+'"/>';
+  if(!hzOn){
+    s+='<line class="zg" x1="'+(zl+w/3)+'" y1="'+zt+'" x2="'+(zl+w/3)+'" y2="'+zb+'"/><line class="zg" x1="'+(zl+2*w/3)+'" y1="'+zt+'" x2="'+(zl+2*w/3)+'" y2="'+zb+'"/>';
+    s+='<line class="zg" x1="'+zl+'" y1="'+(zt+h/3)+'" x2="'+zr+'" y2="'+(zt+h/3)+'"/><line class="zg" x1="'+zl+'" y1="'+(zt+2*h/3)+'" x2="'+zr+'" y2="'+(zt+2*h/3)+'"/>';
+  }
+  s+='<path class="plate" d="M'+zl+' 264 H'+zr+' V257 L100 249 L'+zl+' 257 Z"/>'; /* v47: from the pitcher's side the point faces away */
   var bs=((play&&play.matchup&&play.matchup.batSide)||{}).code;
-  if(bs) s+='<text class="bat" x="'+(bs==='L'?186:14)+'" y="130" text-anchor="middle" transform="rotate(-90 '+(bs==='L'?186:14)+' 130)">'+(bs==='L'?'LEFTY':'RIGHTY')+'</text>';
+  if(bs){ var bx=bs==='L'?14:186; s+='<text class="bat" x="'+bx+'" y="130" text-anchor="middle" transform="rotate(-90 '+bx+' 130)">'+(bs==='L'?'LEFTY':'RIGHTY')+'</text>'; }
   ev.forEach(function(e,i){
     var c=(e.pitchData||{}).coordinates||{};
     if(c.pX==null||c.pZ==null) return;
@@ -2506,7 +2513,7 @@ function gcMatchup(F){
         (pd.startSpeed?'<span class="mph">'+Math.round(pd.startSpeed)+' <small style="font-size:11px;color:var(--dim)">MPH</small></span>':'')+'</div>';
     }
     var hzb=play.matchup&&play.matchup.batter&&S.gc.hz&&S.gc.hz[play.matchup.batter.id];
-    body+='<div class="zw"><div><div class="zlab">Catcher\'s view</div>'+zoneSVG(play)+(hzb&&hzb.ok?hzKey(hzb):'')+'</div><div><div class="zlab">'+label+'</div>'+pitchList(play)+
+    body+='<div class="zw"><div>'+zoneSVG(play)+(hzb&&hzb.ok?hzKey(hzb):'')+'</div><div><div class="zlab">'+label+'</div>'+pitchList(play)+
       (done&&play.result&&play.result.description?'<div class="pres"><b>'+esc(play.result.event||'')+'.</b> '+esc(play.result.description)+'</div>':'')+'</div></div>';
   }
   return card(st==='Final'?'Final':'At the plate',body,'o1');
