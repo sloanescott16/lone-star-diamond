@@ -2958,7 +2958,7 @@ function mfEvents(F){
 function mfXMap(F){
   var all=(F.liveData.plays||{}).allPlays||[], ls=F.liveData.linescore||{}, halves={}, keys=[];
   all.forEach(function(p,i){
-    var a=p.about||{}; if(!a.inning||a.isComplete===false) return; /* v42: completed PAs only, same as the WP feed */
+    var a=p.about||{}; if(!a.inning) return; /* the at-bat in progress counts: the WP feed carries it too */
     var top=a.isTopInning!==false&&a.halfInning!=='bottom', k=(a.inning-1)*2+(top?0:1);
     if(!halves[k]){ halves[k]=[]; keys.push(k); }
     halves[k].push({ab:a.atBatIndex!=null?a.atBatIndex:i, done:a.isComplete!==false, outs:(p.count||{}).outs});
