@@ -453,6 +453,16 @@ body.v-game #secLive,body.v-game #secSched,body.v-game #secStand,body.v-game #se
   background:linear-gradient(90deg,color-mix(in srgb,var(--ca) 30%,transparent) 0%,var(--card) 34%,var(--card) 66%,color-mix(in srgb,var(--ch) 30%,transparent) 100%);
   border:1px solid var(--line); border-radius:12px; padding:14px 22px}
 .gct{display:flex; align-items:center; gap:14px; min-width:0}
+/* v45: the score banner stays pinned under the top bar while the game center scrolls, and slims down
+   once it is pinned. JS sets --barh and toggles .stuck, padding the margin so nothing below jumps. */
+.gch{position:sticky; top:var(--barh,56px); z-index:40;
+  background:linear-gradient(90deg,color-mix(in srgb,var(--ca) 30%,transparent) 0%,var(--card) 34%,var(--card) 66%,color-mix(in srgb,var(--ch) 30%,transparent) 100%),var(--card)}
+.gch.stuck{padding-top:6px; padding-bottom:6px; border-top-left-radius:0; border-top-right-radius:0; box-shadow:0 8px 18px rgba(0,0,0,.5)}
+.gch.stuck .gct img{width:36px; height:36px}
+.gch.stuck .gct .tn{font-size:21px}
+.gch.stuck .gct .tr, .gch.stuck .gcm .gs3{display:none}
+.gch.stuck .gct .ts{font-size:42px}
+.gch.stuck .gcm .dia{width:33px; height:24px}
 .gct.h{flex-direction:row-reverse; text-align:right}
 .gct img{width:58px; height:58px; object-fit:contain; flex:none; filter:drop-shadow(0 0 3px rgba(255,255,255,.22))}
 .gct .tn{font-family:var(--display); font-size:28px; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
@@ -517,6 +527,7 @@ svg.dia rect.on{fill:var(--warn); stroke:var(--warn)}
   .gct.h{flex-direction:row-reverse}
   .gct>div:nth-child(2){order:3; flex-basis:100%}
   .gcm{min-width:0} .gcm .gs{font-size:16px} .gcm .gs3{display:none}
+  .gch.stuck{padding:5px 10px} .gch.stuck .gct>div:nth-child(2){display:none} .gch.stuck .gct img{width:26px;height:26px} .gch.stuck .gct .ts{font-size:30px}
 }
 /* v23: pregame mode */
 .o9{} @media (max-width:760px){ .o9{order:9} .o10{order:10} .o11{order:11} .o12{order:12} }
@@ -3125,7 +3136,7 @@ function gcRender(){
           '<div class="gc-col gc-side">'+preWin(F)+preStake(F)+preSeries(F)+preForm(F)+preInfo(F)+gcIL(F).replace('gcard o8','gcard o12')+'</div>'+
         '</div>';
     }catch(e){ box.innerHTML=head+'<div class="err">Preview render problem: '+esc(e.message)+'</div>'; if(window.console) console.error(e); }
-    return;
+    gcStick(); return;
   }
   try{
     box.innerHTML=head+gcHeader(F)+
@@ -3138,6 +3149,7 @@ function gcRender(){
     box.innerHTML=head+'<div class="err">Game Center render problem: '+esc(e.message)+'</div>';
     if(window.console) console.error(e);
   }
+  gcStick(); /* v45 */
   /* v44: keep the hover in place across the live refresh */
   var lh=S.gc.lh; if(lh&&S.view==='game'){ var el=document.elementFromPoint(lh.x,lh.y); if(el) gcHover({target:el,clientX:lh.x,clientY:lh.y}); }
 }
@@ -3159,6 +3171,20 @@ document.addEventListener('click',function(e){
 document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&S.view==='game') location.hash='#'+(S.gcFrom||'live'); });
 document.addEventListener('pointermove',function(e){ if(S.view==='game') gcHover(e); });
 setInterval(gcTick,1000);   /* v14: live game detail refreshes about every 5 s */
+/* v45: pin the score banner under the top bar; slim it once pinned without shifting the page */
+function gcStick(){
+  var bar=document.querySelector('.bar'), bh=bar?bar.getBoundingClientRect().height:0;
+  document.documentElement.style.setProperty('--barh',bh+'px');
+  var h=document.querySelector('#gc .gch'); if(!h) return;
+  var was=h.classList.contains('stuck');
+  var full=was?h._fullH:h.getBoundingClientRect().height;
+  var stuck=S.view==='game'&&window.scrollY>0&&h.getBoundingClientRect().top<=bh+1;
+  if(stuck===was) return;
+  if(stuck){ h._fullH=full; h.classList.add('stuck'); h.style.marginBottom=(12+full-h.getBoundingClientRect().height)+'px'; }
+  else { h.classList.remove('stuck'); h.style.marginBottom=''; }
+}
+window.addEventListener('scroll',gcStick,{passive:true});
+window.addEventListener('resize',gcStick);
 
 
 /* ================= Season tab ================= */
