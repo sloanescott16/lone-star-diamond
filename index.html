@@ -86,6 +86,8 @@ section{margin-top:26px}
 .ask .tick{font-family:var(--display); font-size:15px; line-height:1}
 .ask .tick.g{color:var(--good)} .ask .tick.b{color:var(--bad)}
 .ask img{width:19px; height:19px; object-fit:contain}
+/* v38: the quiet half of a two-rival ask */
+.ask .alt{color:var(--mute); font-weight:400; font-size:12px; margin-left:4px; white-space:nowrap}
 
 .games{display:grid; grid-template-columns:repeat(auto-fill,minmax(258px,1fr)); gap:11px}
 .g{
@@ -1405,7 +1407,9 @@ function slate(){
 
     var pull=null, split=false;
     if(isFav){ pull=FAV; }
-    else if(ra&&rh){ split=true; }
+    /* v38: two rivals playing each other is still not a coin flip. Root for the one
+       further from a spot, so the bigger threat takes the loss. */
+    else if(ra&&rh){ split=true; pull=(cmp(ra,rh)<=0)?h:a; }
     else if(ra){ pull=h; }
     else { pull=a; }
 
@@ -1429,11 +1433,12 @@ function chipFor(it){
   var has=(aS!=null&&hS!=null);
   if(it.st.fin && has){
     var w=aS>hS?it.a:it.h;
-    if(it.split) return ['Good either way','good'];
+    /* v38: a rival lost either way, but the right one losing is the better result */
+    if(it.split) return w===it.pull ? ['Best case','good'] : ['Half of it','split'];
     return w===it.pull ? ['Went our way','good'] : ['Not our way','bad'];
   }
   if(it.isFav) return ['Rangers','fav'];
-  if(it.split) return ['One of them loses','split'];
+  if(it.split) return ['Rather '+ab(it.pull),'split'];
   return ['Pull for '+ab(it.pull),'root'];
 }
 
@@ -1455,8 +1460,7 @@ function renderTonight(){
       var cls='row';
       if(st.fin&&has&&score<other) cls+=' lose';
       if(!st.fin){
-        if(it.split){}
-        else if(id===it.pull) cls+=' pull';
+        if(id===it.pull) cls+=' pull';
         else cls+=' fear';
       }
       var rr=S.byId[id];
@@ -1480,11 +1484,12 @@ function renderTonight(){
     // ask line
     if(!st.fin){
       if(it.isFav) asks.push({cls:'win',txt:'<b>Rangers</b> beat '+nick(it.a===FAV?it.h:it.a),id:FAV});
-      else if(it.split) asks.push({cls:'root',txt:nick(it.a)+' vs '+nick(it.h)+' &mdash; <b>free win either way</b>',id:it.a});
+      /* v38: name the side to root for even when both are rivals, and say why it is not a free win */
+      else if(it.split) asks.push({cls:'root',txt:'<b>'+nick(it.pull)+'</b> beat '+nick(it.pull===it.a?it.h:it.a)+' <span class="alt">one of them drops either way</span>',id:it.pull});
       else asks.push({cls:'root',txt:'<b>'+nick(it.pull)+'</b> beat '+nick(it.pull===it.a?it.h:it.a),id:it.pull});
     } else if(has){
       var w=aS>hS?it.a:it.h;
-      var good=it.split||w===it.pull;
+      var good=w===it.pull;
       asks.push({cls:good?'done-good':'done-bad',tick:good?'g':'b',
         txt:nick(w)+' '+Math.max(aS,hS)+', '+nick(w===it.a?it.h:it.a)+' '+Math.min(aS,hS),id:w});
     }
@@ -1560,7 +1565,7 @@ function renderBoard(){
     function row(id,score,other){
       var cls='br';
       if(st.fin&&has&&score<other) cls+=' lose';
-      if(!st.fin&&!it.split&&!it.other) cls+=(id===it.pull?' pull':' fear');
+      if(!st.fin&&!it.other) cls+=(id===it.pull?' pull':' fear');
       var rr=S.byId[id];
       return '<div class="'+cls+'" data-tid="'+id+'">'+
         '<img src="'+logo(id)+'" alt="" onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}">'+
@@ -2585,7 +2590,7 @@ function preStake(F){
   var gd=F.gameData, A=gd.teams.away.id, H=gd.teams.home.id, ra=S.byId[A], rh=S.byId[H], it=gcItem();
   if(!ra||!rh) return '';
   var why='';
-  if(it){ var cp=chipFor(it); why='<div class="stake">'+(it.isFav?'The Rangers play. Every one counts now.':it.split?'Both of these teams are in the Rangers\' way. One of them loses tonight.':'For the Rangers: pull for the '+esc(nick(it.pull))+'.')+'</div>'; }
+  if(it){ var cp=chipFor(it); why='<div class="stake">'+(it.isFav?'The Rangers play. Every one counts now.':it.split?'Both of these teams are in the Rangers\' way. One of them loses tonight, and the '+esc(nick(it.pull))+' are the one Texas would rather see win.':'For the Rangers: pull for the '+esc(nick(it.pull))+'.')+'</div>'; }
   function gbTxt(v){ return v==null||v==='-'?'Leads':(String(v).charAt(0)==='+'?v:v+' back'); }
   function cls(v){ return /^W/.test(v)?'up':/^L/.test(v)?'dn':''; }
   var rows=[
