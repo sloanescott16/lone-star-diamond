@@ -2188,10 +2188,19 @@ var TCOL={108:'#ba0021',109:'#a71930',110:'#df4601',111:'#bd3039',112:'#cc3433',
 134:'#fdb827',135:'#ffc425',136:'#00a0a0',137:'#fd5a1e',138:'#c41e3a',139:'#f5d130',140:'#2f6fe0',141:'#e8291c',
 142:'#d31145',143:'#e81828',144:'#ce1141',145:'#9aa4b1',146:'#ef3340',147:'#d9dde6',158:'#ffc52f'};
 function hex2(c){ var n=parseInt(c.slice(1),16); return [n>>16,(n>>8)&255,n&255]; }
-function near(a,b){ var x=hex2(a),y=hex2(b); return Math.hypot(x[0]-y[0],x[1]-y[1],x[2]-y[2])<95; }
+/* v39: two greys (or a grey and a washed gold) read as white on white in the flow wave.
+   A clash is close in RGB or both nearly colourless; the side that gives way takes the first
+   vivid alternate that stands clear of the colour it is up against. Blue stays the Rangers'. */
+var ALTCOL=['#f0b429','#22b8a6','#e8543c','#a77be0','#8fd14f'];
+function csat(c){ var x=hex2(c); return (Math.max(x[0],x[1],x[2])-Math.min(x[0],x[1],x[2]))/255; }
+function near(a,b){ var x=hex2(a),y=hex2(b); return Math.hypot(x[0]-y[0],x[1]-y[1],x[2]-y[2])<110||(csat(a)<.3&&csat(b)<.3); }
 function pairCols(a,h){
   var ca=TCOL[a]||'#9aa4b1', ch=TCOL[h]||'#c9ced8';
-  if(near(ca,ch)){ if(h===FAV) ca='#9aa4b1'; else ch=(ca==='#9aa4b1'?'#d9dde6':'#9aa4b1'); }
+  if(a===FAV) ca='#2f6fe0'; if(h===FAV) ch='#2f6fe0';
+  if(near(ca,ch)){
+    var keep=h===FAV?ch:ca, alt=ALTCOL.filter(function(c){ return !near(c,keep); })[0]||'#f0b429';
+    if(h===FAV) ca=alt; else ch=alt;
+  }
   return [ca,ch];
 }
 function shot(id){ return 'https://img.mlbstatic.com/mlb-photos/image/upload/d_people:generic:headshot:67:current.png/w_120,q_auto:best/v1/people/'+id+'/headshot/67/current'; }
