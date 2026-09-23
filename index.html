@@ -3174,7 +3174,7 @@ function gcMomentum(F){
   var head=rel<0.15?'Nothing doing either way':(nick(who)+(rel>0.55?' all over them':' with the better of it'));
   var note='<b>'+esc(head)+'</b>'+(live?' right now.':' at the last out.')+' Last three innings '+esc(ab(up))+' '+ru+', '+esc(ab(dn))+' '+rd+'.';
   var body='<div class="mflow"><div class="mfw"><div class="mfpl">'+svg+nowMark+dots+'<span class="mfcur" id="mfcur"></span><span class="mfhd" id="mfhd"></span></div>'+chips+'</div><div class="mfx">'+labs+'</div><div class="mfnote">'+note+'</div><div class="wptip mftip" id="mftip"></div></div>';
-  return card('Game flow',body,'o3 mfcard','<span class="gn">dots are runs</span>');
+  return card('Game flow',body,'o3 mfcard');   /* v49: no caption on the game flow */
 }
 function gcRender(){
   var box=$('gc'); if(!box) return;
