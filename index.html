@@ -2923,10 +2923,14 @@ function gcIL(F){
    the team it helped, runs hardest of all, and each one fades over about five batters. */
 function mfEvents(F){
   var pl=F.liveData.plays||{}, all=pl.allPlays||[], gd=F.gameData;
-  var A=gd.teams.away.id, H=gd.teams.home.id, out=[];
+  var A=gd.teams.away.id, H=gd.teams.home.id, out=[], pa=0, ph=0;
   all.forEach(function(p,i){
     var r=p.result||{}, a=p.about||{};
-    if(!r.eventType&&!r.rbi) return;
+    /* v41: runs come from the score change, not RBI, so a run on an error, wild pitch,
+       passed ball or double play still gets its dot and its weight */
+    var sa=r.awayScore!=null?r.awayScore:pa, sh=r.homeScore!=null?r.homeScore:ph;
+    var runs=Math.max(0,a.isTopInning?sa-pa:sh-ph); pa=Math.max(pa,sa); ph=Math.max(ph,sh);
+    if(!r.eventType&&!runs) return;
     var bat=a.isTopInning?A:H, pit=a.isTopInning?H:A, t=a.atBatIndex!=null?a.atBatIndex:i;
     var ev=String(r.eventType||'').toLowerCase(), w=0, team=bat;
     if(/home_run/.test(ev)) w=10;
@@ -2939,7 +2943,7 @@ function mfEvents(F){
     else if(/double_play/.test(ev)){ team=pit; w=2.5; }
     else if(/out|fielders_choice|sac_/.test(ev)){ team=pit; w=1; }
     if(w) out.push({t:t, w:w, team:team, p:p, inn:a.inning||1});
-    if(r.rbi) out.push({t:t, w:4*r.rbi, team:bat, p:p, inn:a.inning||1, runs:r.rbi});
+    if(runs) out.push({t:t, w:4*runs, team:bat, p:p, inn:a.inning||1, runs:runs});
   });
   return out;
 }
