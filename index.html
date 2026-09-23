@@ -463,7 +463,7 @@ body.v-game #secLive,body.v-game #secSched,body.v-game #secStand,body.v-game #se
 /* v36: the momentum wave, the same strip The Crease got. Top side is the favourite when they are
    playing, otherwise the home side; every event fades over a couple of minutes. */
 .mflow{margin:0}
-.mfw{position:relative; height:124px; border-radius:10px; overflow:hidden; background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(0,0,0,.18))}
+.mfw{position:relative; height:118px; border-radius:10px; overflow:hidden; background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(0,0,0,.18))}
 .mfw svg{position:absolute; inset:0; width:100%; height:100%; display:block}
 .mfw .mfax{stroke:#454e60}
 .mfw .mfdiv{stroke:#2b3241; stroke-dasharray:3 4}
@@ -477,6 +477,9 @@ body.v-game #secLive,body.v-game #secSched,body.v-game #secStand,body.v-game #se
 .mfp{position:absolute; top:0; transform:translateX(-50%); font-size:9.5px; letter-spacing:.09em;
   text-transform:uppercase; color:var(--dim); font-weight:700; white-space:nowrap}
 .mfnote{font-size:11.5px; color:var(--mute); margin-top:4px}
+/* v40: innings still to come are dimmer; a thin marker shows where the game is now */
+.mfp.fut{opacity:.45}
+.mfnow{position:absolute; top:6px; bottom:6px; width:0; border-left:1px dashed rgba(255,255,255,.35); pointer-events:none}
 .mfnote b{color:var(--ink); font-weight:600}
 @media (max-width:760px){ .mfw{height:98px} .mft{font-size:12px} .mft img{width:15px;height:15px} }
 
@@ -2940,55 +2943,78 @@ function mfEvents(F){
   });
   return out;
 }
+/* v40: the wave lives in the side column above Win probability and sits on a fixed nine-inning
+   axis like that chart, each half inning half an inning wide, so the line grows left to right as
+   the game goes on. Extra innings widen the axis. Window is in innings now, not at-bats. */
+function mfXMap(F){
+  var all=(F.liveData.plays||{}).allPlays||[], ls=F.liveData.linescore||{}, halves={}, keys=[];
+  all.forEach(function(p,i){
+    var a=p.about||{}; if(!a.inning) return;
+    var top=a.isTopInning!==false&&a.halfInning!=='bottom', k=(a.inning-1)*2+(top?0:1);
+    if(!halves[k]){ halves[k]=[]; keys.push(k); }
+    halves[k].push({ab:a.atBatIndex!=null?a.atBatIndex:i, done:a.isComplete!==false, outs:(p.count||{}).outs});
+  });
+  keys.sort(function(a,b){ return a-b; });
+  var live=F.gameData.status.abstractGameState==='Live', last=keys[keys.length-1], map={}, cur=0;
+  keys.forEach(function(k){
+    var h=halves[k], n=h.length, den=n;
+    if(live&&k===last){
+      var outs=h.reduce(function(m,x){ return x.outs!=null?Math.max(m,x.outs):m; },0);
+      if(ls.outs!=null) outs=Math.max(outs,ls.outs);
+      if(outs<3) den=Math.max(n+0.5,outs>0?n*3/outs:n+3);   /* still batting: leave room for the rest of the half */
+    }
+    h.forEach(function(x,j){ map[x.ab]=k/2+0.5*(j+1)/den; });
+    cur=Math.max(cur,k/2+0.5*n/den);
+  });
+  return {map:map, cur:cur, nInn:Math.max(9,Math.ceil(cur-1e-6),ls.currentInning||0)};
+}
 function gcMomentum(F){
   var gd=F.gameData, A=gd.teams.away.id, H=gd.teams.home.id;
   var ev=mfEvents(F); if(ev.length<4) return '';
   var C=pairCols(A,H), up=gcPersp(F); if(up!==A&&up!==H) up=H;
   var dn=up===H?A:H, cu=up===H?C[1]:C[0], cd=up===H?C[0]:C[1];
-  var all=(F.liveData.plays||{}).allPlays||[], live=gd.status.abstractGameState==='Live';
-  var endT=0, innAt={};
-  ev.forEach(function(e){ if(e.t>endT) endT=e.t; });
-  all.forEach(function(p){ var a=p.about||{}; if(a.atBatIndex==null||!a.inning) return; if(innAt[a.inning]==null) innAt[a.inning]=a.atBatIndex; });
-  endT=Math.max(endT,6);
-  var W=1000,H2=100,MID=50,AMP=43,N=340,SIG=5,step=endT/N,lo=0,m=[],maxA=0,i,k;
+  var live=gd.status.abstractGameState==='Live', XM=mfXMap(F), nInn=XM.nInn, endX=0;
+  ev.forEach(function(e){ e.x=XM.map[e.t]!=null?XM.map[e.t]:0; if(e.x>endX) endX=e.x; });
+  endX=Math.max(endX,XM.cur,0.05);
+  var W=1000,H2=100,MID=50,AMP=43,SIG=0.45,N=Math.max(24,Math.round(420*endX/nInn)),step=endX/N,lo=0,m=[],maxA=0,i,k;
+  ev.sort(function(a,b){ return a.x-b.x; });
   for(i=0;i<=N;i++){
     var t=i*step, v=0;
-    while(lo<ev.length&&ev[lo].t<t-3*SIG) lo++;
-    for(k=lo;k<ev.length&&ev[k].t<t+3*SIG;k++){ var d=(t-ev[k].t)/SIG, sg=ev[k].team===up?1:-1; v+=sg*ev[k].w*Math.exp(-d*d); }
+    while(lo<ev.length&&ev[lo].x<t-3*SIG) lo++;
+    for(k=lo;k<ev.length&&ev[k].x<t+3*SIG;k++){ var d=(t-ev[k].x)/SIG, sg=ev[k].team===up?1:-1; v+=sg*ev[k].w*Math.exp(-d*d); }
     m.push(v); if(Math.abs(v)>maxA) maxA=Math.abs(v);
   }
   maxA=Math.max(maxA,8);
-  function X(t){ return t/endT*W; }
+  function X(x){ return x/nInn*W; }
   function Y(v){ return MID-(v/maxA)*AMP; }
   var dd=m.map(function(v,i){ return X(i*step).toFixed(2)+' '+Y(v).toFixed(2); });
-  var line='M'+dd.join('L'), area='M0 '+MID+'L'+dd.join('L')+'L'+W+' '+MID+'Z';
-  var innings=Object.keys(innAt).map(Number).sort(function(a,b){ return a-b; });
+  var line='M'+dd.join('L'), area='M0 '+MID+'L'+dd.join('L')+'L'+X(endX).toFixed(2)+' '+MID+'Z';
   var grid='', labs='';
-  innings.forEach(function(n2,ix){
-    var st=innAt[n2], en=innings[ix+1]!=null?innAt[innings[ix+1]]:endT;
-    if(ix) grid+='<line class="mfdiv" x1="'+X(st).toFixed(1)+'" x2="'+X(st).toFixed(1)+'" y1="5" y2="'+(H2-5)+'" vector-effect="non-scaling-stroke"/>';
-    if(en-st>=1||innings.length<=9) labs+='<span class="mfp" style="left:'+((st+en)/2/endT*100).toFixed(2)+'%">'+n2+'</span>';
-  });
+  for(i=0;i<nInn;i++){
+    if(i) grid+='<line class="mfdiv" x1="'+X(i).toFixed(1)+'" x2="'+X(i).toFixed(1)+'" y1="5" y2="'+(H2-5)+'" vector-effect="non-scaling-stroke"/>';
+    labs+='<span class="mfp'+(i+1>Math.ceil(endX-1e-6)?' fut':'')+'" style="left:'+((i+0.5)/nInn*100).toFixed(2)+'%">'+(i+1)+'</span>';
+  }
   var svg='<svg viewBox="0 0 '+W+' '+H2+'" preserveAspectRatio="none" aria-hidden="true">'+
     '<defs><clipPath id="mfT"><rect x="0" y="0" width="'+W+'" height="'+MID+'"/></clipPath>'+
     '<clipPath id="mfB"><rect x="0" y="'+MID+'" width="'+W+'" height="'+(H2-MID)+'"/></clipPath></defs>'+grid+
+    '<line class="mfax" x1="0" x2="'+W+'" y1="'+MID+'" y2="'+MID+'" vector-effect="non-scaling-stroke"/>'+
     '<g clip-path="url(#mfT)"><path d="'+area+'" fill="'+cu+'" opacity=".4"/><path d="'+line+'" fill="none" stroke="'+cu+'" stroke-width="2" vector-effect="non-scaling-stroke"/></g>'+
-    '<g clip-path="url(#mfB)"><path d="'+area+'" fill="'+cd+'" opacity=".4"/><path d="'+line+'" fill="none" stroke="'+cd+'" stroke-width="2" vector-effect="non-scaling-stroke"/></g>'+
-    '<line class="mfax" x1="0" x2="'+W+'" y1="'+MID+'" y2="'+MID+'" vector-effect="non-scaling-stroke"/></svg>';
+    '<g clip-path="url(#mfB)"><path d="'+area+'" fill="'+cd+'" opacity=".4"/><path d="'+line+'" fill="none" stroke="'+cd+'" stroke-width="2" vector-effect="non-scaling-stroke"/></g></svg>';
   var dots=ev.filter(function(e){ return e.runs; }).slice(0,40).map(function(e){
     var a=e.p.about||{}, r=e.p.result||{};
-    return '<span class="mfg" style="left:'+Math.min(99.5,Math.max(.5,e.t/endT*100)).toFixed(2)+'%;background:'+(e.team===up?cu:cd)+'" '+
+    return '<span class="mfg" style="left:'+Math.min(99.5,Math.max(.5,e.x/nInn*100)).toFixed(2)+'%;background:'+(e.team===up?cu:cd)+'" '+
       'title="'+esc((a.isTopInning?'Top ':'Bot ')+ord(a.inning||1)+' · '+(r.description||''))+'"></span>';
   }).join('');
+  var nowMark=live?'<span class="mfnow" style="left:'+(endX/nInn*100).toFixed(2)+'%"></span>':'';
   var chips='<span class="mft h" style="color:'+cu+'">'+imgT(up)+esc(ab(up))+'</span>'+
     '<span class="mft a" style="color:'+cd+'">'+imgT(dn)+esc(ab(dn))+'</span>';
-  var lastInn=innings.length?innings[innings.length-1]:1, ru=0, rd=0;
+  var lastInn=Math.max(1,Math.ceil(endX-1e-6)), ru=0, rd=0;
   ev.forEach(function(e){ if(!e.runs||e.inn<lastInn-2) return; if(e.team===up) ru+=e.runs; else rd+=e.runs; });
   var now=m[m.length-1], rel=Math.abs(now)/maxA, who=now>0?up:dn;
   var head=rel<0.15?'Nothing doing either way':(nick(who)+(rel>0.55?' all over them':' with the better of it'));
   var note='<b>'+esc(head)+'</b>'+(live?' right now.':' at the last out.')+' Last three innings '+esc(ab(up))+' '+ru+', '+esc(ab(dn))+' '+rd+'.';
-  var body='<div class="mflow"><div class="mfw">'+svg+chips+dots+'</div><div class="mfx">'+labs+'</div><div class="mfnote">'+note+'</div></div>';
-  return card('Game flow',body,'','<span class="gn">at-bat by at-bat, dots are runs</span>');
+  var body='<div class="mflow"><div class="mfw">'+svg+nowMark+chips+dots+'</div><div class="mfx">'+labs+'</div><div class="mfnote">'+note+'</div></div>';
+  return card('Game flow',body,'o3','<span class="gn">dots are runs</span>');
 }
 function gcRender(){
   var box=$('gc'); if(!box) return;
@@ -3014,11 +3040,11 @@ function gcRender(){
     return;
   }
   try{
-    box.innerHTML=head+gcHeader(F)+gcMomentum(F)+
+    box.innerHTML=head+gcHeader(F)+
       '<div class="gc-grid">'+
         '<div class="gc-col gc-box">'+gcBox(F)+gcPBP(F)+'</div>'+ /* v22: play by play under the box score */
         '<div class="gc-col gc-mid">'+gcMatchup(F)+gcScoring(F)+'</div>'+
-        '<div class="gc-col gc-side">'+gcWP(F)+gcLine(F)+gcCompare(F)+gcIL(F)+'</div>'+
+        '<div class="gc-col gc-side">'+gcMomentum(F)+gcWP(F)+gcLine(F)+gcCompare(F)+gcIL(F)+'</div>'+
       '</div>';
   }catch(e){
     box.innerHTML=head+'<div class="err">Game Center render problem: '+esc(e.message)+'</div>';
