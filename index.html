@@ -1340,6 +1340,10 @@ function blockers(){
 function blockerIds(){
   var m={}; blockers().forEach(function(r){m[r.id]=1;}); return m;
 }
+/* v37: every live rival, ahead or behind (a chaser one back still swings the race) */
+function rivalIds(){
+  var m={}; rivals().forEach(function(r){m[r.id]=1;}); return m;
+}
 
 /* a division leader who could still be dumped into the wild card pool */
 function bumpable(){
@@ -1390,7 +1394,7 @@ function gameStatus(g){
 /* every game today that moves the needle, classified and ranked */
 function slate(){
   var t=tex(); if(!t) return [];
-  var riv={}; blockers().forEach(function(r){riv[r.id]=r;});
+  var riv={}; rivals().forEach(function(r){riv[r.id]=r;});
   var list=[];
 
   S.games.forEach(function(g){
@@ -1408,8 +1412,9 @@ function slate(){
     var stake=0;
     if(isFav) stake=1000;
     else {
-      var g1=ra?Math.abs(gapVs(ra)):99, g2=rh?Math.abs(gapVs(rh)):99;
-      stake=100-Math.min(g1,g2);
+      /* v37: chasers count, but at equal distance a team ahead ranks first */
+      function wt(r){ return r?(100-Math.abs(gapVs(r))-(cmp(r,t)>0?0.5:0)):0; }
+      stake=Math.max(wt(ra),wt(rh));
       if(split) stake+=20;
     }
     list.push({g:g,a:a,h:h,isFav:isFav,pull:pull,split:split,stake:stake,st:gameStatus(g)});
@@ -1504,7 +1509,7 @@ S.flt=(function(){ try{ return localStorage.getItem('pc-flt')||'all'; }catch(e){
 var FLTN={all:'',tex:' that matters to the Rangers',race:' in the playoff race',AL:' in the American League',NL:' in the National League',200:' in the AL West',201:' in the AL East',202:' in the AL Central',203:' in the NL East',204:' in the NL Central',205:' in the NL West'};
 function teamIn(id){
   if(S.flt==='all') return true;
-  if(S.flt==='tex') return id===FAV||!!blockerIds()[id];
+  if(S.flt==='tex') return id===FAV||!!rivalIds()[id];
   if(S.flt==='race') return inRace(id);
   var r=S.byId[id]; if(!r) return false;
   if(S.flt==='AL'||S.flt==='NL') return lgOf(r)===S.flt;
@@ -1808,13 +1813,18 @@ function renderPath(){
   var R=races();
   var west=R.west, pool=R.pool;
   var leader=west[0];
-  var bid=blockerIds();
+  var rid=rivalIds();
 
-  // only the teams standing between Texas and the spot
-  var westOthers=west.filter(function(r){return r.id!==FAV&&bid[r.id];});
-  var wcOthers=pool.filter(function(r){return r.id!==FAV&&bid[r.id];}).slice(0,4);
+  /* v37: the teams in the way AND the ones right behind, so a chaser one game back
+     still sets the magic number instead of the card reading "outright" */
+  var westOthers=west.filter(function(r){return r.id!==FAV&&rid[r.id];});
+  var wcAll=pool.filter(function(r){return r.id!==FAV&&rid[r.id];});
 
   var cut=pool[2]||pool[pool.length-1];
+  var holdsWC=!(cut&&cut.id!==FAV);
+  var wcAhead=wcAll.filter(function(r){return cmp(r,t)<=0;});
+  var wcBehind=wcAll.filter(function(r){return cmp(r,t)>0;});
+  var wcOthers=(holdsWC?wcBehind.concat(wcAhead):wcAhead.concat(wcBehind)).slice(0,4);
   var bump=bumpable().filter(function(b){return b.lead.div!==200;});
 
   var html='';
@@ -1840,8 +1850,12 @@ function renderWhatIf(){
   $('slVal').firstChild.nodeValue=rw+'-'+(t.left-rw);
   var finalW=t.w+rw, finalL=t.l+(t.left-rw);
 
-  var rows=blockers();
-  if(!rows.length){ $('whatif').innerHTML='<tr><td colspan="4" class="say">Nobody ahead of Texas.</td></tr>'; return; }
+  /* v37: chasers in the table too, nearest first, the ones ahead leading */
+  var rows=rivals().sort(function(a,b){
+    var ba=cmp(a,t)<=0?0:1, bb=cmp(b,t)<=0?0:1;
+    return ba-bb || Math.abs(gapVs(a))-Math.abs(gapVs(b)) || cmp(a,b);
+  });
+  if(!rows.length){ $('whatif').innerHTML='<tr><td colspan="4" class="say">Nobody within reach of Texas.</td></tr>'; return; }
 
   $('whatif').innerHTML=rows.map(function(o){
     var cap=affordable(o,rw);
