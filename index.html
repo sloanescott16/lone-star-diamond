@@ -711,6 +711,16 @@ details.pa>summary .psc{margin-left:auto; flex:none; font-family:var(--display);
 .wpw .mid{stroke:#3a4353; stroke-dasharray:3 3}
 .wptip{position:absolute; pointer-events:none; background:#0b0e14; border:1px solid var(--line); border-radius:6px; padding:6px 8px; font-size:11px; max-width:220px; color:var(--mute); display:none; z-index:5}
 .wptip b{color:var(--ink); display:block; font-family:var(--display); font-size:15px}
+/* v44: score after the play in both tips, and the synced hover marks */
+.wptip .sc{display:block; color:var(--ink); font-weight:700; font-size:12px; margin:1px 0 3px; letter-spacing:.02em}
+.wptip .sc i{font-style:normal; color:var(--dim); margin:0 3px}
+.wpw .hcur{stroke:rgba(255,255,255,.35); stroke-width:1}
+.mflow{position:relative}
+.mfw{touch-action:pan-y}
+.mfcur{position:absolute; top:4px; bottom:4px; width:0; border-left:1px solid rgba(255,255,255,.45); pointer-events:none; display:none; z-index:2}
+.mfhd{position:absolute; width:10px; height:10px; margin:-5px 0 0 -5px; border-radius:50%; border:2px solid #fff; pointer-events:none; display:none; z-index:3}
+.mftip{z-index:6}
+.gcard.mfcard{overflow:visible; position:relative; z-index:4} .gcard.mfcard>.gh{border-radius:10px 10px 0 0}
 .swings{margin-top:10px; padding-top:8px; border-top:1px solid var(--line)}
 .swings h4{margin:0 0 4px; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim)}
 .swings div{display:flex; gap:8px; align-items:baseline; padding:4px 0; font-size:12px; color:var(--mute)}
@@ -2852,8 +2862,9 @@ function gcWP(F){
   g+='<text class="ax" x="'+(px-4)+'" y="'+(Y(100)+3)+'" text-anchor="end">100</text><text class="ax" x="'+(px-4)+'" y="'+(Y(50)+3)+'" text-anchor="end">50</text><text class="ax" x="'+(px-4)+'" y="'+(Y(0)+3)+'" text-anchor="end">0</text>';
   var svg='<svg class="wpsvg" viewBox="0 0 '+W+' '+Hh+'"><defs><linearGradient id="wpg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+col+'" stop-opacity=".35"/><stop offset="1" stop-color="'+col+'" stop-opacity="0"/></linearGradient></defs>'+
     g+'<path d="'+area+'" fill="url(#wpg)"/><path d="'+path+'" fill="none" stroke="'+col+'" stroke-width="2" stroke-linejoin="round"/>'+
+    '<line id="wpcur" class="hcur" y1="'+py+'" y2="'+(py+ih)+'" style="display:none"/>'+
     '<circle id="wpdot" r="4" fill="'+col+'" stroke="#fff" stroke-width="1.5" style="display:none"/></svg>';
-  S.gc.pts={W:W,xs:xs,vals:vals,Y:Y,wp:wp,team:ab(persp)};
+  S.gc.pts={W:W,xs:xs,vals:vals,Y:Y,wp:wp,team:ab(persp),px:px,iw:iw,ninn:ninn,top:py,bot:py+ih};
   var now=vals[vals.length-1];
   // biggest swings, from our side
   var sw=wp.map(function(e){ return {e:e,v:wpaFor(F,e)}; }).filter(function(x){ return x.v!=null; })
@@ -2867,21 +2878,83 @@ function gcWP(F){
   return card('Win probability',body,'o3');
 }
 
-function wpHover(ev){
-  var svg=ev.target.closest&&ev.target.closest('.wpsvg'), P=S.gc.pts;
-  var tip=$('wptip'), dot=document.getElementById('wpdot');
-  if(!svg||!P||!tip){ if(tip) tip.style.display='none'; if(dot) dot.style.display='none'; return; }
-  var r=svg.getBoundingClientRect(), x=(ev.clientX-r.left)*P.W/r.width, best=0;
-  for(var i=1;i<P.xs.length;i++) if(Math.abs(P.xs[i]-x)<Math.abs(P.xs[best]-x)) best=i;
+/* v44: hovering either chart tracks the same plate appearance on both. The chart under the
+   pointer shows the tip (score after the play, inning, description); the other shows a guide
+   line and a dot at the same moment. Both charts share mfXMap, so one x in innings is enough. */
+function gcScoreAt(p){
+  var F=S.gc.feed; if(!F) return '';
+  var r=(p&&p.result)||{}, as=r.awayScore, hs=r.homeScore;
+  if((as==null||hs==null)&&p&&p.about){
+    var q=((F.liveData.plays||{}).allPlays||[]).filter(function(x){ return (x.about||{}).atBatIndex===p.about.atBatIndex; })[0];
+    if(q&&q.result){ as=q.result.awayScore; hs=q.result.homeScore; }
+  }
+  if(!p){ as=0; hs=0; }
+  if(as==null||hs==null) return '';
+  var gd=F.gameData;
+  return '<span class="sc">'+esc(ab(gd.teams.away.id))+' '+as+' <i>·</i> '+esc(ab(gd.teams.home.id))+' '+hs+'</span>';
+}
+function gcPlayLine(p){
+  if(!p) return 'First pitch';
+  var a=p.about||{}, r=p.result||{};
+  return (a.isTopInning?'Top ':'Bot ')+ord(a.inning||1)+': '+esc(r.description||r.event||'At bat in progress');
+}
+function wpShow(xin,withTip){
+  var P=S.gc.pts, tip=$('wptip'), dot=document.getElementById('wpdot'), cur=document.getElementById('wpcur');
+  var svg=document.querySelector('.wpsvg');
+  if(xin==null||!P||!svg||!dot){ if(tip) tip.style.display='none'; if(dot) dot.style.display='none'; if(cur) cur.style.display='none'; return null; }
+  var sx=P.px+P.iw*xin/P.ninn, best=0;
+  for(var i=1;i<P.xs.length;i++) if(Math.abs(P.xs[i]-sx)<Math.abs(P.xs[best]-sx)) best=i;
   var e=P.wp[best-1];
   dot.style.display=''; dot.setAttribute('cx',P.xs[best]); dot.setAttribute('cy',P.Y(P.vals[best]));
-  var a=(e&&e.about)||{}, res=(e&&e.result)||{};
-  tip.innerHTML='<b>'+P.team+' '+Math.round(P.vals[best])+'%</b>'+(e?(a.isTopInning?'Top ':'Bot ')+ord(a.inning||1)+': '+esc(res.description||res.event||''):'First pitch');
-  tip.style.display='block';
-  var left=(P.xs[best]/P.W)*r.width;
-  tip.style.left=Math.max(0,Math.min(r.width-220,left-110))+'px';
-  tip.style.top=(r.height+4)+'px';
+  if(cur){ cur.style.display=''; cur.setAttribute('x1',P.xs[best]); cur.setAttribute('x2',P.xs[best]); }
+  if(tip){
+    if(withTip){
+      var r=svg.getBoundingClientRect();
+      tip.innerHTML='<b>'+P.team+' '+Math.round(P.vals[best])+'%</b>'+gcScoreAt(e)+gcPlayLine(e);
+      tip.style.display='block';
+      var left=(P.xs[best]/P.W)*r.width;
+      tip.style.left=Math.max(0,Math.min(r.width-220,left-110))+'px';
+      tip.style.top=(r.height+4)+'px';
+    } else tip.style.display='none';
+  }
+  return (P.xs[best]-P.px)/P.iw*P.ninn;
 }
+function mfShow(xin,withTip){
+  var M=S.gc.mf, tip=$('mftip'), cur=$('mfcur'), hd=$('mfhd'), pl=document.querySelector('.mfpl');
+  if(xin==null||!M||!pl||!cur||!M.plays.length){ if(tip) tip.style.display='none'; if(cur) cur.style.display='none'; if(hd) hd.style.display='none'; return null; }
+  var best=null;
+  if(xin>0.02||!withTip){ M.plays.forEach(function(q){ if(!best||Math.abs(q.x-xin)<Math.abs(best.x-xin)) best=q; }); }
+  if(xin<=0.02&&M.plays[0]&&M.plays[0].x>0.04) best={x:0,p:null};
+  if(!best) best=M.plays[0];
+  var x=Math.min(best.x,M.endX), v=M.m[Math.min(M.m.length-1,Math.round(x/M.step))]||0;
+  var lp=(x/M.nInn*100).toFixed(2)+'%', tp=((M.MID-(v/M.maxA)*M.AMP)/M.H2*100).toFixed(2)+'%';
+  cur.style.display='block'; cur.style.left=lp;
+  hd.style.display='block'; hd.style.left=lp; hd.style.top=tp; hd.style.background=v>=0?M.cu:M.cd;
+  if(tip){
+    if(withTip){
+      var fw=pl.parentNode, r=pl.getBoundingClientRect(), rw=fw.getBoundingClientRect(), leftPx=r.left-rw.left+x/M.nInn*r.width;
+      var lean=Math.abs(v)/M.maxA<0.15?'Even':(nick(v>0?M.up:M.dn)+' pushing');
+      tip.innerHTML='<b>'+esc(lean)+'</b>'+gcScoreAt(best.p)+gcPlayLine(best.p);
+      tip.style.display='block';
+      tip.style.left=Math.max(0,Math.min(rw.width-220,leftPx-110))+'px';
+      tip.style.top=(rw.height+4)+'px';
+    } else tip.style.display='none';
+  }
+  return x;
+}
+function gcHover(ev){
+  var t=ev.target, P=S.gc.pts, M=S.gc.mf;
+  var wsvg=t&&t.closest&&t.closest('.wpsvg'), fw=t&&t.closest&&t.closest('.mfw');
+  if(wsvg&&P){
+    var r=wsvg.getBoundingClientRect(), sx=(ev.clientX-r.left)*P.W/r.width;
+    var x=wpShow(Math.max(0,(sx-P.px)/P.iw*P.ninn),true); mfShow(x,false);
+  } else if(fw&&M){
+    var pl=fw.querySelector('.mfpl'), r2=pl.getBoundingClientRect();
+    var x2=mfShow(Math.max(0,(ev.clientX-r2.left)/r2.width*M.nInn),true); wpShow(x2,false);
+  } else { wpShow(null); mfShow(null); S.gc.lh=null; return; }
+  S.gc.lh={x:ev.clientX,y:ev.clientY};
+}
+function wpHover(ev){ gcHover(ev); }
 
 /* ---------- team stats + injured list ---------- */
 
@@ -3015,6 +3088,11 @@ function gcMomentum(F){
     return '<span class="mfg" style="left:'+Math.min(99.5,Math.max(.5,e.x/nInn*100)).toFixed(2)+'%;background:'+(e.team===up?cu:cd)+'" '+
       'title="'+esc((a.isTopInning?'Top ':'Bot ')+ord(a.inning||1)+' · '+(r.description||''))+'"></span>';
   }).join('');
+  /* v44: hover state, shared with Win probability */
+  var hp=[], all2=(F.liveData.plays||{}).allPlays||[];
+  all2.forEach(function(p){ var a=p.about||{}, x=XM.map[a.atBatIndex]; if(x!=null&&x<=endX+1e-9) hp.push({x:x,p:p}); });
+  hp.sort(function(a,b){ return a.x-b.x; });
+  S.gc.mf={nInn:nInn,endX:endX,step:step,m:m,maxA:maxA,up:up,dn:dn,cu:cu,cd:cd,plays:hp,MID:MID,AMP:AMP,H2:H2};
   var nowMark=live?'<span class="mfnow" style="left:'+(endX/nInn*100).toFixed(2)+'%"></span>':'';
   var chips='<span class="mft h" style="color:'+cu+'">'+imgT(up)+esc(ab(up))+'</span>'+
     '<span class="mft a" style="color:'+cd+'">'+imgT(dn)+esc(ab(dn))+'</span>';
@@ -3023,8 +3101,8 @@ function gcMomentum(F){
   var now=m[m.length-1], rel=Math.abs(now)/maxA, who=now>0?up:dn;
   var head=rel<0.15?'Nothing doing either way':(nick(who)+(rel>0.55?' all over them':' with the better of it'));
   var note='<b>'+esc(head)+'</b>'+(live?' right now.':' at the last out.')+' Last three innings '+esc(ab(up))+' '+ru+', '+esc(ab(dn))+' '+rd+'.';
-  var body='<div class="mflow"><div class="mfw"><div class="mfpl">'+svg+nowMark+dots+'</div>'+chips+'</div><div class="mfx">'+labs+'</div><div class="mfnote">'+note+'</div></div>';
-  return card('Game flow',body,'o3','<span class="gn">dots are runs</span>');
+  var body='<div class="mflow"><div class="mfw"><div class="mfpl">'+svg+nowMark+dots+'<span class="mfcur" id="mfcur"></span><span class="mfhd" id="mfhd"></span></div>'+chips+'</div><div class="mfx">'+labs+'</div><div class="mfnote">'+note+'</div><div class="wptip mftip" id="mftip"></div></div>';
+  return card('Game flow',body,'o3 mfcard','<span class="gn">dots are runs</span>');
 }
 function gcRender(){
   var box=$('gc'); if(!box) return;
@@ -3060,6 +3138,8 @@ function gcRender(){
     box.innerHTML=head+'<div class="err">Game Center render problem: '+esc(e.message)+'</div>';
     if(window.console) console.error(e);
   }
+  /* v44: keep the hover in place across the live refresh */
+  var lh=S.gc.lh; if(lh&&S.view==='game'){ var el=document.elementFromPoint(lh.x,lh.y); if(el) gcHover({target:el,clientX:lh.x,clientY:lh.y}); }
 }
 
 document.addEventListener('click',function(e){
@@ -3077,7 +3157,7 @@ document.addEventListener('click',function(e){
   }
 });
 document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&S.view==='game') location.hash='#'+(S.gcFrom||'live'); });
-document.addEventListener('pointermove',function(e){ if(S.view==='game') wpHover(e); });
+document.addEventListener('pointermove',function(e){ if(S.view==='game') gcHover(e); });
 setInterval(gcTick,1000);   /* v14: live game detail refreshes about every 5 s */
 
 
