@@ -617,13 +617,13 @@ svg.zone .zg{stroke:#2e3542; stroke-width:1}
 svg.zone .plate{fill:#d9dde6; opacity:.85}
 svg.zone .bat{fill:var(--dim); font:700 10px var(--body); letter-spacing:.06em}
 /* v46: hot and cold zones */
-svg.zone .hzc{stroke:rgba(11,14,20,.55); stroke-width:1}
+svg.zone .hzc{stroke:rgba(255,255,255,.07); stroke-width:.8}
 svg.zone .zb.hzon{fill:none; stroke:rgba(255,255,255,.9); stroke-width:1.8}
 svg.zone .hzt{fill:#fff; font:700 10.5px var(--body); letter-spacing:-.15px; text-anchor:middle; dominant-baseline:central; paint-order:stroke; stroke:rgba(0,0,0,.45); stroke-width:1.6px; pointer-events:none}
-svg.zone .hz.quiet .hzc{fill-opacity:.3}
+svg.zone .hz.quiet .hzc{fill-opacity:.46}
 svg.zone .hz.quiet .hzt{opacity:0; transition:opacity .15s}
 svg.zone:hover .hz.quiet .hzt{opacity:1}
-svg.zone:hover .hz.quiet .hzc{fill-opacity:.5}
+svg.zone:hover .hz.quiet .hzc{fill-opacity:.6}
 .hzk{display:flex; align-items:center; gap:4px; margin-top:6px; flex-wrap:wrap}
 .hzk button{font:700 10px var(--body); letter-spacing:.05em; color:var(--mute); background:transparent; border:1px solid var(--line); border-radius:5px; padding:2px 6px; cursor:pointer}
 .hzk button.on{color:var(--ink); border-color:#7c8698; background:rgba(255,255,255,.06)}
@@ -2431,10 +2431,11 @@ function zoneSVG(play){
   ev.forEach(function(e){ var pd=e.pitchData||{}; if(pd.strikeZoneTop){ top=pd.strikeZoneTop; bot=pd.strikeZoneBottom; } });
   /* v46: 56 units a foot (was 46) so the zone, and the heat painted in it, reads bigger.
      v47: drawn from the pitcher's side, like ESPN, so pX (catcher's right is +) is mirrored */
-  var X=function(v){ return Math.max(8,Math.min(192,100-v*56)); };
-  var Y=function(v){ return Math.max(8,Math.min(238,236-v*56)); };
+  /* v48: clamp so an edge pitch keeps its whole dot on the canvas */
+  var X=function(v){ return Math.max(10,Math.min(190,100-v*56)); };
+  var Y=function(v){ return Math.max(10,Math.min(230,265-v*56)); }; /* v48: zone centred on the canvas, plate right under it */
   var zl=X(0.708), zr=X(-0.708), zt=Y(top), zb=Y(bot), w=zr-zl, h=zb-zt;
-  var s='<svg class="zone" viewBox="0 0 200 270" role="img" aria-label="Pitch locations">';
+  var s='<svg class="zone" viewBox="0 0 200 250" role="img" aria-label="Pitch locations">';
   var hz=play&&play.matchup&&play.matchup.batter?hzLoad(play.matchup.batter.id):null;
   /* v47: like ESPN the heat spills past the zone, which is drawn as a box on top of it */
   var hzOn=false;
@@ -2444,9 +2445,9 @@ function zoneSVG(play){
     s+='<line class="zg" x1="'+(zl+w/3)+'" y1="'+zt+'" x2="'+(zl+w/3)+'" y2="'+zb+'"/><line class="zg" x1="'+(zl+2*w/3)+'" y1="'+zt+'" x2="'+(zl+2*w/3)+'" y2="'+zb+'"/>';
     s+='<line class="zg" x1="'+zl+'" y1="'+(zt+h/3)+'" x2="'+zr+'" y2="'+(zt+h/3)+'"/><line class="zg" x1="'+zl+'" y1="'+(zt+2*h/3)+'" x2="'+zr+'" y2="'+(zt+2*h/3)+'"/>';
   }
-  s+='<path class="plate" d="M'+zl+' 264 H'+zr+' V257 L100 249 L'+zl+' 257 Z"/>'; /* v47: from the pitcher's side the point faces away */
+  s+='<path class="plate" d="M'+zl+' 238 L100 234 L'+zr+' 238 V243 H'+zl+' Z"/>'; /* v48: a flat plate seen from the mound, not a peaked roof */
   var bs=((play&&play.matchup&&play.matchup.batSide)||{}).code;
-  if(bs){ var bx=bs==='L'?14:186; s+='<text class="bat" x="'+bx+'" y="130" text-anchor="middle" transform="rotate(-90 '+bx+' 130)">'+(bs==='L'?'LEFTY':'RIGHTY')+'</text>'; }
+  if(bs){ var bx=bs==='L'?14:186; s+='<text class="bat" x="'+bx+'" y="125" text-anchor="middle" transform="rotate(-90 '+bx+' 125)">'+(bs==='L'?'LEFTY':'RIGHTY')+'</text>'; }
   ev.forEach(function(e,i){
     var c=(e.pitchData||{}).coordinates||{};
     if(c.pX==null||c.pZ==null) return;
