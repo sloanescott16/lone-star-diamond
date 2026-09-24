@@ -2437,9 +2437,9 @@ function zoneSVG(play){
   var zl=X(0.708), zr=X(-0.708), zt=Y(top), zb=Y(bot), w=zr-zl, h=zb-zt;
   var s='<svg class="zone" viewBox="0 0 200 250" role="img" aria-label="Pitch locations">';
   var hz=play&&play.matchup&&play.matchup.batter?hzLoad(play.matchup.batter.id):null;
-  /* v47: like ESPN the heat spills past the zone, which is drawn as a box on top of it */
+  /* v47: like ESPN the heat spills past the zone, which is drawn as a box on top of it; v52: the same 10 units on every side, so the cells keep the zone's shape */
   var hzOn=false;
-  if(hz){ var mx=w*0.2, my=h*0.07, cells=hzCells(hz,zl-mx,zt-my,w+2*mx,h+2*my,ev.some(function(e){ var c=(e.pitchData||{}).coordinates||{}; return c.pX!=null; })); if(cells){ s+=cells; hzOn=true; } }
+  if(hz){ var mx=10, my=10, cells=hzCells(hz,zl-mx,zt-my,w+2*mx,h+2*my,ev.some(function(e){ var c=(e.pitchData||{}).coordinates||{}; return c.pX!=null; })); if(cells){ s+=cells; hzOn=true; } }
   s+='<rect class="zb'+(hzOn?' hzon':'')+'" x="'+zl+'" y="'+zt+'" width="'+w+'" height="'+h+'"/>';
   if(!hzOn){
     s+='<line class="zg" x1="'+(zl+w/3)+'" y1="'+zt+'" x2="'+(zl+w/3)+'" y2="'+zb+'"/><line class="zg" x1="'+(zl+2*w/3)+'" y1="'+zt+'" x2="'+(zl+2*w/3)+'" y2="'+zb+'"/>';
