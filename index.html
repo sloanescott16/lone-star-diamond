@@ -2055,7 +2055,34 @@ function tex(){return S.byId[FAV];}
 function maxW(r){return r.w+r.left;}
 
 /* magic number for leader T over trailer R (combined T wins + R losses) */
-function magic(T,R){ return Math.max(0,(R.w+R.left)-T.w+1); }
+/* v55: T's magic number over R. The +1 means T must finish strictly ahead; when T owns
+   the head-to-head tiebreaker a tie is enough, so it drops by one. Only Texas's season
+   series is known, so other pairings keep the strict number. */
+function magic(T,R){
+  var own=T.id===FAV?tbOwn(R.id):R.id===FAV?-tbOwn(T.id):0;
+  return Math.max(0,(R.w+R.left)-T.w+1-(own>0?1:0));
+}
+/* v55: Texas's season series with a team: w, l, still to play, and who has clinched it */
+function tbSeries(id){
+  if(!S.sn) return null;
+  var gs=snGames(FAV,SEASON);
+  if(!gs){
+    if(!S.tbTried){ S.tbTried=1; var p=snLoadSched(FAV,SEASON); if(p&&p.then) p.then(function(r){ if(r) renderAll(); }); }
+    return null;
+  }
+  var w=0,l=0,left=0;
+  gs.forEach(function(x){
+    if(x.opp!==id||x.pp) return;
+    if(x.st===2&&x.ms!=null){ if(x.ms>x.os) w++; else l++; } else left++;
+  });
+  return {w:w,l:l,left:left};
+}
+/* 1 = Texas owns the tiebreaker, -1 = they do, 0 = not settled or level */
+function tbOwn(id){
+  var s=tbSeries(id); if(!s) return 0;
+  var tot=s.w+s.l+s.left;
+  return s.w*2>tot?1:s.l*2>tot?-1:0;
+}
 
 /* can A still finish ahead of B outright */
 function canPass(A,B){ return A.w+A.left>B.w; }
@@ -2523,18 +2550,21 @@ function pathCard(kind,title,lede,holder,others,bump){
   } else if(m<=0){
     big='<div class="big" style="color:var(--bad)">Eliminated by <em style="color:var(--bad)">'+esc(ab(holder.id))+'</em>.</div>';
   } else {
-    /* v54: say it in wins and losses. slack = Texas losses plus holder wins Texas can
-       absorb and still tie; out-gaining by more games than are left read as nonsense */
-    var slack=m-1, tot=t.left+holder.left, tieNeed=Math.max(0,tot-slack), nk=esc(nick(holder.id));
+    /* v54/v55: say it in wins and losses. m already knows the tiebreaker, so using up all
+       the slack lands on a tie unless the other side owns the tiebreaker, in which case it
+       lands one ahead. */
+    var slack=m-1, tot=t.left+holder.left, need=Math.max(0,tot-slack), nk=esc(nick(holder.id));
+    var tie=tbOwn(holder.id)>=0;
     if(slack===0){
       big='<div class="big">'+(t.left&&holder.left?'Texas has to win out and the <em>'+nk+'</em> have to lose out.':
-          t.left?'Texas has to win out.':'The <em>'+nk+'</em> have to lose out.')+' Even that only ties it.</div>';
+          t.left?'Texas has to win out.':'The <em>'+nk+'</em> have to lose out.')+(tie?' Even that only ties it.':'')+'</div>';
     } else {
-      big='<div class="big">Texas wins plus <em>'+nk+'</em> losses: <em>'+(tieNeed+1)+'</em> of '+tot+' passes them, '+tieNeed+' ties.</div>';
+      big='<div class="big">Texas wins plus <em>'+nk+'</em> losses have to reach <em>'+need+'</em> of '+tot+(tie?' to tie them.':' to pass them.')+'</div>';
     }
   }
   var tbo=holds?others[0]:holder;
-  if(m>0&&tbo) big+=tbNote(tbo);
+  /* also explain an elimination that only the tiebreaker caused */
+  if(tbo&&(m>0||(!holds&&(t.w+t.left)-holder.w+1>0))) big+=tbNote(tbo);
 
   /* v54: the number is labelled. A team ahead or level carries Texas's elimination number
      against it; a team behind carries Texas's magic number over it (was the elim formula for
@@ -2574,20 +2604,12 @@ function pathCard(kind,title,lede,holder,others,bump){
 
 /* v54: who wins a two-team tie with this rival, from the season series (MLB: head-to-head first) */
 function tbNote(o){
-  var gs=snGames(FAV,SEASON);
-  if(!gs){
-    if(!S.tbTried){ S.tbTried=1; var p=snLoadSched(FAV,SEASON); if(p&&p.then) p.then(function(r){ if(r) renderPath(); }); }
-    return '';
-  }
-  var w=0,l=0,left=0;
-  gs.forEach(function(x){
-    if(x.opp!==o.id||x.pp) return;
-    if(x.st===2&&x.ms!=null){ if(x.ms>x.os) w++; else l++; } else left++;
-  });
+  var sr0=tbSeries(o.id); if(!sr0) return '';
+  var w=sr0.w,l=sr0.l,left=sr0.left,own=tbOwn(o.id);
   var nk=esc(nick(o.id)), sr=w+'-'+l;
-  var txt=left?'Season series '+sr+' with '+left+' to play decides a tie.':
-    w>l?'Texas owns the tiebreaker over the '+nk+' ('+sr+').':
-    w<l?'The '+nk+' own the tiebreaker ('+sr+' Texas), so a tie is not enough.':
+  var txt=left&&!own?'Season series '+sr+' with '+left+' to play decides a tie.':
+    own>0||w>l?'Texas owns the tiebreaker over the '+nk+' ('+sr+').':
+    own<0||w<l?'The '+nk+' own the tiebreaker ('+sr+' Texas), so a tie is not enough.':
     'Season series level at '+sr+'; a tie goes to the next tiebreaker.';
   return '<div class="ptb">'+txt+'</div>';
 }
