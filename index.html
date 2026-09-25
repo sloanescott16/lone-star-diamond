@@ -1797,6 +1797,19 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
   :where(body.v-game,body.v-stand) table.st td{padding-top:8px; padding-bottom:8px}
   :where(body.v-game,body.v-stand) table.st .rec,:where(body.v-game,body.v-stand) table.st td.od{font-size:16px}
 }
+/* score slots, v56: digits dead centre in every black slot. The line box is trimmed to cap height and baseline,
+   so centring no longer depends on how each browser reads Zilla Slab's ascent and descent (Safari sat them high,
+   Chrome low); padding is even and keeps each slot about the size it was. Big scores use proportional digits. */
+@supports (text-box: trim-both cap alphabetic){
+  .gct .ts, .bg .br .bs, .g .sc, table.ls td:not(.t){text-box:trim-both cap alphabetic}
+  .gct .ts{padding-top:.23em; padding-bottom:.23em}
+  :where(body:not(.v-game):not(.v-stand)) .bg .br .bs{padding-top:.23em; padding-bottom:.23em}
+  :where(body.v-game,body.v-stand) .bg .br .bs{padding-top:.19em; padding-bottom:.19em}
+  :where(body:not(.v-game):not(.v-stand)) .g .sc{padding-top:.3em; padding-bottom:.3em}
+  :where(body.v-game,body.v-stand) .g .sc{padding-top:.33em; padding-bottom:.33em}
+  table.ls td:not(.t){padding-top:.53em; padding-bottom:.53em; vertical-align:middle}
+}
+.gct .ts, .bg .br .bs{font-feature-settings:"lnum" 1,"pnum" 1}
 /* ==== SKIN:nightgame end ==== */
 </style>
 </head>
