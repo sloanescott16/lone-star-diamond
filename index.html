@@ -1881,6 +1881,10 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
 .g .nm{display:flex;flex-wrap:wrap;align-items:baseline;white-space:nowrap;min-width:0}
 .tb .tbh{flex-wrap:wrap;row-gap:2px}
 .tb .tbh h3{white-space:nowrap}
+/* What if table: on a narrow screen it drops the pace column and lets the explanation wrap, instead of scrolling sideways */
+.tool{container-type:inline-size}
+@container (max-width:540px){ .wt{min-width:0} .wt th:nth-child(3),.wt td:nth-child(3){display:none} .wt .say{white-space:normal} }
+@container (max-width:60px){ .calg .dy .rs{font-size:9.5px;white-space:normal;overflow:visible;line-height:1.1} }
 /* ==== SKIN:nightgame end ==== */
 </style>
 </head>
