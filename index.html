@@ -1885,6 +1885,39 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
 .tool{container-type:inline-size}
 @container (max-width:540px){ .wt{min-width:0} .wt th:nth-child(3),.wt td:nth-child(3){display:none} .wt .say{white-space:normal} }
 @container (max-width:60px){ .calg .dy .rs{font-size:9.5px;white-space:normal;overflow:visible;line-height:1.1} }
+/* v61: scoreboard tiles. Rows never drift apart in a tall tile: the two teams sit together in the middle, inning up top, outs at the foot */
+.bg .br{flex:1 1 0; max-height:22cqw}
+.bg .bt + .br{margin-top:auto}
+.bg .br + .br{margin-bottom:auto}
+/* v61: the playoff race tag sits on the left of the inning line instead of on top of the inning */
+.bg.key.race .bt{margin-top:0}
+:where(body:not(.v-game):not(.v-stand)) .bg.key.race .bchip.race{background:transparent; color:var(--race); box-shadow:inset 0 0 0 1px var(--race); border-radius:2px; padding:0.4cqh 1.2cqw 0.3cqh}
+/* v61: the Pennant Chase wordmark never gets clipped. On the Scoreboard (the only view with the filter) the
+   filter and Fullscreen give way first, the wordmark scales down a touch, and under 820px nav and filter take a second row */
+.brand{flex-shrink:0}
+.brand h1{overflow:visible}
+@media (max-width:1180px) and (min-width:641px){
+  body.v-live .flt{flex:0 1 183px; min-width:112px; width:183px}
+  body.v-live #fsBtn{width:34px; min-width:34px; height:30px; padding:0; font-size:0; color:transparent; flex-shrink:0;
+    background:rgba(241,232,210,.05) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='none' stroke='%23c9c1ab' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M1.5 5.5v-4h4M10.5 1.5h4v4M14.5 10.5v4h-4M5.5 14.5h-4v-4'/%3E%3C/svg%3E") center/16px no-repeat}
+  body.v-live .brand h1{font-size:clamp(24px,calc(3.7vw - 9.7px),31px)}
+}
+@media (max-width:820px) and (min-width:641px){
+  body.v-live .bar{flex-wrap:wrap; row-gap:8px}
+  body.v-live .bar .spacer{flex:1 1 0}
+  body.v-live .bar .nav{order:9; flex:1 1 calc(100% - 200px); display:flex}
+  body.v-live .bar .nav a{flex:1 1 auto; text-align:center}
+  body.v-live .bar .flt{order:10}
+  body.v-live .brand h1{font-size:28px}
+  body.v-live .board{height:calc(100dvh - 146px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px))}
+}
+/* v61: inning, tag and outs grow with the tile's width too, so a wide tile doesn't leave them tiny */
+:where(body:not(.v-game):not(.v-stand)) .bg .bchip{font-size:max(10px,min(4cqh,2.2cqw))}
+:where(body:not(.v-game):not(.v-stand)) .bg .ribbon{font-size:max(10px,min(4cqh,2.2cqw))}
+:where(body:not(.v-game):not(.v-stand)) .bg .bst{font-size:max(12px,min(7cqh,4cqw))}
+:where(body:not(.v-game):not(.v-stand)) .bg .bf{font-size:max(11px,min(6cqh,3.4cqw))}
+:where(body:not(.v-game):not(.v-stand)) .bg .bbz{grid-template-columns:repeat(3,max(10px,min(6.4cqh,3.6cqw))); grid-template-rows:repeat(2,max(10px,min(6.4cqh,3.6cqw)))}
+:where(body:not(.v-game):not(.v-stand)) .bg .bz{width:max(7px,min(4.6cqh,2.6cqw)); height:max(7px,min(4.6cqh,2.6cqw))}
 /* ==== SKIN:nightgame end ==== */
 </style>
 </head>
@@ -2414,6 +2447,25 @@ function teamIn(id){
 function wide(){ return S.flt==='all'||S.flt==='tex'||S.flt==='race'; }
 function gameIn(g){ return teamIn(g.teams.away.team.id)||teamIn(g.teams.home.team.id); }
 
+/* v61: pick the column count that makes the scores biggest for this window,
+   so two games on half a monitor stack instead of turning into two tall, empty strips */
+function fitBoard(){
+  var bd=$('board'), n=+bd.getAttribute('data-n')||0; if(!n) return;
+  var W=bd.clientWidth, H=bd.clientHeight, gap=parseFloat(getComputedStyle(bd).rowGap)||10;
+  var c = n<=1?1 : n<=4?2 : n<=9?3 : n<=16?4 : 5;
+  if(W>0&&H>0){
+    // scores and names size off min(height, width/2), so pick the grid that makes them biggest; empty slots cost a little
+    var best=-1;
+    for(var k=1;k<=Math.min(n,6);k++){
+      var r=Math.ceil(n/k), w=(W-(k-1)*gap)/k, h=(H-(r-1)*gap)/r;
+      if(w<150||h<90) continue;
+      var sc=Math.min(h,w/2)*(1-0.05*(k*r-n));
+      if(sc>best){ best=sc; c=k; }
+    }
+  }
+  bd.style.setProperty('--c',c);
+}
+window.addEventListener('resize',function(){ if(S.view==='live') fitBoard(); });
 function renderBoard(){
   var t=tex(); if(!t) return;
   // v7: live games only; the Schedule tab has everything else
@@ -2432,7 +2484,7 @@ function renderBoard(){
 
   var bd=$('board');
   if(!list.length){
-    bd.style.removeProperty('--c');
+    bd.style.removeProperty('--c'); bd.removeAttribute('data-n');
     var nx=S.games.filter(function(g){return g.status&&g.status.abstractGameState==='Preview'&&gameIn(g);})
       .sort(function(a,b){return new Date(a.gameDate)-new Date(b.gameDate);})[0];
     bd.innerHTML='<div class="boardnote">Nothing live'+FLTN[S.flt]+' right now.'+(nx?' Next first pitch: '+esc(nick(nx.teams.away.team.id))+' at '+esc(nick(nx.teams.home.team.id))+', '+esc(gameStatus(nx).t)+'.':'')+' Every game is on the Schedule tab.</div>';
@@ -2440,8 +2492,8 @@ function renderBoard(){
   }
 
   var n=list.length;
-  var c = n<=1?1 : n<=4?2 : n<=9?3 : n<=16?4 : 5;
-  bd.style.setProperty('--c',c);
+  bd.setAttribute('data-n',n);
+  fitBoard();
 
   // dim the not-yet-started games only when there is something live to dim them against
   var anyLive=list.some(function(x){return x.st.live;});
@@ -2482,8 +2534,8 @@ function renderBoard(){
     else if(anyLive) cls+=' soon';
 
     return '<div class="'+cls+'" data-pk="'+g.gamePk+'" title="Open Game Center">'+
-      (it.other&&!it.race?'':'<div class="ribbon">'+(it.isFav?'Rangers':it.race?'Playoff race':'Matters to Texas')+'</div>')+
-      '<div class="bt">'+(it.other&&it.race?'':'<span class="bchip '+cp[1]+'">'+esc(cp[0])+'</span>')+
+      (it.other?'':'<div class="ribbon">'+(it.isFav?'Rangers':'Matters to Texas')+'</div>')+
+      '<div class="bt"><span class="bchip '+cp[1]+'">'+esc(cp[0])+'</span>'+
       '<span class="bst'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+
       row(it.a,aS,hS)+row(it.h,hS,aS)+foot+'</div>';
   }).join('');
