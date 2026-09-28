@@ -1919,6 +1919,139 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
 :where(body:not(.v-game):not(.v-stand)) .bg .bbz{grid-template-columns:repeat(3,max(10px,min(6.4cqh,3.6cqw))); grid-template-rows:repeat(2,max(10px,min(6.4cqh,3.6cqw)))}
 :where(body:not(.v-game):not(.v-stand)) .bg .bz{width:max(7px,min(4.6cqh,2.6cqw)); height:max(7px,min(4.6cqh,2.6cqw))}
 /* ==== SKIN:nightgame end ==== */
+/* ==== v62: October (Bracket tab) ==== */
+html:not(.ps-on) #nav a[data-v="bracket"]{display:none}
+html.ps-on #nav a[data-v="home"]{display:none}
+body:not(.v-bracket) #secBracket{display:none}
+body.v-bracket #odds,body.v-bracket #secTonight,body.v-bracket #secPath,body.v-bracket #secRace,body.v-bracket #secRun,body.v-bracket #secLive,body.v-bracket #secSched,body.v-bracket #secStand{display:none}
+#secBracket .head .note b{color:var(--cream)}
+/* today strip */
+.pstd{margin-bottom:18px}
+.pstd h3{font-size:15px; letter-spacing:.1em; color:var(--dim); margin:0 0 8px}
+.pstl{display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:10px}
+.pstg{background:var(--card); border:1px solid var(--rule-soft); border-radius:6px; padding:9px 11px 8px; cursor:pointer; display:grid; gap:4px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 2px 0 rgba(0,0,0,.35)}
+.pstg:hover{border-color:var(--rule)}
+.pstg.live{border-color:rgba(255,106,88,.6); box-shadow:inset 3px 0 0 var(--live), 0 2px 0 rgba(0,0,0,.35)}
+.pstg .k{display:flex; justify-content:space-between; gap:8px; font-family:var(--display); font-size:13px; letter-spacing:.06em; text-transform:uppercase; color:var(--dim)}
+.pstg .k .t{color:var(--cream)} .pstg .k .t.lv{color:var(--live)}
+.pstg .r{display:grid; grid-template-columns:22px 1fr auto; align-items:center; gap:8px; font-weight:600}
+.pstg .r img{width:22px; height:22px; object-fit:contain}
+.pstg .r .a{font-family:var(--display); font-size:18px; letter-spacing:.03em; color:var(--cream)}
+.pstg .r .sc{font-family:var(--display); font-size:20px; font-weight:700; color:var(--cream); min-width:1.2em; text-align:right}
+.pstg .r.lo .a,.pstg .r.lo .sc{color:var(--dim)}
+.pstg .k2{font-size:12px; color:var(--mute); border-top:1px solid var(--rule-soft); padding-top:5px; margin-top:2px}
+.pstg .tbdr{display:block; color:var(--mute); font-size:13px}
+/* bracket: one set of cards, three layouts by the space it gets */
+.psw{container-type:inline-size}
+.psg{display:grid; gap:12px 14px; align-items:center;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  grid-template-areas:"h1 h2 h3 h4 h5 h6 h7" "aw1 ad1 . . . nd1 nw1" "aw1 ad1 al ws nl nd1 nw1" "aw2 ad2 al ws nl nd2 nw2" "aw2 ad2 . . . nd2 nw2"}
+.pshd{font-family:var(--display); font-size:14px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim); text-align:center; align-self:end;
+  border-bottom:1px solid var(--rule-soft); padding-bottom:6px}
+.pshd.wsh{color:var(--hr)}
+.pshd small{display:block; font-family:var(--body); font-size:11px; letter-spacing:.04em; text-transform:none; color:var(--dim)}
+.pshd.n{display:none}
+@container (max-width:1180px){
+  .psg{grid-template-columns:repeat(2,minmax(0,1fr)); align-items:stretch;
+    grid-template-areas:"r1 r1" "aw1 nw1" "aw2 nw2" "r2 r2" "ad1 nd1" "ad2 nd2" "r3 r3" "al nl" "r4 r4" "ws ws"}
+  .pshd.w{display:none} .pshd.n{display:block; text-align:left; margin-top:8px}
+  .psc[style*="grid-area:ws"]{max-width:calc(50% - 7px); width:100%; justify-self:center}
+}
+@container (max-width:600px){
+  .psg{grid-template-columns:minmax(0,1fr);
+    grid-template-areas:"r1" "aw1" "aw2" "nw1" "nw2" "r2" "ad1" "ad2" "nd1" "nd2" "r3" "al" "nl" "r4" "ws"}
+  .psc[style*="grid-area:ws"]{max-width:none}
+}
+.psc{container-type:inline-size; background:var(--card); border:1px solid var(--rule-soft); border-radius:6px; padding:8px 10px 8px; cursor:pointer; min-width:0;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 2px 0 rgba(0,0,0,.35), 0 8px 18px rgba(0,0,0,.2); display:grid; gap:4px; position:relative}
+.psc:hover{border-color:var(--rule)}
+.psc.sel{border-color:var(--cream); box-shadow:0 0 0 1px var(--cream), 0 8px 18px rgba(0,0,0,.25)}
+.psc.live{box-shadow:inset 3px 0 0 var(--live), 0 2px 0 rgba(0,0,0,.35)}
+.psc[style*="grid-area:ws"]{border-color:rgba(233,185,60,.55)}
+.psh{display:flex; justify-content:space-between; gap:6px; font-family:var(--display); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); white-space:nowrap}
+.psh .psr{overflow:hidden; text-overflow:ellipsis}
+.pst{display:grid; grid-template-columns:12px 22px minmax(0,1fr) auto 3.1em; align-items:center; gap:7px; padding:3px 0}
+.pst .sd{font-family:var(--display); font-size:12px; color:var(--dim); text-align:center}
+.pst img{width:22px; height:22px; object-fit:contain}
+.pst .nm{font-weight:600; color:var(--cream); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.pst .nm .abv{display:none}
+.pst .pw{font-family:var(--display); font-size:20px; font-weight:700; color:var(--cream); min-width:1em; text-align:center;
+  background:var(--slot); border-radius:3px; padding:0 .3em; box-shadow:var(--plate); line-height:1.3}
+.pst .pw:empty{background:none; box-shadow:none; padding:0}
+.pst .po{font-size:12px; color:var(--mute); text-align:right; font-variant-numeric:tabular-nums}
+.pst.win .nm{color:var(--cream)} .pst.win .pw{color:var(--cream); box-shadow:var(--plate), 0 0 0 1px var(--hr)}
+.pst.out{opacity:.45}
+.pst.tbd .nm{color:var(--dim); font-weight:500}
+.pst .cands{display:flex; width:22px; height:22px; position:relative}
+.pst .cands img{width:15px; height:15px; position:absolute} .pst .cands img:first-child{left:0; top:0} .pst .cands img+img{right:0; bottom:0}
+.pst .cands i{width:22px; height:22px; border:1px dashed var(--rule); border-radius:50%}
+.psf{display:flex; justify-content:space-between; flex-wrap:wrap; gap:2px 8px; font-size:12px; color:var(--mute); border-top:1px solid var(--rule-soft); padding-top:5px; margin-top:1px}
+.psf .psl{color:var(--cream); font-weight:600}
+.psf .lv{color:var(--live)}
+.psp{display:flex; gap:4px; flex-wrap:wrap}
+.pip{font-family:var(--display); font-size:11.5px; letter-spacing:.04em; padding:1px 6px 0; border-radius:3px; border:1px solid var(--rule-soft); color:var(--dim)}
+.pip.fin{color:var(--cream); border-color:transparent; background:color-mix(in srgb, var(--tc) 55%, #0b1a12)}
+.pip.live{color:#fff; background:var(--live); border-color:var(--live)}
+.pip.ifn{border-style:dashed}
+.psc.done .psf .psl{color:var(--hr)}
+@container (max-width:200px){
+  .pst{grid-template-columns:10px 18px minmax(0,1fr) auto 2.7em; gap:5px}
+  .pst img{width:18px; height:18px}
+  .pst .nm .nk{display:none} .pst .nm .abv{display:inline}
+  .psh .psb{display:none}
+}
+/* detail and odds */
+.psx{display:grid; grid-template-columns:minmax(0,1.25fr) minmax(0,1fr); gap:16px; margin-top:22px; align-items:start}
+@media (max-width:1320px){ .psx{grid-template-columns:minmax(0,1fr)} }
+.psd,.pso{background:var(--card); border:1px solid var(--rule-soft); border-radius:6px; overflow:hidden;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05), 0 2px 0 rgba(0,0,0,.35), 0 8px 18px rgba(0,0,0,.22)}
+.pdh{display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; padding:12px 14px; background:linear-gradient(180deg,#0c2217,#0a1e14); border-bottom:2px solid var(--rule-soft)}
+.pdh h3{font-size:19px; color:var(--cream); letter-spacing:.04em}
+.pdh .sub{font-size:12.5px; color:var(--mute)}
+.pdo{display:flex; gap:14px}
+.pdo span{display:grid; grid-template-columns:24px auto; grid-template-rows:auto auto; column-gap:7px; align-items:center; cursor:pointer}
+.pdo img{width:24px; height:24px; grid-row:1/3; object-fit:contain}
+.pdo b{font-family:var(--display); font-size:19px; color:var(--cream); line-height:1}
+.pdo small{font-size:11px; color:var(--dim); letter-spacing:.06em}
+table.pdt{width:100%; border-collapse:collapse; font-size:13px}
+table.pdt td{padding:9px 10px; border-top:1px solid var(--rule-soft); vertical-align:middle}
+table.pdt tr:first-child td{border-top:0}
+table.pdt tr[data-pspk]{cursor:pointer} table.pdt tr[data-pspk]:hover td{background:rgba(255,255,255,.035)}
+table.pdt .gn{font-family:var(--display); font-size:16px; color:var(--cream); white-space:nowrap; width:1%}
+table.pdt .gn small{display:block; font-family:var(--body); font-size:10.5px; color:var(--dim)}
+table.pdt .mt{white-space:nowrap}
+table.pdt .tm{display:inline-flex; align-items:center; gap:5px; font-weight:600; color:var(--cream); cursor:pointer}
+table.pdt .tm img{width:20px; height:20px; object-fit:contain}
+table.pdt .tm.lo{color:var(--dim)}
+table.pdt .sc{font-family:var(--display); font-size:18px; font-weight:700; color:var(--cream); margin:0 8px 0 7px; background:var(--slot); padding:0 .3em; border-radius:3px; box-shadow:var(--plate)}
+table.pdt .at{color:var(--dim); margin:0 8px}
+table.pdt .stt{white-space:nowrap; color:var(--mute)}
+table.pdt tr.lv .stt{color:var(--live); font-weight:600}
+table.pdt .nt{color:var(--mute); font-size:12px}
+table.pdt .nt small{display:block; color:var(--dim); font-size:11px}
+table.pdt tr.nn td{opacity:.4}
+table.pdt .tbdr{color:var(--dim)}
+@media (max-width:640px){ table.pdt .nt{display:none} table.pdt td{padding:8px 6px} table.pdt .at{margin:0 3px} table.pdt .sc{margin:0 3px 0 4px} table.pdt .stt{white-space:normal; font-size:12px} table.pdt .tm img{display:none} }
+.pso .tbh{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:12px 14px; background:linear-gradient(180deg,#0c2217,#0a1e14); border-bottom:2px solid var(--rule-soft)}
+.pso .tbh h3{font-size:19px; color:var(--cream); letter-spacing:.04em}
+.pso .tbh span{font-size:12px; color:var(--dim)}
+table.pot{width:100%; border-collapse:collapse; font-size:13px}
+table.pot th{font-family:var(--display); font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); text-align:left; padding:8px 10px 6px; font-weight:600; white-space:nowrap}
+table.pot td{padding:7px 10px; border-top:1px solid var(--rule-soft); white-space:nowrap}
+table.pot tr[data-tid]{cursor:pointer} table.pot tr[data-tid]:hover td{background:rgba(255,255,255,.035)}
+table.pot .n{text-align:right; font-variant-numeric:tabular-nums}
+table.pot .tn{display:flex; align-items:center; gap:7px; font-weight:600; color:var(--cream)}
+table.pot .tn .sd{font-family:var(--display); color:var(--dim); width:10px; text-align:center}
+table.pot .tn img{width:20px; height:20px; object-fit:contain}
+table.pot .tn small{color:var(--dim); font-weight:500; font-size:11px}
+table.pot .wh{color:var(--mute)}
+table.pot .ws{display:flex; align-items:center; gap:8px; min-width:120px}
+table.pot .ws .pbar{flex:1; height:8px; background:var(--slot); border-radius:4px; overflow:hidden; box-shadow:var(--plate); min-width:50px}
+table.pot .ws .pbar i{display:block; height:100%; background:color-mix(in srgb, var(--tc) 70%, #f1e8d2); border-radius:4px}
+table.pot .ws b{font-family:var(--display); font-size:16px; color:var(--cream); min-width:2.6em; text-align:right}
+table.pot tr.out td{opacity:.4}
+@media (max-width:640px){ table.pot th:nth-child(2), table.pot td.wh{display:none} table.pot td,table.pot th{padding-left:6px; padding-right:6px} table.pot .tn small{display:none} table.pot .ws{min-width:0; gap:6px} table.pot .ws .pbar{min-width:24px} table.pot .ws b{font-size:15px; min-width:2.3em} table.pot th{font-size:11px; letter-spacing:.04em} }
 </style>
 </head>
 <body>
@@ -1931,6 +2064,7 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
   <div class="rec" id="favRec">--<span id="favLeft"></span></div>
   <nav class="nav" id="nav">
     <a href="#season" data-v="season">Season</a>
+    <a href="#bracket" data-v="bracket">Bracket</a>
     <a href="#home" data-v="home">Race</a>
     <a href="#sched" data-v="sched">Schedule</a>
     <a href="#live" data-v="live">Scoreboard</a>
@@ -1957,6 +2091,11 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
       <div class="split" id="oddsSplit"></div></div>
     <div class="q"><p id="oddsQ"></p></div>
   </div>
+
+  <section id="secBracket">
+    <div class="head"><h2>October</h2><span class="sub">the road to the World Series</span><span class="note" id="psNote"></span></div>
+    <div id="psBox"><div class="empty">Loading the bracket</div></div>
+  </section>
 
   <section id="secSeason">
     <div class="head"><h2>The Season</h2><span class="sub">Rangers first, then the league</span><span class="seg" id="snSea"></span>
@@ -2123,7 +2262,7 @@ function loadStandings(){
 
 function loadToday(){
   var t=todayStr();
-  return j(API+'/schedule?sportId=1&gameType=R&date='+t+'&hydrate=team,linescore').then(function(d){
+  return j(API+'/schedule?sportId=1&gameType=R,F,D,L,W&date='+t+'&hydrate=team,linescore').then(function(d){
     var out=[];
     (d.dates||[]).forEach(function(dt){
       (dt.games||[]).forEach(function(g){ out.push(g); });
@@ -2502,7 +2641,7 @@ function renderBoard(){
     var g=it.g, st=it.st, ls=g.linescore||{};
     var aS=g.teams.away.score, hS=g.teams.home.score;
     var has=(aS!=null&&hS!=null);
-    var cp=it.other?(it.race?['Playoff race','race']:['Around the league','']):chipFor(it);
+    var pst=psTag(g), cp=pst?[pst,'race']:it.other?(it.race?['Playoff race','race']:['Around the league','']):chipFor(it);   /* v62: postseason games carry the series */
 
     function row(id,score,other){
       var cls='br';
@@ -2588,7 +2727,7 @@ function dayGames(){
 function loadDay(off){
   var d=dayStr(off);
   if(off===0||S.dayCache[d]) return Promise.resolve();
-  return j(API+'/schedule?sportId=1&gameType=R&date='+d+'&hydrate=team,linescore').then(function(x){
+  return j(API+'/schedule?sportId=1&gameType=R,F,D,L,W&date='+d+'&hydrate=team,linescore').then(function(x){
     var out=[]; (x.dates||[]).forEach(function(dt){ (dt.games||[]).forEach(function(g){ out.push(g); }); });
     S.dayCache[d]=out;
   });
@@ -2673,7 +2812,7 @@ document.addEventListener('click',function(e){
 
 function setView(v){
   var gm=/^game-(\d+)$/.exec(v||'');
-  S.view=gm?'game':(v==='live'||v==='sched'||v==='stand'||v==='season')?v:(v?'home':snDefault());
+  S.view=gm?'game':(v==='live'||v==='sched'||v==='stand'||v==='season'||v==='bracket')?v:(v?'home':snDefault());
   document.body.className='v-'+S.view;
   Array.prototype.forEach.call(document.querySelectorAll('#nav a'),function(a){
     var dv=a.getAttribute('data-v');
@@ -2684,6 +2823,7 @@ function setView(v){
   if(S.view==='sched') renderSched();
   if(S.view==='stand') renderStandings();
   if(S.view==='season') renderSeason();
+  if(S.view==='bracket'){ window.scrollTo(0,0); renderBracket(); }   /* v62 */
 }
 function route(){ setView((location.hash||'').replace(/^#/,'')); }
 
@@ -4136,7 +4276,7 @@ function gcRender(){
   var why='';
   if(it){ var cp=chipFor(it); why='<span class="gc-why '+cp[1]+'">'+esc(cp[0])+'</span>'; }
   var gst=F&&F.gameData.status.abstractGameState;
-  var back={home:'Race',sched:'Schedule',stand:'Standings'}[S.gcFrom]||'Scoreboard';
+  var back={home:'Race',sched:'Schedule',stand:'Standings',bracket:'Bracket'}[S.gcFrom]||'Scoreboard';
   var head='<div class="gchd"><button class="gc-back" type="button" data-gcback>&larr; '+back+'</button><h2>'+(gst==='Final'?'Game Breakdown':gst==='Preview'?'Preview':'Game Center')+'</h2>'+why+
     '<span class="note">'+(S.gc.err?'Could not refresh ('+esc(S.gc.err)+'), retrying':F?'updated '+new Date(S.gc.at).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'}):'')+'</span></div>';
   if(!S.gc.pk){ box.innerHTML=head+'<div class="empty">Pick a game on the Scoreboard.</div>'; return; }
@@ -4209,7 +4349,7 @@ S.sn={sea:'cur', sch:{}, st:{}, lg:{}, roster:{}, lead:{}, leadCat:'hr', rtab:'h
   lgv:{sort:'pct',dir:-1,f:'all'}, split:null, mon:null, on:null, onKey:'', logAll:false, busy:{}, chart:null};
 S.pl={id:null, mode:'l10', stat:null, gl:{}, per:{}, nm:{}};
 
-function snDefault(){ var m=new Date().getMonth(); return (m>=7&&m<=10)?'home':'season'; }
+function snDefault(){ if(typeof PS!=='undefined'&&PS&&PS.on) return 'bracket'; var m=new Date().getMonth(); return (m>=7&&m<=10)?'home':'season'; }
 function snPrevView(){ return S.sn.sea==='prev'; }
 function snYear(){ return snPrevView()?PRIOR:SEASON; }
 function snStarted(){ var t=S.byId[FAV]; return !!(t&&t.gp>0); }
@@ -5029,6 +5169,352 @@ window.LSD.gcHeader=gcHeader; /* v35: test hook, the header renders from a feed 
 window.LSD.gcMomentum=gcMomentum; window.LSD.gcRender=gcRender; /* v36 */
 window.LSD.gcWP=gcWP; /* v42: test hook */
 window.LSD.gcMatchup=gcMatchup; /* v46: test hook */
+/* ================= v62: October. When the regular season is done the site becomes a postseason tracker:
+   a Bracket tab (the landing page while it runs), series cards with every game, and each team's odds to win
+   its series, the pennant and the World Series. No favourite: the Rangers get no special treatment here.
+   Data: statsapi schedule/postseason/series, which lists every series with placeholder teams ("HOU/CWS",
+   "AL Higher Seed") until they are decided. ================= */
+var PS={on:false,loaded:false,series:[],byId:{},byPk:{},seed:{},sel:null,odds:null,oddsKey:'',timer:null};
+var RND={F:{n:'Wild Card',s:'WC',best:3},D:{n:'Division Series',s:'DS',best:5},L:{n:'Championship Series',s:'CS',best:7},W:{n:'World Series',s:'WS',best:7}};
+function psReal(t){ return !!(t&&t.id&&TEAM[t.id]); }
+function psShort(s){ return s.type==='W'?'World Series':s.type==='L'?s.lg+'CS':s.lg+(s.type==='D'?' Division Series':' Wild Card'); }
+function psTiny(s){ return s.type==='W'?'WS':s.type==='L'?s.lg+'CS':s.lg+s.type.replace('F','WC').replace('D','DS'); }
+function psLoad(){
+  return j(API+'/schedule/postseason/series?sportId=1&season='+SEASON+'&hydrate=team,linescore,probablePitcher,decisions').then(function(d){
+    var list=(d.series||[]).map(function(x){
+      var games=(x.games||[]).slice().sort(function(a,b){ return (a.seriesGameNumber||0)-(b.seriesGameNumber||0) || new Date(a.gameDate)-new Date(b.gameDate); });
+      var g0=games[0]||{}, type=(x.series&&x.series.gameType)||g0.gameType;
+      var lg=type==='W'?'':(/^AL /.test(g0.seriesDescription||'')?'AL':/^NL /.test(g0.seriesDescription||'')?'NL':'');
+      return {id:(x.series&&x.series.id)||type+'_'+(g0.gamePk||0), type:type, lg:lg, desc:g0.seriesDescription||'', games:games,
+              best:g0.gamesInSeries||(RND[type]&&RND[type].best)||7};
+    }).filter(function(s){ return RND[s.type]&&s.games.length; });
+    PS.series=list; PS.byId={}; PS.byPk={};
+    list.forEach(function(s){ PS.byId[s.id]=s; s.games.forEach(function(g){ PS.byPk[g.gamePk]=s; }); psState(s); });
+    psLink();
+    var first=null, ws=list.filter(function(s){return s.type==='W';})[0];
+    list.forEach(function(s){ s.games.forEach(function(g){ var t=+new Date(g.gameDate); if(first==null||t<first) first=t; }); });
+    var over=ws&&ws.winner&&ws.lastFin&&Date.now()>+new Date(ws.lastFin.gameDate)+12*864e5;
+    PS.on=first!=null&&Date.now()>=first-4*864e5&&!over;
+    PS.loaded=true;
+    document.documentElement.classList.toggle('ps-on',PS.on);
+  });
+}
+function psWinnerOf(g){
+  var a=g.teams.away,h=g.teams.home;
+  if(a.isWinner) return a.team.id; if(h.isWinner) return h.team.id;
+  if(a.score!=null&&h.score!=null&&a.score!==h.score) return a.score>h.score?a.team.id:h.team.id;
+  return null;
+}
+function psFinal(g){ var st=g.status||{}; return st.abstractGameState==='Final'&&!/Postponed|Cancel|Suspend/i.test(st.detailedState||''); }
+function psLive(g){ return (g.status||{}).abstractGameState==='Live'; }
+function psState(s){
+  var ids=[], wins={}, need=Math.ceil(s.best/2), live=null, next=null, lastFin=null;
+  s.games.forEach(function(g){ ['away','home'].forEach(function(k){ var t=g.teams[k].team; if(psReal(t)&&ids.indexOf(t.id)<0) ids.push(t.id); }); });
+  ids.forEach(function(id){ wins[id]=0; });
+  s.games.forEach(function(g){
+    if(psFinal(g)){ var w=psWinnerOf(g); if(w!=null&&wins[w]!=null){ wins[w]++; lastFin=g; } }
+    else if(psLive(g)){ if(!live) live=g; }
+    else if(!next) next=g;
+  });
+  s.ids=ids; s.wins=wins; s.need=need; s.winner=null;
+  ids.forEach(function(id){ if(wins[id]>=need) s.winner=id; });
+  s.live=s.winner?null:live; s.next=s.winner?null:next; s.lastFin=lastFin;
+  s.started=!!lastFin||!!live;
+  var g1=s.games[0];
+  s.away=g1&&psReal(g1.teams.away.team)?g1.teams.away.team.id:null;
+  s.home=g1&&psReal(g1.teams.home.team)?g1.teams.home.team.id:null;
+  s.ph=g1&&!psReal(g1.teams.away.team)?(g1.teams.away.team.name||''):'';
+}
+/* who feeds whom, and the seeds (the feed carries no seed numbers) */
+function psLink(){
+  var L=PS.series, seed={};
+  L.forEach(function(s){ s.from=[]; s.to=null; });
+  ['AL','NL'].forEach(function(lg){
+    var wc=L.filter(function(s){return s.type==='F'&&s.lg===lg;}), ds=L.filter(function(s){return s.type==='D'&&s.lg===lg;});
+    ds.forEach(function(d){
+      var f=null;
+      if(d.away) f=wc.filter(function(w){return w.ids.indexOf(d.away)>=0;})[0];
+      if(!f&&d.ph){ var abs=d.ph.split('/'); f=wc.filter(function(w){ return w.ids.some(function(id){ return abs.indexOf(ab(id))>=0; }); })[0]; }
+      if(f){ d.from=[f]; f.to=d; }
+    });
+    wc.forEach(function(w){ if(!w.to){ var d=ds.filter(function(x){return !x.from.length;})[0]; if(d){ d.from=[w]; w.to=d; } } });
+    /* the 3 seed is a division winner hosting a wild card series, so its series feeds the 2 seed */
+    var dw=function(id){ var r=S.byId[id]; return r&&r.divRank===1; };
+    var w36=wc.filter(function(w){return w.home&&dw(w.home);})[0]||null;
+    wc.forEach(function(w){
+      var three=w===w36||(!w36&&wc.length===2&&w===wc.slice().sort(function(a,b){ return cmp(S.byId[a.home]||{},S.byId[b.home]||{}); })[0]);
+      if(w.home) seed[w.home]=three?3:4; if(w.away) seed[w.away]=three?6:5;
+      if(w.to&&w.to.home) seed[w.to.home]=three?2:1;
+    });
+    ds.forEach(function(d){ if(d.home&&!seed[d.home]) seed[d.home]=ds.length===2?(ds.indexOf(d)+1):1; });
+    var cs=L.filter(function(s){return s.type==='L'&&s.lg===lg;})[0];
+    if(cs){ cs.from=ds.slice().sort(function(a,b){ return (seed[a.home]||9)-(seed[b.home]||9); }); ds.forEach(function(d){ d.to=cs; }); }
+  });
+  var ws=L.filter(function(s){return s.type==='W';})[0];
+  if(ws){ ws.from=L.filter(function(s){return s.type==='L';}).sort(function(a,b){ return a.lg<b.lg?-1:1; }); ws.from.forEach(function(c){ c.to=ws; }); }
+  /* order the wild card series to line up with the division series they feed: the 1 seed's branch on top */
+  PS.seed=seed;
+}
+/* the two sides of a series: a known team, or the candidates still alive for that slot */
+function psSlots(s){
+  if(s.away&&s.home) return [{id:s.away},{id:s.home}];
+  function fromFeed(f){ if(!f) return {id:null,c:[]}; if(f.winner) return {id:f.winner}; if(f.ids.length===2) return {id:null,c:f.ids.slice()};
+    var c=[]; f.from.forEach(function(x){ var y=fromFeed(x); if(y.id) c.push(y.id); else c=c.concat(y.c); }); return {id:null,c:c}; }
+  if(s.type==='D'){ return [s.from[0]?fromFeed(s.from[0]):{id:s.away,c:[]}, {id:s.home}]; }
+  return [fromFeed(s.from[0]),fromFeed(s.from[1])];
+}
+
+/* ---- odds: 20,000 simulated Octobers from the current state of every series ---- */
+function psP(a,h){ var A=S.byId[a],H=S.byId[h], x=A?strength(A):.5, y=H?strength(H):.5; return x*(1-y)/(x*(1-y)+y*(1-x))-0.02; }
+function psHost(type,n,hi,lo){ if(type==='F') return hi; if(type==='D') return (n===3||n===4)?lo:hi; return (n>=3&&n<=5)?lo:hi; }
+function psSim(N){
+  var order=['F','D','L','W'], L=PS.series.slice().sort(function(a,b){ return order.indexOf(a.type)-order.indexOf(b.type); });
+  var cnt={}, key=L.map(function(s){ return s.id+':'+s.ids.map(function(id){return id+'-'+s.wins[id];}).join(','); }).join('|');
+  var seed=0; for(var i=0;i<key.length;i++) seed=(seed*31+key.charCodeAt(i))|0;
+  var R=rng(seed), win={};
+  L.forEach(function(s){ cnt[s.id]={}; });
+  for(var it=0;it<N;it++){
+    win={};
+    for(var k=0;k<L.length;k++){
+      var s=L[k], a, b;
+      if(s.away&&s.home){ a=s.away; b=s.home; }
+      else if(s.type==='D'){ b=s.home; a=s.from[0]?win[s.from[0].id]:s.away; }
+      else { a=s.from[0]?win[s.from[0].id]:null; b=s.from[1]?win[s.from[1].id]:null; }
+      if(!a||!b){ continue; }
+      var hi, lo;
+      if(s.type==='W'){ var ra=S.byId[a], rb=S.byId[b]; hi=(ra&&rb&&cmp(ra,rb)<=0)?a:b; }
+      else if(s.home&&(s.home===a||s.home===b)) hi=s.home;
+      else hi=((PS.seed[a]||9)<=(PS.seed[b]||9))?a:b;
+      lo=hi===a?b:a;
+      var known=(s.ids.indexOf(a)>=0&&s.ids.indexOf(b)>=0), wa=known?s.wins[a]:0, wb=known?s.wins[b]:0;
+      var n=wa+wb+1;
+      while(wa<s.need&&wb<s.need){
+        var g=s.games[n-1], host=(g&&known&&psReal(g.teams.home.team))?g.teams.home.team.id:psHost(s.type,n,hi,lo);
+        var guest=host===a?b:a, pg=psP(guest,host);
+        if(R()<pg){ if(guest===a) wa++; else wb++; } else { if(host===a) wa++; else wb++; }
+        n++;
+      }
+      var w=wa>=s.need?a:b; win[s.id]=w; cnt[s.id][w]=(cnt[s.id][w]||0)+1;
+    }
+  }
+  var out={byS:{},team:{}};
+  L.forEach(function(s){ out.byS[s.id]={}; Object.keys(cnt[s.id]).forEach(function(id){ out.byS[s.id][id]=cnt[s.id][id]/N; }); });
+  var pen=L.filter(function(s){return s.type==='L';}), ws=L.filter(function(s){return s.type==='W';})[0];
+  Object.keys(PS.seed).concat(L.reduce(function(a,s){ return a.concat(s.ids); },[])).forEach(function(id){
+    id=+id; if(out.team[id]) return;
+    var p=0; pen.forEach(function(c){ p+=(out.byS[c.id][id]||0); });
+    out.team[id]={pen:p, ws:ws?(out.byS[ws.id][id]||0):0};
+  });
+  return out;
+}
+function psOdds(){
+  var key=PS.series.map(function(s){ return s.id+s.ids.map(function(id){return id+'-'+s.wins[id];}).join(','); }).join('|');
+  if(!PS.odds||PS.oddsKey!==key){ PS.odds=psSim(20000); PS.oddsKey=key; }
+  return PS.odds;
+}
+function psPct(p){ if(p==null) return ''; if(p>=0.9995) return '100%'; if(p<=0) return '0%'; if(p<0.005) return '<1%'; return Math.round(p*100)+'%'; }
+
+/* ---- words ---- */
+function psNick(id){ return nick(id); }
+function psLine(s){
+  var W=s.wins;
+  if(s.winner){ var lo=s.ids.filter(function(x){return x!==s.winner;})[0];
+    return (W[lo]===0&&s.need>1?psNick(s.winner)+' sweep ':psNick(s.winner)+' win ')+W[s.winner]+'-'+(W[lo]||0); }
+  if(s.ids.length===2&&s.started){ var a=s.ids[0], b=s.ids[1];
+    if(W[a]===W[b]) return 'Tied '+W[a]+'-'+W[b];
+    var ld=W[a]>W[b]?a:b, tr=ld===a?b:a; return psNick(ld)+' lead '+W[ld]+'-'+W[tr]; }
+  var g=s.games[0]; if(!g) return '';
+  return 'Starts '+psWhen(g,true);
+}
+function psWhen(g,withDay){
+  var d=new Date(g.gameDate), tbd=g.status&&g.status.startTimeTBD;
+  var day=d.toLocaleDateString([], {weekday:'short', month:'numeric', day:'numeric'});
+  if(tbd) return day;
+  var t=d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+  var today=new Date().toDateString()===d.toDateString();
+  return (withDay&&!today?day+' ':today&&withDay?'today ':'')+t;
+}
+function psNextLine(s){
+  if(s.winner) return '';
+  if(s.live){ var st=gameStatus(s.live); return '<b class="lv">Game '+s.live.seriesGameNumber+' live</b> '+esc(st.t); }
+  if(s.next&&s.started&&(s.ids.length===2)) return 'Game '+s.next.seriesGameNumber+', '+esc(psWhen(s.next,true));
+  return '';
+}
+
+/* ---- render ---- */
+function psRow(s,slot,od){
+  var id=slot.id;
+  if(!id){
+    var c=slot.c||[];
+    var label=c.length===2?esc(ab(c[0]))+' / '+esc(ab(c[1])):c.length>2?'To be decided':'To be decided';
+    return '<div class="pst tbd"><span class="sd"></span><span class="cands">'+(c.length===2?c.map(function(x){return imgT(x);}).join(''):'<i></i>')+'</span>'+
+      '<span class="nm"><span class="nk">'+label+'</span><span class="abv">'+(c.length===2?esc(ab(c[0]))+'/'+esc(ab(c[1])):'TBD')+'</span></span><span class="pw"></span><span class="po"></span></div>';
+  }
+  var cls='pst'+(s.winner?(s.winner===id?' win':' out'):'');
+  var w=s.ids.length===2&&s.started?(s.wins[id]||0):'';
+  var p=s.winner?'':psPct(od&&od[id]);
+  return '<div class="'+cls+'" data-tid="'+id+'" style="--tc:'+(TCOL[id]||'#777')+'"><span class="sd">'+(PS.seed[id]||'')+'</span>'+imgT(id)+
+    '<span class="nm"><span class="nk">'+esc(psNick(id))+'</span><span class="abv">'+esc(ab(id))+'</span></span>'+
+    '<span class="pw">'+w+'</span><span class="po" title="Chance to win the series">'+p+'</span></div>';
+}
+function psPips(s){
+  var shown=s.games.filter(function(g){ return !(s.winner&&!psFinal(g)); });
+  if(!shown.length) return '';
+  return '<div class="psp">'+shown.map(function(g){
+    var n=g.seriesGameNumber, t;
+    if(psFinal(g)){ var w=psWinnerOf(g); return '<span class="pip fin" style="--tc:'+(TCOL[w]||'#777')+'" title="Game '+n+': '+esc(nick(g.teams.away.team.id)+' '+g.teams.away.score+', '+nick(g.teams.home.team.id)+' '+g.teams.home.score)+'">'+esc(ab(w))+'</span>'; }
+    if(psLive(g)) return '<span class="pip live" title="Game '+n+' live">'+esc(gameStatus(g).t)+'</span>';
+    var d=new Date(g.gameDate);
+    t=(d.getMonth()+1)+'/'+d.getDate();
+    return '<span class="pip'+(g.ifNecessary==='Y'?' ifn':'')+'" title="Game '+n+(g.ifNecessary==='Y'?', if needed':'')+'">'+t+'</span>';
+  }).join('')+'</div>';
+}
+function psCard(s,area,od){
+  var sl=psSlots(s);
+  var cls='psc'+(s.winner?' done':'')+(s.live?' live':'')+(PS.sel===s.id?' sel':'');
+  return '<div class="'+cls+'" style="grid-area:'+area+'" data-psid="'+esc(s.id)+'" role="button" tabindex="0" title="Every game in this series">'+
+    '<div class="psh"><span class="psr">'+esc(psShort(s))+'</span><span class="psb">best of '+s.best+'</span></div>'+
+    psRow(s,sl[0],od)+psRow(s,sl[1],od)+
+    '<div class="psf"><span class="psl">'+esc(psLine(s))+'</span>'+(s.winner?'':'<span class="psn">'+psNextLine(s)+'</span>')+'</div>'+
+    psPips(s)+'</div>';
+}
+function psCur(){
+  var order=['F','D','L','W'], live=PS.series.filter(function(s){return s.live;});
+  if(live.length) return live[0];
+  var nx=PS.series.filter(function(s){ return s.next&&s.ids.length===2; }).sort(function(a,b){ return new Date(a.next.gameDate)-new Date(b.next.gameDate); });
+  if(nx.length) return nx[0];
+  var done=PS.series.filter(function(s){return s.winner;}).sort(function(a,b){ return order.indexOf(b.type)-order.indexOf(a.type); });
+  return done[0]||PS.series[0];
+}
+function psToday(){
+  var all=[]; PS.series.forEach(function(s){ s.games.forEach(function(g){ all.push({g:g,s:s}); }); });
+  var td=new Date().toDateString();
+  var list=all.filter(function(x){ return new Date(x.g.gameDate).toDateString()===td && !(x.s.winner&&!psFinal(x.g)); });
+  var title='Today';
+  if(!list.length){
+    var up=all.filter(function(x){ return !psFinal(x.g)&&!psLive(x.g)&&!x.s.winner&&x.s.ids.length===2&&new Date(x.g.gameDate)>new Date(); })
+      .sort(function(a,b){ return new Date(a.g.gameDate)-new Date(b.g.gameDate); });
+    if(up.length){ var d0=new Date(up[0].g.gameDate).toDateString(); list=up.filter(function(x){ return new Date(x.g.gameDate).toDateString()===d0; });
+      title='Next up, '+new Date(up[0].g.gameDate).toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'}); }
+  }
+  if(!list.length) return '';
+  list.sort(function(a,b){ return new Date(a.g.gameDate)-new Date(b.g.gameDate); });
+  return '<div class="pstd"><h3>'+esc(title)+'</h3><div class="pstl">'+list.map(function(x){
+    var g=x.g, s=x.s, st=gameStatus(g), a=g.teams.away.team.id, h=g.teams.home.team.id, has=g.teams.away.score!=null&&psReal(g.teams.away.team);
+    var fin=psFinal(g), wn=fin?psWinnerOf(g):null;
+    function side(id,sc){ return '<div class="r'+(fin&&wn!==id?' lo':'')+'">'+imgT(id)+'<span class="a">'+esc(ab(id))+'</span><span class="sc">'+(has&&(fin||psLive(g))?sc:'')+'</span></div>'; }
+    return '<div class="pstg'+(psLive(g)?' live':'')+(fin?' fin':'')+'" data-pspk="'+g.gamePk+'" role="button" tabindex="0" title="Open Game Center">'+
+      '<div class="k"><span>'+esc(psTiny(s))+' &middot; Gm '+g.seriesGameNumber+'</span><span class="t'+(st.live?' lv':'')+'">'+esc(fin?'Final':st.live?st.t:psWhen(g,false))+'</span></div>'+
+      (psReal(g.teams.away.team)&&psReal(g.teams.home.team)?side(a,g.teams.away.score)+side(h,g.teams.home.score):'<div class="r tbdr">'+esc(g.teams.away.team.name)+' at '+esc(g.teams.home.team.name)+'</div>')+
+      '<div class="k2">'+esc(psLine(s))+'</div></div>';
+  }).join('')+'</div></div>';
+}
+function psDetail(s){
+  if(!s) return '';
+  var od=psOdds().byS[s.id]||{}, sl=psSlots(s);
+  var head='<div class="pdh"><div><h3>'+esc(s.desc||psShort(s))+'</h3><div class="sub">Best of '+s.best+' &middot; '+esc(psLine(s))+'</div></div>'+
+    '<div class="pdo">'+sl.filter(function(x){return x.id;}).map(function(x){ return '<span data-tid="'+x.id+'">'+imgT(x.id)+'<b>'+(s.winner?(s.winner===x.id?'Won':'Out'):psPct(od[x.id]))+'</b><small>'+esc(ab(x.id))+'</small></span>'; }).join('')+'</div></div>';
+  var rows=s.games.map(function(g){
+    var a=g.teams.away, h=g.teams.home, real=psReal(a.team)&&psReal(h.team), fin=psFinal(g), lv=psLive(g), st=gameStatus(g);
+    var unneeded=s.winner&&!fin;
+    var match=real?'<span class="tm'+(fin&&!a.isWinner&&a.score<h.score?' lo':'')+'" data-tid="'+a.team.id+'">'+imgT(a.team.id)+esc(ab(a.team.id))+'</span>'+
+      (fin||lv?'<span class="sc">'+a.score+'</span>':'')+'<span class="at">@</span>'+
+      '<span class="tm'+(fin&&!h.isWinner&&h.score<a.score?' lo':'')+'" data-tid="'+h.team.id+'">'+imgT(h.team.id)+esc(ab(h.team.id))+'</span>'+
+      (fin||lv?'<span class="sc">'+h.score+'</span>':''):'<span class="tbdr">'+esc(a.team.name)+' @ '+esc(h.team.name)+'</span>';
+    var dec=g.decisions||{}, note='';
+    if(fin&&(dec.winner||dec.loser)) note='W '+esc((dec.winner||{}).lastName||(dec.winner||{}).fullName||'')+(dec.loser?' &middot; L '+esc(dec.loser.lastName||dec.loser.fullName||''):'')+(dec.save?' &middot; S '+esc(dec.save.lastName||dec.save.fullName||''):'');
+    else if(!fin&&!lv&&!unneeded&&(a.probablePitcher||h.probablePitcher)) note=esc((a.probablePitcher||{}).fullName||'TBD')+' vs '+esc((h.probablePitcher||{}).fullName||'TBD');
+    var stt=unneeded?'Not needed':fin?(g.status.detailedState==='Final'?'Final':g.status.detailedState)+(g.linescore&&g.linescore.currentInning>9?' / '+g.linescore.currentInning:''):lv?st.t:psWhen(g,true);
+    return '<tr class="'+(lv?'lv ':'')+(unneeded?'nn ':'')+(fin?'fin':'')+'"'+(real&&!unneeded?' data-pspk="'+g.gamePk+'"':'')+'>'+
+      '<td class="gn">G'+g.seriesGameNumber+(g.ifNecessary==='Y'&&!fin?'<small>if needed</small>':'')+'</td>'+
+      '<td class="mt">'+match+'</td><td class="stt">'+esc(stt)+'</td><td class="nt">'+note+(g.venue&&g.venue.name?'<small>'+esc(g.venue.name)+'</small>':'')+'</td></tr>';
+  }).join('');
+  return head+'<div class="scrollx"><table class="pdt"><tbody>'+rows+'</tbody></table></div>';
+}
+function psTable(){
+  var o=psOdds(), ids={};
+  PS.series.forEach(function(s){ s.ids.forEach(function(id){ ids[id]=1; }); });
+  Object.keys(PS.seed).forEach(function(id){ ids[id]=1; });
+  var list=Object.keys(ids).map(Number).filter(function(id){return TEAM[id];});
+  function cur(id){ var ss=PS.series.filter(function(s){ return s.ids.indexOf(id)>=0; });
+    var order=['F','D','L','W']; ss.sort(function(a,b){ return order.indexOf(b.type)-order.indexOf(a.type); }); return ss[0]; }
+  function out(id){ return PS.series.some(function(s){ return s.winner&&s.ids.indexOf(id)>=0&&s.winner!==id; }); }
+  list.sort(function(a,b){ var x=o.team[a]||{ws:0,pen:0}, y=o.team[b]||{ws:0,pen:0}; return (out(a)-out(b))||(y.ws-x.ws)||(y.pen-x.pen)||((PS.seed[a]||9)-(PS.seed[b]||9)); });
+  var mx=Math.max.apply(null,list.map(function(id){ return (o.team[id]||{}).ws||0; }).concat([0.01]));
+  var rows=list.map(function(id){
+    var t=o.team[id]||{ws:0,pen:0}, s=cur(id), dead=out(id), lg=lgOf(S.byId[id]);
+    var opp=s?s.ids.filter(function(x){return x!==id;})[0]:null;
+    var where=!s?'':dead?'Out in the '+psTiny(s).replace(/^(AL|NL)/,'').replace('CS','LCS'):(psTiny(s)+(opp?' vs '+ab(opp):''));
+    var sw=s&&!dead?(s.winner===id?'Won':psPct((o.byS[s.id]||{})[id])):'';
+    return '<tr class="'+(dead?'out':'')+'" data-tid="'+id+'"><td class="tn">'+'<span class="sd">'+(PS.seed[id]||'')+'</span>'+imgT(id)+'<span class="nk">'+esc(nick(id))+'</span><small>'+lg+'</small></td>'+
+      '<td class="wh">'+esc(where)+'</td><td class="n">'+(dead?'':sw)+'</td><td class="n">'+(dead?'':psPct(t.pen))+'</td>'+
+      '<td class="ws"><span class="pbar"><i style="width:'+(dead?0:Math.max(1.5,t.ws/mx*100))+'%;--tc:'+(TCOL[id]||'#999')+'"></i></span><b>'+(dead?'Out':psPct(t.ws))+'</b></td></tr>';
+  }).join('');
+  return '<div class="pso"><div class="tbh"><h3>Title odds</h3><span>20,000 simulated Octobers</span></div>'+
+    '<div class="scrollx"><table class="pot"><thead><tr><th>Team</th><th>Series</th><th class="n">Win it</th><th class="n">Pennant</th><th>World Series</th></tr></thead><tbody>'+rows+'</tbody></table></div></div>';
+}
+function renderBracket(){
+  var box=$('psBox'); if(!box) return;
+  if(!PS.loaded){ box.innerHTML='<div class="empty">Loading the bracket</div>'; return; }
+  if(!PS.series.length){ box.innerHTML='<div class="empty">The bracket is not out yet.</div>'; return; }
+  var od=psOdds(), L=PS.series;
+  function pick(type,lg,i){ var x=L.filter(function(s){return s.type===type&&(lg===''||s.lg===lg);}); return x[i]; }
+  var cards='';
+  ['AL','NL'].forEach(function(lg){
+    var p=lg==='AL'?'a':'n', cs=pick('L',lg,0);
+    var ds=cs&&cs.from.length===2?cs.from:L.filter(function(s){return s.type==='D'&&s.lg===lg;});
+    ds.forEach(function(d,i){ if(!d) return; cards+=psCard(d,p+'d'+(i+1),od.byS[d.id]); if(d.from[0]) cards+=psCard(d.from[0],p+'w'+(i+1),od.byS[d.from[0].id]); });
+    L.filter(function(s){return s.type==='F'&&s.lg===lg&&!s.to;}).forEach(function(w,i){ cards+=psCard(w,p+'w'+(i+1),od.byS[w.id]); });
+    if(cs) cards+=psCard(cs,p+'l',od.byS[cs.id]);
+  });
+  var ws=pick('W','',0); if(ws) cards+=psCard(ws,'ws',od.byS[ws.id]);
+  var heads='<div class="pshd w" style="grid-area:h1">AL Wild Card</div><div class="pshd w" style="grid-area:h2">AL Division Series</div><div class="pshd w" style="grid-area:h3">ALCS</div>'+
+    '<div class="pshd w wsh" style="grid-area:h4">World Series</div><div class="pshd w" style="grid-area:h5">NLCS</div><div class="pshd w" style="grid-area:h6">NL Division Series</div><div class="pshd w" style="grid-area:h7">NL Wild Card</div>'+
+    '<div class="pshd n" style="grid-area:r1">Wild Card<small>best of 3</small></div><div class="pshd n" style="grid-area:r2">Division Series<small>best of 5</small></div>'+
+    '<div class="pshd n" style="grid-area:r3">League Championship Series<small>best of 7</small></div><div class="pshd n" style="grid-area:r4">World Series<small>best of 7</small></div>';
+  if(!PS.sel||!PS.byId[PS.sel]) PS.sel=(psCur()||{}).id;
+  var fav=Object.keys(od.team).map(Number).sort(function(a,b){ return od.team[b].ws-od.team[a].ws; })[0];
+  $('psNote').innerHTML=fav&&od.team[fav].ws<1?'Title favourite: <b>'+esc(nick(fav))+'</b> '+psPct(od.team[fav].ws):'';
+  box.innerHTML=psToday()+'<div class="psw"><div class="psg">'+heads+cards+'</div></div>'+
+    '<div class="psx"><div class="psd" id="psDetail">'+psDetail(PS.byId[PS.sel])+'</div>'+psTable()+'</div>';
+}
+function psTag(g){
+  var s=PS&&PS.byPk[g.gamePk]; if(!s) return null;
+  var t=psTiny(s)+' Gm '+g.seriesGameNumber;
+  if(s.ids.length===2&&s.started){ var a=s.ids[0], b=s.ids[1], W=s.wins; t+=' · '+(W[a]===W[b]?'tied '+W[a]+'-'+W[b]:ab(W[a]>W[b]?a:b)+' '+Math.max(W[a],W[b])+'-'+Math.min(W[a],W[b])); }
+  return t;
+}
+function psLoop(){
+  clearTimeout(PS.timer);
+  var live=PS.series.some(function(s){return s.live;}) || (S.games||[]).some(function(g){ return PS.byPk[g.gamePk]&&psLive(g); });
+  PS.timer=setTimeout(function(){
+    if(document.hidden) return psLoop();
+    psLoad().then(function(){ if(S.view==='bracket') renderBracket(); }).catch(function(){}).then(psLoop);
+  }, live?10000:60000);
+}
+document.addEventListener('click',function(e){
+  var t=e.target;
+  if(!t.closest('#secBracket')) return;
+  var tid=t.closest('.pst[data-tid] img, .pst[data-tid] .nm, .pdo [data-tid], .pdt .tm[data-tid], .pot tr[data-tid] .tn');
+  if(tid){ var el=tid.closest('[data-tid]'); e.stopPropagation(); openTeam(el.getAttribute('data-tid')); return; }
+  var gk=t.closest('[data-pspk]');
+  if(gk){ S.gcFrom='bracket'; location.hash='#game-'+gk.getAttribute('data-pspk'); return; }
+  var c=t.closest('.psc[data-psid]');
+  if(c){ PS.sel=c.getAttribute('data-psid'); renderBracket(); var d=$('psDetail'); if(d&&d.getBoundingClientRect().top>innerHeight-80) d.scrollIntoView({behavior:'smooth',block:'start'}); return; }
+  var r=t.closest('.pot tr[data-tid]'); if(r){ openTeam(r.getAttribute('data-tid')); }
+},true);
+document.addEventListener('keydown',function(e){
+  if(e.key!=='Enter'&&e.key!==' ') return;
+  var c=e.target.closest&&e.target.closest('#secBracket [data-psid], #secBracket [data-pspk]'); if(!c) return;
+  e.preventDefault(); c.click();
+});
+psLoad().then(function(){
+  if(PS.on&&!(location.hash||'').replace(/^#/,'')&&S.view!=='bracket') setView('bracket');
+  else if(S.view==='bracket') renderBracket();
+  if(S.view==='live') renderBoard();
+}).catch(function(){ PS.loaded=true; if(S.view==='bracket') renderBracket(); }).then(psLoop);
+window.LSD.ps=PS; window.LSD.psSim=psSim; window.LSD.renderBracket=renderBracket;
+
 })();
 
 /* Search X and any other new-tab link: iOS quietly drops window.open from a touch, so on a
