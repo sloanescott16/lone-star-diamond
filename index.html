@@ -1855,6 +1855,11 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
   table.ls td.R{font-size:min(18px,5.2cqi)}
   table.ls th{font-size:min(12.5px,3.7cqi)}
 }
+/* v63: the line score never scrolls. The plates' spacing hung past the scroller top and bottom, so every line score
+   carried a scrollbar and Safari clipped the home row. The box now grows to fit the table, whatever the browser. */
+.gb>.scroll.lsx{overflow:visible; height:auto; max-height:none}
+:where(body.v-game,body.v-stand) .gb>.scroll.lsx>table.ls{margin-top:0; margin-bottom:0}
+@container (max-width:470px){ .gb>.scroll.lsx>table.ls{margin-top:0; margin-bottom:0} }
 /* v59: fit every width, same standard as Command Center v89 */
 /* no empty black plate before first pitch */
 .g .sc:empty{background:none !important;box-shadow:none !important}
@@ -3851,7 +3856,7 @@ function gcLine(F){
     r+='<td class="R">'+(tt.runs|0)+'</td><td>'+(tt.hits|0)+'</td><td>'+(tt.errors|0)+'</td><td>'+(tt.leftOnBase|0)+'</td>';
     return '<tr class="'+(t.id===FAV?'fav':'')+'">'+r+'</tr>';
   }
-  var body='<div class="scroll"><table class="ls"><thead><tr>'+th+'</tr></thead><tbody>'+row('away')+row('home')+'</tbody></table></div>';
+  var body='<div class="scroll lsx"><table class="ls"><thead><tr>'+th+'</tr></thead><tbody>'+row('away')+row('home')+'</tbody></table></div>';
   if(fin) body+=decisionsHTML(F).replace('style="margin-top:0;padding-top:0;border-top:0"','');
   return card('Line score',body,'o2');
 }
@@ -5169,6 +5174,7 @@ window.LSD.gcHeader=gcHeader; /* v35: test hook, the header renders from a feed 
 window.LSD.gcMomentum=gcMomentum; window.LSD.gcRender=gcRender; /* v36 */
 window.LSD.gcWP=gcWP; /* v42: test hook */
 window.LSD.gcMatchup=gcMatchup; /* v46: test hook */
+window.LSD.gcLine=gcLine; /* v63: test hook */
 /* ================= v62: October. When the regular season is done the site becomes a postseason tracker:
    a Bracket tab (the landing page while it runs), series cards with every game, and each team's odds to win
    its series, the pennant and the World Series. No favourite: the Rangers get no special treatment here.
