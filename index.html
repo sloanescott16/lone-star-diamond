@@ -1860,6 +1860,14 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
 .gb>.scroll.lsx{overflow:visible; height:auto; max-height:none}
 :where(body.v-game,body.v-stand) .gb>.scroll.lsx>table.ls{margin-top:0; margin-bottom:0}
 @container (max-width:470px){ .gb>.scroll.lsx>table.ls{margin-top:0; margin-bottom:0} }
+/* v64: the line score sits across the bottom of the score banner (live and final), centred and capped so the plates
+   stay plate-sized on a wide screen. It drops away while the banner is pinned so the pinned bar stays slim. */
+.gch>.gcls{grid-column:1/-1; justify-self:center; width:min(100%,640px); margin-top:6px; min-width:0}
+.gch.stuck>.gcls{display:none}
+.gch>.gcls table.ls{margin:0 !important; width:100% !important}
+.gch>.gcls .decs{justify-content:center; gap:4px 18px; margin-top:8px; padding-top:0; border-top:0}
+:where(body.v-game,body.v-stand) .gch>.gcls .decs{font-size:13px}
+@container (max-width:470px){ .gch>.gcls{margin-top:2px} .gch>.gcls .decs{gap:6px 12px; font-size:11.5px} }
 /* v59: fit every width, same standard as Command Center v89 */
 /* no empty black plate before first pitch */
 .g .sc:empty{background:none !important;box-shadow:none !important}
@@ -3447,7 +3455,8 @@ function gcHeader(F){
       (st.detailedState&&st.detailedState!=='Scheduled'?'<div class="gs3">'+esc(st.detailedState)+'</div>':'');
   }
   mid+='<div class="gs3">'+esc((gd.venue||{}).name||'')+'</div>';
-  return '<div class="gch" style="--ca:'+cols[0]+';--ch:'+cols[1]+'">'+side(A,ar,hr,'a')+'<div class="gcm">'+mid+'</div>'+side(H,hr,ar,'h')+'</div>';
+  var strip=pre?'':'<div class="gcls">'+lsTable(F)+(fin?decisionsHTML(F):'')+'</div>'; /* v64: line score in the banner */
+  return '<div class="gch" style="--ca:'+cols[0]+';--ch:'+cols[1]+'">'+side(A,ar,hr,'a')+'<div class="gcm">'+mid+'</div>'+side(H,hr,ar,'h')+strip+'</div>';
 }
 
 /* ---------- matchup + strike zone ---------- */
@@ -3840,7 +3849,7 @@ function preInfo(F){
 
 /* ---------- line score ---------- */
 
-function gcLine(F){
+function lsTable(F){
   var ls=F.liveData.linescore||{}, gd=F.gameData, inn=ls.innings||[], n=Math.max(9,inn.length);
   var live=gd.status.abstractGameState==='Live', fin=gd.status.abstractGameState==='Final', cur=live?ls.currentInning:0;
   var th='<th></th>'; for(var i=1;i<=n;i++) th+='<th class="'+(i===cur?'cur':'')+'">'+i+'</th>';
@@ -3856,7 +3865,12 @@ function gcLine(F){
     r+='<td class="R">'+(tt.runs|0)+'</td><td>'+(tt.hits|0)+'</td><td>'+(tt.errors|0)+'</td><td>'+(tt.leftOnBase|0)+'</td>';
     return '<tr class="'+(t.id===FAV?'fav':'')+'">'+r+'</tr>';
   }
-  var body='<div class="scroll lsx"><table class="ls"><thead><tr>'+th+'</tr></thead><tbody>'+row('away')+row('home')+'</tbody></table></div>';
+  return '<table class="ls"><thead><tr>'+th+'</tr></thead><tbody>'+row('away')+row('home')+'</tbody></table>';
+}
+/* v64: the line score lives in the score banner; the card is no longer drawn but stays for tests */
+function gcLine(F){
+  var fin=F.gameData.status.abstractGameState==='Final';
+  var body='<div class="scroll lsx">'+lsTable(F)+'</div>';
   if(fin) body+=decisionsHTML(F).replace('style="margin-top:0;padding-top:0;border-top:0"','');
   return card('Line score',body,'o2');
 }
@@ -4301,8 +4315,8 @@ function gcRender(){
     box.innerHTML=head+gcHeader(F)+
       '<div class="gc-grid">'+
         '<div class="gc-col gc-box">'+gcBox(F)+gcPBP(F)+'</div>'+ /* v22: play by play under the box score */
-        '<div class="gc-col gc-mid">'+gcMatchup(F)+gcScoring(F)+'</div>'+
-        '<div class="gc-col gc-side">'+gcMomentum(F)+gcWP(F)+gcLine(F)+gcCompare(F)+gcIL(F)+'</div>'+
+        '<div class="gc-col gc-mid">'+gcMatchup(F)+'</div>'+
+        '<div class="gc-col gc-side">'+gcMomentum(F)+gcWP(F)+gcScoring(F)+gcCompare(F)+gcIL(F)+'</div>'+ /* v64: line score moved into the banner, scoring summary takes its place */
       '</div>';
   }catch(e){
     box.innerHTML=head+'<div class="err">Game Center render problem: '+esc(e.message)+'</div>';
