@@ -1863,7 +1863,23 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
 /* v64: the line score sits across the bottom of the score banner (live and final), centred and capped so the plates
    stay plate-sized on a wide screen. It drops away while the banner is pinned so the pinned bar stays slim. */
 .gch>.gcls{grid-column:1/-1; justify-self:center; width:min(100%,640px); margin-top:6px; min-width:0}
-.gch.stuck>.gcls{display:none}
+.gch.stuck>.gcls .decs{display:none}
+/* v65: once the banner is pinned the line score stays with it, as a slim strip: small unplated digits, a hairline
+   above, LOB dropped, the current inning outlined and R on cream so the score still reads first. */
+.gch.stuck{row-gap:0}
+.gch.stuck>.gcls{width:min(100%,540px); margin-top:3px; padding-top:3px; border-top:1px solid rgba(241,232,210,.14)}
+.gch.stuck>.gcls table.ls{border-collapse:separate; border-spacing:2px 1px; table-layout:fixed}
+.gch.stuck>.gcls table.ls th{font-family:var(--cond); font-size:10px; line-height:1; padding:0 0 1px; color:var(--dim); background:none; letter-spacing:.02em}
+.gch.stuck>.gcls table.ls th.R{color:#f38a7b}
+.gch.stuck>.gcls table.ls td{font-family:var(--display); font-size:13px; font-weight:700; line-height:1; padding:3px 0; background:none; box-shadow:none; border:0; border-radius:2px; color:var(--mute); text-box:none}
+.gch.stuck>.gcls table.ls td.sc{color:var(--cream)}
+.gch.stuck>.gcls table.ls td.cur{box-shadow:inset 0 0 0 1px rgba(241,232,210,.7); background:none; color:var(--cream)}
+.gch.stuck>.gcls table.ls td.R{background:var(--cream); color:var(--cream-ink); font-size:13px}
+.gch.stuck>.gcls table.ls th:first-child,.gch.stuck>.gcls table.ls td:first-child{width:15%}
+.gch.stuck>.gcls table.ls td.t{font-size:12px; color:var(--cream); padding-right:4px}
+.gch.stuck>.gcls table.ls td.t span{gap:4px}
+.gch.stuck>.gcls table.ls td.t img{width:13px; height:13px}
+.gch.stuck>.gcls table.ls th:last-child,.gch.stuck>.gcls table.ls td:last-child{display:none}
 .gch>.gcls table.ls{margin:0 !important; width:100% !important}
 .gch>.gcls .decs{justify-content:center; gap:4px 18px; margin-top:8px; padding-top:0; border-top:0}
 :where(body.v-game,body.v-stand) .gch>.gcls .decs{font-size:13px}
