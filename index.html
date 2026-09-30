@@ -5578,7 +5578,8 @@ function psTable(){
 }
 function renderBracket(){
   var box=$('psBox'); if(!box) return;
-  if(!PS.loaded){ box.innerHTML='<div class="empty">Loading the bracket</div>'; return; }
+  /* v70: a page opened straight at #bracket routes before the October block has run; PS is still undefined then */
+  if(typeof PS==='undefined'||!PS||!PS.loaded){ box.innerHTML='<div class="empty">Loading the bracket</div>'; return; }
   if(!PS.series.length){ box.innerHTML='<div class="empty">The bracket is not out yet.</div>'; return; }
   var od=psOdds(), L=PS.series, cards='';
   ['AL','NL'].forEach(function(lg){
