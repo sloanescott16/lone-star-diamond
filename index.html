@@ -517,7 +517,7 @@ svg.dia rect.on{fill:var(--warn); stroke:var(--warn)}
   grid-template-columns:minmax(0,1fr) minmax(0,1.4fr) minmax(0,1fr); grid-template-areas:"box mid side"}
 .gc-col{display:flex; flex-direction:column; gap:12px; min-width:0}
 .gc-box{grid-area:box} .gc-mid{grid-area:mid} .gc-side{grid-area:side}
-@media (max-width:1180px){ .gc-grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); grid-template-areas:"mid side" "box side"} }
+@media (max-width:1180px){ .gc-grid{grid-template-columns:minmax(0,1.35fr) minmax(0,1fr); grid-template-areas:"mid side" "box side"; grid-template-rows:auto 1fr} } /* v66: the tall right column's height goes to row 2, so the box score sits right under At the plate */
 @media (max-width:760px){
   .gc-grid{grid-template-columns:minmax(0,1fr); grid-template-areas:none}
   .gc-col{display:contents}
@@ -1863,7 +1863,10 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
 /* v64: the line score sits across the bottom of the score banner (live and final), centred and capped so the plates
    stay plate-sized on a wide screen. It drops away while the banner is pinned so the pinned bar stays slim. */
 .gch>.gcls{grid-column:1/-1; justify-self:center; width:min(100%,640px); margin-top:6px; min-width:0}
-.gch.stuck>.gcls .decs{display:none}
+.gch.stuck>.gcls .decs{font-size:11px; gap:2px 14px; margin-top:4px}
+/* v66: slim all the time; it keeps its full frame until it actually pins under the top bar */
+:where(body.v-game,body.v-stand) .gch.stuck:not(.pinned){border-top:1px solid var(--rule); border-radius:6px}
+.gch.stuck:not(.pinned){border-top-left-radius:6px; border-top-right-radius:6px}
 /* v65: once the banner is pinned the line score stays with it, as a slim strip: small unplated digits, a hairline
    above, LOB dropped, the current inning outlined and R on cream so the score still reads first. */
 .gch.stuck{row-gap:0}
@@ -3471,8 +3474,8 @@ function gcHeader(F){
       (st.detailedState&&st.detailedState!=='Scheduled'?'<div class="gs3">'+esc(st.detailedState)+'</div>':'');
   }
   mid+='<div class="gs3">'+esc((gd.venue||{}).name||'')+'</div>';
-  var strip=pre?'':'<div class="gcls">'+lsTable(F)+(fin?decisionsHTML(F):'')+'</div>'; /* v64: line score in the banner */
-  return '<div class="gch" style="--ca:'+cols[0]+';--ch:'+cols[1]+'">'+side(A,ar,hr,'a')+'<div class="gcm">'+mid+'</div>'+side(H,hr,ar,'h')+strip+'</div>';
+  var strip=pre?'':'<div class="gcls">'+lsTable(F)+(fin?decsSlim(F):'')+'</div>'; /* v64: line score in the banner */
+  return '<div class="gch stuck" style="--ca:'+cols[0]+';--ch:'+cols[1]+'">'+side(A,ar,hr,'a')+'<div class="gcm">'+mid+'</div>'+side(H,hr,ar,'h')+strip+'</div>';
 }
 
 /* ---------- matchup + strike zone ---------- */
@@ -3633,6 +3636,12 @@ function gcMatchup(F){
   return card(st==='Final'?'Final':'At the plate',body,'o1');
 }
 
+/* v66: one-line W/L/S for the slim banner; the full lines stay in the box score */
+function decsSlim(F){
+  var dc=F.liveData.decisions||{}, out=[];
+  [['winner','W'],['loser','L'],['save','S']].forEach(function(k){ var p=dc[k[0]]; if(p) out.push('<span><i>'+k[1]+'</i><b>'+plx(p.id,pName(F,p.id)||p.fullName)+'</b></span>'); });
+  return out.length?'<div class="decs">'+out.join('')+'</div>':'';
+}
 function decisionsHTML(F){
   var dc=F.liveData.decisions||{}, out=[];
   [['winner','W'],['loser','L'],['save','S']].forEach(function(k){
@@ -4366,12 +4375,10 @@ function gcStick(){
   var bar=document.querySelector('.bar'), bh=bar?bar.getBoundingClientRect().height:0;
   document.documentElement.style.setProperty('--barh',bh+'px');
   var h=document.querySelector('#gc .gch'); if(!h) return;
-  var was=h.classList.contains('stuck');
-  var full=was?h._fullH:h.getBoundingClientRect().height;
-  var stuck=S.view==='game'&&window.scrollY>0&&h.getBoundingClientRect().top<=bh+1;
-  if(stuck===was) return;
-  if(stuck){ h._fullH=full; h.classList.add('stuck'); h.style.marginBottom=(12+full-h.getBoundingClientRect().height)+'px'; }
-  else { h.classList.remove('stuck'); h.style.marginBottom=''; }
+  /* v66: the banner is always the slim version; pinning only squares off its top */
+  h.classList.add('stuck');
+  var pin=S.view==='game'&&window.scrollY>0&&h.getBoundingClientRect().top<=bh+1;
+  h.classList.toggle('pinned',pin);
 }
 window.addEventListener('scroll',gcStick,{passive:true});
 window.addEventListener('resize',gcStick);
