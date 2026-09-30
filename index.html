@@ -675,6 +675,11 @@ table.gt .dec.W{background:rgba(55,192,125,.2); color:#6ee0a8} table.gt .dec.L{b
 .gtab button.on{border-color:var(--line); background:var(--card); color:var(--ink)}
 .bxh{font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); font-weight:700; margin:14px 0 2px}
 .bxh:first-child{margin-top:0}
+.bxs+.bxs{margin-top:16px; padding-top:12px; border-top:1px solid var(--line)}
+.bxt{display:flex; align-items:center; gap:8px; margin:0 0 6px; cursor:pointer}
+.bxt img{width:22px; height:22px; object-fit:contain}
+.bxt b{font-size:14px; letter-spacing:.02em}
+.bxt i{font-style:normal; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--dim); margin-left:auto}
 table.ls{width:100%; border-collapse:collapse; font-size:13px; font-variant-numeric:tabular-nums}
 table.ls th{font-size:10px; color:var(--dim); font-weight:700; padding:5px 3px; text-align:center; border-bottom:1px solid var(--line)}
 table.ls td{padding:8px 3px; text-align:center; border-bottom:1px solid #1a1f29; color:var(--mute)}
@@ -4064,12 +4069,14 @@ function gcPBP(F){
 
 function gcBox(F){
   var gd=F.gameData, dc=F.liveData.decisions||{};
-  var side=S.gc.tab||(gd.teams.home.id===FAV?'home':'away');
-  var tabs='<div class="gtab">'+['away','home'].map(function(s){ var t=gd.teams[s]; return '<button type="button" data-gctab="'+s+'" class="'+(s===side?'on':'')+'">'+imgT(t.id)+esc(ab(t.id))+'</button>'; }).join('')+'</div>';
+  /* v72: both teams at once, home on top (no team tabs) */
+  var out='';
+  ['home','away'].forEach(function(side){
+  var tm=gd.teams[side];
   var T=F.liveData.boxscore.teams[side]||{}, P=T.players||{};
+  var body='<div class="bxt" data-tid="'+tm.id+'" title="Team">'+imgT(tm.id)+'<b>'+esc(tm.teamName||tm.name||ab(tm.id))+'</b><i>'+(side==='home'?'Home':'Away')+'</i></div>';
   var hit=Object.keys(P).map(function(k){ return P[k]; }).filter(function(x){ return x.battingOrder; })
     .sort(function(a,b){ return +a.battingOrder - +b.battingOrder; });
-  var body='';
   if(!hit.length) body+='<div class="empty">Lineup not posted yet.</div>';
   else {
     var tot={ab:0,r:0,h:0,rbi:0,bb:0,k:0};
@@ -4093,7 +4100,9 @@ function gcBox(F){
           '<td>'+(p.numberOfPitches|0)+'-'+(p.strikes|0)+'</td><td>'+esc(z.era||'')+'</td></tr>';
       }).join('')+'</tbody></table></div>';
   }
-  return card('Box score',body,'o6',tabs);
+  out+='<div class="bxs">'+body+'</div>';
+  });
+  return card('Box score',out,'o6');
 }
 
 /* ---------- win probability ---------- */
@@ -4401,8 +4410,8 @@ function gcRender(){
   try{
     box.innerHTML=head+gcHeader(F)+
       '<div class="gc-grid">'+
-        '<div class="gc-col gc-box">'+gcBox(F)+gcPBP(F)+'</div>'+ /* v22: play by play under the box score */
-        '<div class="gc-col gc-mid">'+gcMatchup(F)+'</div>'+
+        '<div class="gc-col gc-box">'+gcBox(F)+'</div>'+
+        '<div class="gc-col gc-mid">'+gcMatchup(F)+gcPBP(F)+'</div>'+ /* v72: play by play back under At the plate */
         '<div class="gc-col gc-side">'+gcMomentum(F)+gcWP(F)+gcScoring(F)+gcCompare(F)+gcIL(F)+'</div>'+ /* v64: line score moved into the banner, scoring summary takes its place */
       '</div>';
   }catch(e){
@@ -5199,7 +5208,7 @@ document.addEventListener('click',function(e){
   var v=t.closest('[data-tmv]'); if(v){ S.tm.view=v.getAttribute('data-tmv'); tmRender(); return; }
   var sg=t.closest('#gc .ptab tr[data-pk]'); if(sg&&+sg.getAttribute('data-pk')!==S.gc.pk){ openGame(sg.getAttribute('data-pk')); return; }
   var tg=t.closest('#tmod tr[data-pk]'); if(tg){ openGame(tg.getAttribute('data-pk')); return; }
-  var tr=t.closest('.st tr[data-tid], .gct[data-tid], .rih[data-tid]'); if(tr){ openTeam(tr.getAttribute('data-tid')); return; }
+  var tr=t.closest('.st tr[data-tid], .gct[data-tid], .rih[data-tid], .bxt[data-tid]'); if(tr){ openTeam(tr.getAttribute('data-tid')); return; }
   var row=t.closest('.g .row[data-tid]'); if(row&&t.closest('.nm, img')){ e.stopPropagation(); openTeam(row.getAttribute('data-tid')); return; }
   var ri=t.closest('.runin li[data-pk]'); if(ri){ openGame(ri.getAttribute('data-pk')); return; }
   var card=t.closest('#games .g[data-pk], #sched .g[data-pk]'); if(card){ openGame(card.getAttribute('data-pk')); return; }
