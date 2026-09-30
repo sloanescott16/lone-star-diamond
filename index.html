@@ -1867,6 +1867,10 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
 /* v66: slim all the time; it keeps its full frame until it actually pins under the top bar */
 :where(body.v-game,body.v-stand) .gch.stuck:not(.pinned){border-top:1px solid var(--rule); border-radius:6px}
 .gch.stuck:not(.pinned){border-top-left-radius:6px; border-top-right-radius:6px}
+/* v68: once pinned, a little breathing room between the top bar and the score plates; the margin gives the same
+   height back so the page below does not jump when it pins. */
+.gch.stuck.pinned{padding-top:14px; margin-bottom:4px}
+@media (max-width:760px){ .gch.stuck.pinned{padding-top:13px} }
 /* v65: once the banner is pinned the line score stays with it, as a slim strip: small unplated digits, a hairline
    above, LOB dropped, the current inning outlined and R on cream so the score still reads first. */
 .gch.stuck{row-gap:0}
