@@ -1888,19 +1888,24 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
 .gch.stuck>.gcls table.ls td.cur{box-shadow:inset 0 0 0 1px rgba(241,232,210,.7); background:none; color:var(--cream)}
 .gch.stuck>.gcls table.ls td.R{background:var(--cream); color:var(--cream-ink); font-size:13px}
 .gch.stuck>.gcls table.ls th:first-child,.gch.stuck>.gcls table.ls td:first-child{width:15%}
-/* v73: postseason series line across the top of the banner (round, game, who leads) and series-win pips under each name */
-.gch>.gcser{grid-column:1/-1; justify-self:center; min-width:0; max-width:100%; margin:0 0 5px; text-align:center; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  font-family:var(--cond,'Barlow Condensed','Arial Narrow',sans-serif); font-size:14px; font-weight:600; line-height:1.15; letter-spacing:.08em; text-transform:uppercase; color:var(--mute)}
-.gch>.gcser b{font-weight:700; color:var(--cream,#f1e8d2)}
-.gch>.gcser i{font-style:normal; margin:0 .5em; opacity:.6}
-.gch>.gcser .sh{display:none}
-.gct .psp{display:flex; gap:5px; margin-top:6px}
-.gct.h .psp{justify-content:flex-end}
-.gct .psp i{flex:none; width:11px; height:11px; border-radius:50%; box-shadow:inset 0 0 0 1.5px rgba(241,232,210,.45)}
-.gct .psp i.on{background:var(--cream,#f1e8d2); box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+/* v74: sleeker series marker. A quiet chip beside the Game Center title says the round, game and who leads; under each
+   score plate a row of thin ticks, one per win needed, lit per win. The banner keeps its slim height. */
+.gchd .gc-ser{display:inline-flex; align-items:center; white-space:nowrap; padding:3px 9px 2px; border-radius:4px; background:rgba(241,232,210,.07);
+  box-shadow:inset 0 0 0 1px rgba(241,232,210,.16); font-family:var(--cond,'Barlow Condensed','Arial Narrow',sans-serif); font-size:13px; font-weight:600;
+  line-height:1.15; letter-spacing:.07em; text-transform:uppercase; color:var(--mute)}
+.gchd .gc-ser b{font-weight:700; color:var(--cream,#f1e8d2)}
+.gchd .gc-ser i{font-style:normal; margin:0 .45em; opacity:.55}
+.gchd .gc-ser .sh{display:none}
+.gct .tsw{display:flex; flex-direction:column; align-items:center; gap:4px; flex:none}
+.gct .psp{display:flex; gap:3px}
+.gct .psp i{flex:none; width:10px; height:3px; border-radius:2px; background:rgba(241,232,210,.2)}
+.gct .psp i.on{background:var(--cream,#f1e8d2)}
+@media (max-width:900px){ .gchd .gc-ser .fl{display:none} .gchd .gc-ser .sh{display:inline} }
 @media (max-width:760px){
-  .gch>.gcser{font-size:12px; margin-bottom:3px}
-  .gch>.gcser .fl{display:none} .gch>.gcser .sh{display:inline}
+  .gchd .gc-ser{font-size:12px; padding:2px 7px 1px}
+  .gchd:has(.gc-ser) .note{width:auto; margin-left:auto}
+  .gct .psp i{width:8px}
+}
 }
 .gch.stuck>.gcls table.ls td.t{font-size:12px; color:var(--cream); padding-right:4px}
 .gch.stuck>.gcls table.ls td.t span{gap:4px}
@@ -3539,8 +3544,8 @@ function gcHeader(F){
     return '<div class="psp" title="'+ser.W[id]+(ser.W[id]===1?' win':' wins')+' in the series, '+ser.need+' to advance">'+h+'</div>'; }
   function side(t,runs,other,cls){
     return '<div class="gct '+cls+(fin&&runs<other?' lose':'')+'" data-tid="'+t.id+'" title="Schedule, standings and stats">'+imgT(t.id)+
-      '<div><div class="tn">'+esc(t.teamName||nick(t.id))+'</div>'+pips(t.id)+'<div class="tr">'+esc(rec(t))+' · '+(cls==='a'?'Away':'Home')+'</div></div>'+
-      '<div class="ts">'+(pre?'':runs)+'</div></div>';
+      '<div><div class="tn">'+esc(t.teamName||nick(t.id))+'</div><div class="tr">'+esc(rec(t))+' · '+(cls==='a'?'Away':'Home')+'</div></div>'+
+      (ser?'<div class="tsw"><div class="ts">'+(pre?'':runs)+'</div>'+pips(t.id)+'</div>':'<div class="ts">'+(pre?'':runs)+'</div>')+'</div>'; /* v74: series ticks under the plate */
   }
   var mid='';
   if(live){
@@ -3560,8 +3565,7 @@ function gcHeader(F){
   mid+='<div class="gs3">'+esc((gd.venue||{}).name||'')+'</div>';
   var strip=pre?'':'<div class="gcls">'+lsTable(F)+(fin?decsSlim(F):'')+'</div>'; /* v64: line score in the banner */
   S.gc.serKey=ser?ser.key:'';
-  var top=ser?'<div class="gcser"><span class="fl">'+ser.long+'</span><span class="sh">'+ser.short+'</span></div>':'';
-  return '<div class="gch stuck'+(ser?' ser':'')+'" style="--ca:'+cols[0]+';--ch:'+cols[1]+'">'+top+side(A,ar,hr,'a')+'<div class="gcm">'+mid+'</div>'+side(H,hr,ar,'h')+strip+'</div>';
+  return '<div class="gch stuck'+(ser?' ser':'')+'" style="--ca:'+cols[0]+';--ch:'+cols[1]+'">'+side(A,ar,hr,'a')+'<div class="gcm">'+mid+'</div>'+side(H,hr,ar,'h')+strip+'</div>';
 }
 /* v73: in October the banner says where the series stands: round, game number and who leads, counted as of this game
    (games before it, plus this one once it is final, taken from the feed so it always agrees with the score shown). */
@@ -3579,12 +3583,12 @@ function gcSeries(F){
   if(fin){ var lt=((F.liveData||{}).linescore||{}).teams||{}, ar=(lt.away||{}).runs|0, hr=(lt.home||{}).runs|0; if(ar!==hr) W[ar>hr?A:H]++; }
   var need=Math.ceil((s.best||RND[s.type].best)/2), win=W[A]>=need?A:W[H]>=need?H:null;
   var L, Sh, ld=W[A]>W[H]?A:H, tr=ld===A?H:A;
-  if(win){ L=nick(win)+' win series '+W[win]+'-'+W[win===A?H:A]; Sh=ab(win)+' win '+W[win]+'-'+W[win===A?H:A]; }
-  else if(W[A]===W[H]){ L=W[A]?'Series tied '+W[A]+'-'+W[H]:'Best of '+(s.best||RND[s.type].best); Sh=W[A]?'Tied '+W[A]+'-'+W[H]:'Best of '+(s.best||RND[s.type].best); }
-  else { L=nick(ld)+' lead series '+W[ld]+'-'+W[tr]; Sh=ab(ld)+' lead '+W[ld]+'-'+W[tr]; }
+  if(win){ L=nick(win)+' win '+W[win]+'-'+W[win===A?H:A]; Sh=ab(win)+' win '+W[win]+'-'+W[win===A?H:A]; }
+  else if(W[A]===W[H]){ L=W[A]?'Tied '+W[A]+'-'+W[H]:'Best of '+(s.best||RND[s.type].best); Sh=L; }
+  else { L=nick(ld)+' lead '+W[ld]+'-'+W[tr]; Sh=ab(ld)+' lead '+W[ld]+'-'+W[tr]; }
   var dot='<i>&middot;</i>';
   return {W:W, need:need, n:n, win:win, key:psTiny(s)+n+'|'+L,
-    long:esc(psShort(s))+(n?dot+'Game '+n:'')+dot+'<b>'+esc(L)+'</b>',
+    long:esc(psShort(s))+(n?' Gm '+n:'')+dot+'<b>'+esc(L)+'</b>',
     short:esc(psTiny(s))+(n?' Gm '+n:'')+dot+'<b>'+esc(Sh)+'</b>'};
 }
 
@@ -4435,7 +4439,9 @@ function gcRender(){
   if(it){ var cp=chipFor(it); why='<span class="gc-why '+cp[1]+'">'+esc(cp[0])+'</span>'; }
   var gst=F&&F.gameData.status.abstractGameState;
   var back={home:'Race',sched:'Schedule',stand:'Standings',bracket:'Bracket'}[S.gcFrom]||'Scoreboard';
-  var head='<div class="gchd"><button class="gc-back" type="button" data-gcback>&larr; '+back+'</button><h2>'+(gst==='Final'?'Game Breakdown':gst==='Preview'?'Preview':'Game Center')+'</h2>'+why+
+  var ser=F&&gcSeries(F); /* v74: series status chip beside the title */
+  var serChip=ser?'<span class="gc-ser"><span class="fl">'+ser.long+'</span><span class="sh">'+ser.short+'</span></span>':'';
+  var head='<div class="gchd"><button class="gc-back" type="button" data-gcback>&larr; '+back+'</button><h2>'+(gst==='Final'?'Game Breakdown':gst==='Preview'?'Preview':'Game Center')+'</h2>'+serChip+why+
     '<span class="note">'+(S.gc.err?'Could not refresh ('+esc(S.gc.err)+'), retrying':F?'updated '+new Date(S.gc.at).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'}):'')+'</span></div>';
   if(!S.gc.pk){ box.innerHTML=head+'<div class="empty">Pick a game on the Scoreboard.</div>'; return; }
   if(!F){ box.innerHTML=head+'<div class="empty">'+(S.gc.err?'Could not load this game ('+esc(S.gc.err)+'). Retrying.':'Loading the game')+'</div>'; return; }
