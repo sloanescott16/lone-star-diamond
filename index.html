@@ -2170,6 +2170,25 @@ table.pot .ws .pbar i{display:block; height:100%; background:color-mix(in srgb, 
 table.pot .ws b{font-family:var(--display); font-size:16px; color:var(--cream); min-width:2.6em; text-align:right}
 table.pot tr.out td{opacity:.4}
 @media (max-width:640px){ table.pot th:nth-child(2), table.pot td.wh{display:none} table.pot td,table.pot th{padding-left:6px; padding-right:6px} table.pot .tn small{display:none} table.pot .ws{min-width:0; gap:6px} table.pot .ws .pbar{min-width:24px} table.pot .ws b{font-size:15px; min-width:2.3em} table.pot th{font-size:11px; letter-spacing:.04em} }
+/* v75: Watch button on each live game, copied from Command Center (v90). A blue pill in the corner of a Scoreboard tile,
+   a Schedule card and the Game Center title row; it opens the game on the service showing it, in a new tab. */
+a.watch{flex:none; margin-left:auto; display:inline-flex; align-items:center; gap:.45em; padding:.28em .7em .28em .6em; border-radius:999px; background:#1f6feb; color:#fff;
+  text-decoration:none; font-family:var(--cond,'Barlow Condensed','Arial Narrow',sans-serif); font-weight:800; font-size:1em; font-style:normal; line-height:1; letter-spacing:.06em;
+  text-transform:uppercase; white-space:nowrap; box-shadow:0 0 0 1px rgba(255,255,255,.14); cursor:pointer}
+a.watch i{flex:none; width:0; height:0; border-style:solid; border-width:.38em 0 .38em .6em; border-color:transparent transparent transparent #fff}
+a.watch span{font-weight:600; opacity:.85}
+a.watch:hover,a.watch:focus-visible{filter:brightness(1.15); box-shadow:0 0 0 2px #fff}
+.bg .bf .bbz+a.watch,.g .gfoot .bases+a.watch{margin-left:0}
+.g .gfoot a.watch{font-size:12px}
+#gcWatch{display:flex}
+#gcWatch:empty{display:none}
+#gcWatch a.watch{font-size:14px; padding:7px 14px}
+@container (max-width:270px){ .bg .bf a.watch span{display:none} }
+/* tablets and phones: the button keeps to the right edge, after the updated note, even when it wraps to a line of its own */
+@media (max-width:900px){ #gcWatch{flex:1 0 auto; justify-content:flex-end} .gchd:has(#gcWatch a) .note{width:auto} #gcWatch a.watch{font-size:12px; padding:6px 11px} }
+/* phones: the button takes the top right corner, on the Back button's line; the title starts the next line */
+@media (max-width:480px){ .gchd .gc-back{order:-2} #gcWatch{order:-1; flex:1 0 calc(100% - 165px)} .gchd:has(#gcWatch a) .note{margin-left:auto} }
+@media (max-width:640px){ a.watch span{display:none} }
 </style>
 </head>
 <body>
@@ -2380,12 +2399,12 @@ function loadStandings(){
 
 function loadToday(){
   var t=todayStr();
-  return j(API+'/schedule?sportId=1&gameType=R,F,D,L,W&date='+t+'&hydrate=team,linescore').then(function(d){
+  return j(API+'/schedule?sportId=1&gameType=R,F,D,L,W&date='+t+'&hydrate=team,linescore,broadcasts(all)').then(function(d){ /* v75: broadcasts feed the Watch button */
     var out=[];
     (d.dates||[]).forEach(function(dt){
       (dt.games||[]).forEach(function(g){ out.push(g); });
     });
-    S.games=out;
+    S.games=out; watchTick();
   });
 }
 
@@ -2723,6 +2742,118 @@ function fitBoard(){
   bd.style.setProperty('--c',c);
 }
 window.addEventListener('resize',function(){ if(S.view==='live') fitBoard(); });
+/* v75: Watch button, copied from Command Center (v90, v91, v98, v110) and pointed at MLB. From 30 minutes before first
+   pitch until the final, a game carries a Watch link that opens it on the service showing it, in a new tab.
+   The network comes from the MLB Stats API schedule feed (hydrate=broadcasts(all)): national TV only, English first.
+   ESPN and ABC games go to that game's own stream when ESPN's public watch listings show it, otherwise the ESPN channel;
+   FOX to Fox One's Dallas feed of the program starting at first pitch; FS1 to the Fox live guide; TBS and truTV to HBO Max;
+   NBC and Peacock to Peacock; Apple TV to Friday Night Baseball; MLB Network to its live stream; Netflix, Roku and YouTube
+   to their own pages. A game with no national TV (regional networks only), or one a national channel carries out of market
+   only when the Rangers are in it, falls back to that game's own MLB.TV page. */
+var W={map:{},at:0,busy:false,sched:{},ask:{}};
+var ESPN_FAM=/^(ESPN|ESPN2|ESPNU|ESPNEWS|ESPN\+|ESPN Unlimited|ESPN Deportes|ABC)$/i;
+var WATCH_NETS=[
+  [/^(FOX|FOX Sports)$/i,'FOX',function(g){ return foxOne(+g.date); }],
+  [/^FS1$/i,'FS1','https://www.fox.com/live'],   /* Fox One addresses FS1/FS2 airings by program id, so these land on the live guide */
+  [/^FS2$/i,'FS2','https://www.fox.com/live'],
+  [/^(FOX Dep\.?|FOX Deportes)$/i,'FOX Deportes','https://www.fox.com/live'],
+  [/^(NBC|Peacock|NBCSN|Peacock ES|Universo)$/i,'Peacock','https://www.peacocktv.com/watch/search'],   /* its search page leads with today's live games */
+  [/^(Apple TV|Apple TV\+)$/i,'Apple TV','https://tv.apple.com/us/room/edt.item.62327df1-6874-470e-98b2-a5bbeac509a2'],   /* MLB only: the Friday Night Baseball room */
+  [/^(MLBN|MLB Network)$/i,'MLB Network','https://www.mlb.com/network/live'],   /* MLB only */
+  [/^Netflix$/i,'Netflix','https://www.netflix.com/search?q=MLB'],
+  [/^(Roku|The Roku Channel)$/i,'Roku','https://therokuchannel.roku.com/'],   /* MLB only */
+  [/^(YouTube|YouTube TV)$/i,'YouTube','https://www.youtube.com/@MLB/live'],
+  /* TBS/truTV stream on HBO Max; its game ids aren't public, so search the team (the live game is the top hit) */
+  [/^(TBS|truTV|TNT|TNT Sports|HBO Max|Max)$/i,'TBS',function(g){ return 'https://play.hbomax.com/search?q='+encodeURIComponent(nick(g.home===FAV||g.away===FAV?FAV:g.home)); }]
+];
+/* Fox One plays his local FOX (KDFW Dallas) program that starts at a given moment; a FOX game's program starts at its listed first pitch */
+function foxOne(ms){ return 'https://www.fox.com/watch/epg/KDFW-program-KDFW-'+(Math.round(ms/60e3)*60e3)+'_dtc/live'; }
+function watchable(g){ return !!g&&(g.live||(g.state==='pre'&&g.date-Date.now()<=30*60e3&&Date.now()-g.date<4*36e5)); }
+/* the national TV call signs on a schedule game, English first */
+function watchNets(g){
+  var seen={}, out=[], tm=g.teams||{}, a=((tm.away||{}).team||{}).id, h=((tm.home||{}).team||{}).id, fav=a===FAV||h===FAV;
+  (g.broadcasts||[]).filter(function(b){ return b&&b.type==='TV'&&b.isNational&&!(fav&&/out-of-market only/i.test(b.name||'')); })
+    .sort(function(x,y){ return (x.language==='es'?1:0)-(y.language==='es'?1:0); })
+    .forEach(function(b){ var n=String(b.callSign||b.name||'').replace(/\s+/g,' ').trim(); if(n&&!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; out.push(n); } });
+  return out;
+}
+/* a schedule game in the shape Command Center's watch code expects */
+function watchGame(g){
+  if(!g||!g.status) return null;
+  var st=g.status.abstractGameState, off=/Postponed|Cancel|Suspended/i.test(g.status.detailedState||''), tm=g.teams||{};
+  return {id:g.gamePk, live:st==='Live'&&!off, state:off?'post':st==='Preview'?'pre':st==='Live'?'in':'post', date:+new Date(g.gameDate),
+    nets:watchNets(g), away:((tm.away||{}).team||{}).id, home:((tm.home||{}).team||{}).id};
+}
+function watchLink(g){
+  var nets=g.nets||[], fam=null, i, k;
+  for(i=0;i<nets.length&&!fam;i++) if(ESPN_FAM.test(nets[i])) fam=nets[i];
+  if(fam){
+    var air=W.map[g.id];
+    if(air) return {net:fam,url:'https://www.espn.com/watch/player/_/id/'+air};
+    if(/^ESPN2?$/i.test(fam)) return {net:fam,url:'https://www.espn.com/watch/player/_/channel/'+fam.toLowerCase()};
+    return {net:fam,url:'https://www.espn.com/watch/'};
+  }
+  for(i=0;i<nets.length;i++) for(k=0;k<WATCH_NETS.length;k++) if(WATCH_NETS[k][0].test(nets[i])){
+    var u=WATCH_NETS[k][2]; return {net:WATCH_NETS[k][1],url:typeof u==='function'?u(g):u};
+  }
+  return {net:'MLB.TV',url:'https://www.mlb.com/tv/g'+g.id};   /* regional networks only */
+}
+function watchHTML(g,kind){
+  var wg=g&&g.nets?g:watchGame(g);
+  if(!watchable(wg)) return '';
+  var w=watchLink(wg); if(!w) return '';
+  return '<a class="watch'+(kind?' '+kind:'')+'" href="'+esc(w.url)+'" target="_blank" rel="noopener" title="Watch on '+esc(w.net)+' (new tab)"><i></i>Watch<span>'+esc(w.net)+'</span></a>';
+}
+/* Game Center: live state and first pitch from the game feed, the broadcasts from the schedule (today's games, a loaded
+   day, or one small schedule call for a game opened from somewhere else) */
+function gcWatchHTML(F){
+  if(!F||!F.gameData) return '';
+  var gd=F.gameData, pk=F.gamePk||(gd.game||{}).pk, sg=null, d;
+  var wg=watchGame({gamePk:pk, status:gd.status, gameDate:(gd.datetime||{}).dateTime, teams:{away:{team:{id:((gd.teams||{}).away||{}).id}},home:{team:{id:((gd.teams||{}).home||{}).id}}}});
+  if(!watchable(wg)) return '';
+  (S.games||[]).forEach(function(g){ if(g.gamePk===pk) sg=g; });
+  if(!sg) for(d in S.dayCache) (S.dayCache[d]||[]).forEach(function(g){ if(g.gamePk===pk) sg=g; });
+  if(!sg||!sg.broadcasts) sg=W.sched[pk]||sg;
+  if(!sg||!sg.broadcasts){
+    if(!W.ask[pk]){
+      W.ask[pk]=1;
+      j(API+'/schedule?sportId=1&gamePk='+pk+'&hydrate=broadcasts(all)').then(function(x){
+        var hit=null; (x.dates||[]).forEach(function(dt){ (dt.games||[]).forEach(function(g){ if(g.gamePk===pk) hit=g; }); });
+        W.sched[pk]={broadcasts:(hit&&hit.broadcasts)||[]};
+      }).catch(function(){ W.sched[pk]={broadcasts:[]}; }).then(function(){ if(S.gc.pk===pk) gcRender(); });
+    }
+    if(!W.sched[pk]) return '';
+    sg=W.sched[pk];
+  }
+  wg.nets=watchNets({broadcasts:sg.broadcasts, teams:{away:{team:{id:wg.away}},home:{team:{id:wg.home}}}});
+  return watchHTML(wg,'gcw');
+}
+/* ESPN family games: find the game's own airing in ESPN's public watch listings (matched on the two team names, since
+   ESPN does not know MLB's game numbers) */
+function watchTick(){
+  if(W.busy||Date.now()-W.at<120e3) return;
+  var want=(S.games||[]).map(watchGame).filter(function(g){ return watchable(g)&&g.nets.some(function(n){ return ESPN_FAM.test(n); }); });
+  if(!want.length) return;
+  W.busy=true; W.at=Date.now();
+  fetch('https://watch.product.api.espn.com/api/product/v3/watchespn/web/home?lang=en&features=pbov7&countryCode=US&entitlements=ESPN_PLUS&tz=America%2FChicago')
+    .then(function(r){ return r.ok?r.json():null; }).then(function(d){
+      var map={};
+      (function walk(o){
+        if(!o||typeof o!=='object') return;
+        if(o.eventId&&Array.isArray(o.streams)&&o.streams.length&&typeof o.name==='string'&&(!o.subtitle||/MLB/i.test(o.subtitle))){
+          var s=o.streams.filter(function(x){ return x.status==='live'; })[0]||o.streams.filter(function(x){ return x.tier==='primary'; })[0]||o.streams[0];
+          if(s&&s.id) want.forEach(function(g){ if(!map[g.id]&&o.name.indexOf(nick(g.away))>=0&&o.name.indexOf(nick(g.home))>=0) map[g.id]=s.id; });
+        }
+        for(var k in o) walk(o[k]);
+      })(d);
+      for(var k in map) W.map[k]=map[k];
+    }).catch(function(){ /* keep the fallback links */ }).then(function(){ W.busy=false; });
+}
+/* a Watch link sits inside clickable tiles: let the link open, but don't let the tile also open the game. This is the
+   first capture listener on the document, and it stops the others (the tile and card openers) outright. */
+document.addEventListener('click',function(e){ if(e.target.closest&&e.target.closest('a.watch')) e.stopImmediatePropagation(); },true);
+document.addEventListener('keydown',function(e){ if(e.key==='Enter'&&e.target.closest&&e.target.closest('a.watch')) e.stopImmediatePropagation(); },true);
+
 function renderBoard(){
   var t=tex(); if(!t) return;
   // v7: live games only; the Schedule tab has everything else
@@ -2781,7 +2912,7 @@ function renderBoard(){
         '<span class="bz'+(o.second?' on':'')+'"></span>'+
         '<span class="bz'+(o.third?' on':'')+'"></span>'+
         '<span class="bz'+(o.first?' on':'')+'"></span>'+
-        '</span></div>';
+        '</span>'+watchHTML(g)+'</div>'; /* v75: Watch in the corner of the tile */
     }
 
     var cls='bg'+(it.other?(it.race?' key race':' other'):' key');
@@ -2845,7 +2976,7 @@ function dayGames(){
 function loadDay(off){
   var d=dayStr(off);
   if(off===0||S.dayCache[d]) return Promise.resolve();
-  return j(API+'/schedule?sportId=1&gameType=R,F,D,L,W&date='+d+'&hydrate=team,linescore').then(function(x){
+  return j(API+'/schedule?sportId=1&gameType=R,F,D,L,W&date='+d+'&hydrate=team,linescore,broadcasts(all)').then(function(x){
     var out=[]; (x.dates||[]).forEach(function(dt){ (dt.games||[]).forEach(function(g){ out.push(g); }); });
     S.dayCache[d]=out;
   });
@@ -2886,7 +3017,8 @@ function renderSched(){
     }
     var foot='';
     if(st.live){ var o=ls.offense||{};
-      foot='<div class="gfoot"><span>'+(ls.outs!=null?ls.outs+' out':'')+'</span><span class="bases"><span class="bz'+(o.second?' on':'')+'"></span><span class="bz'+(o.third?' on':'')+'"></span><span class="bz'+(o.first?' on':'')+'"></span></span></div>'; }
+      foot='<div class="gfoot"><span>'+(ls.outs!=null?ls.outs+' out':'')+'</span><span class="bases"><span class="bz'+(o.second?' on':'')+'"></span><span class="bz'+(o.third?' on':'')+'"></span><span class="bz'+(o.first?' on':'')+'"></span></span>'+watchHTML(g)+'</div>'; }
+    else { var wH=watchHTML(g); if(wH) foot='<div class="gfoot">'+wH+'</div>'; } /* v75: Watch on live cards, and from 30 minutes before first pitch */
     return '<div class="g'+(isFav?' fav':'')+(st.live?' live':'')+(imp?' imp':'')+(race?' race':'')+'" data-pk="'+g.gamePk+'" title="'+(st.live?'Open Game Center':st.fin?'Open the game breakdown':'Open the preview')+'"><div class="gtop">'+chip+'<span class="gstat'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+row(a,aS,hS)+row(h,hS,aS)+foot+'</div>';
   }
   function blk(title,sub,list,showSeed){
@@ -4442,7 +4574,7 @@ function gcRender(){
   var ser=F&&gcSeries(F); /* v74: series status chip beside the title */
   var serChip=ser?'<span class="gc-ser"><span class="fl">'+ser.long+'</span><span class="sh">'+ser.short+'</span></span>':'';
   var head='<div class="gchd"><button class="gc-back" type="button" data-gcback>&larr; '+back+'</button><h2>'+(gst==='Final'?'Game Breakdown':gst==='Preview'?'Preview':'Game Center')+'</h2>'+serChip+why+
-    '<span class="note">'+(S.gc.err?'Could not refresh ('+esc(S.gc.err)+'), retrying':F?'updated '+new Date(S.gc.at).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'}):'')+'</span></div>';
+    '<span class="note">'+(S.gc.err?'Could not refresh ('+esc(S.gc.err)+'), retrying':F?'updated '+new Date(S.gc.at).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'}):'')+'</span><span id="gcWatch">'+gcWatchHTML(F)+'</span></div>'; /* v75: Watch in the corner of the title row */
   if(!S.gc.pk){ box.innerHTML=head+'<div class="empty">Pick a game on the Scoreboard.</div>'; return; }
   if(!F){ box.innerHTML=head+'<div class="empty">'+(S.gc.err?'Could not load this game ('+esc(S.gc.err)+'). Retrying.':'Loading the game')+'</div>'; return; }
   if(gst==='Preview'){
@@ -5332,6 +5464,7 @@ window.LSD.gcMomentum=gcMomentum; window.LSD.gcRender=gcRender; /* v36 */
 window.LSD.gcWP=gcWP; /* v42: test hook */
 window.LSD.gcMatchup=gcMatchup; /* v46: test hook */
 window.LSD.gcLine=gcLine; /* v63: test hook */
+window.LSD.watch={W:W,nets:WATCH_NETS,game:watchGame,link:watchLink,html:watchHTML,able:watchable,tick:watchTick}; /* v75: test hook */
 /* ================= v62: October. When the regular season is done the site becomes a postseason tracker:
    a Bracket tab (the landing page while it runs), series cards with every game, and each team's odds to win
    its series, the pennant and the World Series. No favourite: the Rangers get no special treatment here.
