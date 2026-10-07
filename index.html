@@ -1900,6 +1900,14 @@ body.v-game .bar,body.v-stand .bar{--ground:#09170f; --card:#133021; --card2:#0f
 .gct .psp{display:flex; gap:3px}
 .gct .psp i{flex:none; width:10px; height:3px; border-radius:2px; background:rgba(241,232,210,.2)}
 .gct .psp i.on{background:var(--cream,#f1e8d2)}
+/* v76: the TV network beside the game status on tiles and cards, after a faint dot; in the Game Center a chip like the series one */
+.bg .btv,.g .gtv{font-family:var(--cond,'Barlow Condensed','Arial Narrow',sans-serif); font-weight:700; line-height:1; letter-spacing:.08em; text-transform:uppercase; color:var(--mute); white-space:nowrap}
+.bg .btv{font-size:max(12px,min(3.8cqh,3.2cqw))}
+.g .gtv{font-size:12px}
+.bg .btv::before,.g .gtv::before{content:'\00b7'; margin-right:.45em; opacity:.55}
+.bg .bst + .btv{margin-left:-.4cqw}
+.g .gstat + .gtv{margin-left:-3px}
+.gchd .gc-tv{color:var(--cream,#f1e8d2)}
 @media (max-width:900px){ .gchd .gc-ser .fl{display:none} .gchd .gc-ser .sh{display:inline} }
 @media (max-width:760px){
   .gchd .gc-ser{font-size:12px; padding:2px 7px 1px}
@@ -2695,7 +2703,7 @@ function renderTonight(){
 
     return '<div class="g'+(it.isFav?' fav':'')+(st.live?' live':'')+'" data-pk="'+g.gamePk+'" title="'+(st.live?'Open Game Center':st.fin?'Open the game breakdown':'Open the preview')+'">'+
       '<div class="gtop"><span class="chip '+chipCls+'">'+esc(chip)+'</span>'+
-      '<span class="gstat'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+
+      '<span class="gstat'+(st.live?' live':'')+'">'+esc(st.t)+'</span>'+tvHTML(g,'gtv')+'</div>'+
       row(it.a,aS,hS)+row(it.h,hS,aS)+foot+'</div>';
   }).join('');
 
@@ -2777,6 +2785,41 @@ function watchNets(g){
     .forEach(function(b){ var n=String(b.callSign||b.name||'').replace(/\s+/g,' ').trim(); if(n&&!seen[n.toLowerCase()]){ seen[n.toLowerCase()]=1; out.push(n); } });
   return out;
 }
+/* v76: the TV network shown plainly on cards, tiles and the Game Center title row (not only behind Watch).
+   National TV first (English, the same rule as Watch, so "FS1"); with none, the two local feeds away then home
+   ("SNLA / BSSO", or just one if only one is listed); nothing when the schedule lists no TV. */
+function tvLabel(g){
+  var nat=watchNets({broadcasts:(g.broadcasts||[]).filter(function(b){ return b&&b.language!=='es'; }), teams:g.teams});   /* English only: "FS1", not "FS1 / FOX Dep." */
+  if(nat.length) return nat.slice(0,2).join(' / ');
+  var tv=(g.broadcasts||[]).filter(function(b){ return b&&b.type==='TV'&&!b.isNational; }), en=tv.filter(function(b){ return b.language!=='es'; });
+  if(en.length) tv=en;
+  function side(s){ for(var i=0;i<tv.length;i++) if(tv[i].homeAway===s){ var n=String(tv[i].callSign||tv[i].name||'').replace(/\s+/g,' ').trim(); if(n) return n; } return ''; }
+  var a=side('away'), h=side('home');
+  return a&&h&&a!==h?a+' / '+h:(a||h);
+}
+function tvHTML(g,cls){ var t=tvLabel(g); return t?'<span class="'+cls+'" title="On TV: '+esc(t)+'">'+esc(t)+'</span>':''; }
+/* the schedule's broadcasts for one game: today's games, a loaded day, or one small schedule call (then re-render) */
+function gcBroadcasts(pk){
+  var sg=null, d;
+  (S.games||[]).forEach(function(g){ if(g.gamePk===pk) sg=g; });
+  if(!sg) for(d in S.dayCache) (S.dayCache[d]||[]).forEach(function(g){ if(g.gamePk===pk) sg=g; });
+  if(sg&&sg.broadcasts) return sg.broadcasts;
+  if(W.sched[pk]) return W.sched[pk].broadcasts;
+  if(!W.ask[pk]){
+    W.ask[pk]=1;
+    j(API+'/schedule?sportId=1&gamePk='+pk+'&hydrate=broadcasts(all)').then(function(x){
+      var hit=null; (x.dates||[]).forEach(function(dt){ (dt.games||[]).forEach(function(g){ if(g.gamePk===pk) hit=g; }); });
+      W.sched[pk]={broadcasts:(hit&&hit.broadcasts)||[]};
+    }).catch(function(){ W.sched[pk]={broadcasts:[]}; }).then(function(){ if(S.gc.pk===pk) gcRender(); });
+  }
+  return null;
+}
+function gcTvHTML(F){
+  if(!F||!F.gameData) return '';
+  var gd=F.gameData, pk=F.gamePk||(gd.game||{}).pk, bc=gcBroadcasts(pk);
+  if(!bc) return '';
+  return tvHTML({broadcasts:bc, teams:{away:{team:{id:((gd.teams||{}).away||{}).id}},home:{team:{id:((gd.teams||{}).home||{}).id}}}},'gc-ser gc-tv');
+}
 /* a schedule game in the shape Command Center's watch code expects */
 function watchGame(g){
   if(!g||!g.status) return null;
@@ -2808,24 +2851,11 @@ function watchHTML(g,kind){
    day, or one small schedule call for a game opened from somewhere else) */
 function gcWatchHTML(F){
   if(!F||!F.gameData) return '';
-  var gd=F.gameData, pk=F.gamePk||(gd.game||{}).pk, sg=null, d;
+  var gd=F.gameData, pk=F.gamePk||(gd.game||{}).pk;
   var wg=watchGame({gamePk:pk, status:gd.status, gameDate:(gd.datetime||{}).dateTime, teams:{away:{team:{id:((gd.teams||{}).away||{}).id}},home:{team:{id:((gd.teams||{}).home||{}).id}}}});
   if(!watchable(wg)) return '';
-  (S.games||[]).forEach(function(g){ if(g.gamePk===pk) sg=g; });
-  if(!sg) for(d in S.dayCache) (S.dayCache[d]||[]).forEach(function(g){ if(g.gamePk===pk) sg=g; });
-  if(!sg||!sg.broadcasts) sg=W.sched[pk]||sg;
-  if(!sg||!sg.broadcasts){
-    if(!W.ask[pk]){
-      W.ask[pk]=1;
-      j(API+'/schedule?sportId=1&gamePk='+pk+'&hydrate=broadcasts(all)').then(function(x){
-        var hit=null; (x.dates||[]).forEach(function(dt){ (dt.games||[]).forEach(function(g){ if(g.gamePk===pk) hit=g; }); });
-        W.sched[pk]={broadcasts:(hit&&hit.broadcasts)||[]};
-      }).catch(function(){ W.sched[pk]={broadcasts:[]}; }).then(function(){ if(S.gc.pk===pk) gcRender(); });
-    }
-    if(!W.sched[pk]) return '';
-    sg=W.sched[pk];
-  }
-  wg.nets=watchNets({broadcasts:sg.broadcasts, teams:{away:{team:{id:wg.away}},home:{team:{id:wg.home}}}});
+  var bc=gcBroadcasts(pk); if(!bc) return '';   /* v76: shared with the TV chip */
+  wg.nets=watchNets({broadcasts:bc, teams:{away:{team:{id:wg.away}},home:{team:{id:wg.home}}}});
   return watchHTML(wg,'gcw');
 }
 /* ESPN family games: find the game's own airing in ESPN's public watch listings (matched on the two team names, since
@@ -2924,7 +2954,7 @@ function renderBoard(){
     return '<div class="'+cls+'" data-pk="'+g.gamePk+'" title="Open Game Center">'+
       (it.other?'':'<div class="ribbon">'+(it.isFav?'Rangers':'Matters to Texas')+'</div>')+
       '<div class="bt"><span class="bchip '+cp[1]+'">'+esc(cp[0])+'</span>'+
-      '<span class="bst'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+
+      '<span class="bst'+(st.live?' live':'')+'">'+esc(st.t)+'</span>'+tvHTML(g,'btv')+'</div>'+
       row(it.a,aS,hS)+row(it.h,hS,aS)+foot+'</div>';
   }).join('');
 }
@@ -3019,7 +3049,7 @@ function renderSched(){
     if(st.live){ var o=ls.offense||{};
       foot='<div class="gfoot"><span>'+(ls.outs!=null?ls.outs+' out':'')+'</span><span class="bases"><span class="bz'+(o.second?' on':'')+'"></span><span class="bz'+(o.third?' on':'')+'"></span><span class="bz'+(o.first?' on':'')+'"></span></span>'+watchHTML(g)+'</div>'; }
     else { var wH=watchHTML(g); if(wH) foot='<div class="gfoot">'+wH+'</div>'; } /* v75: Watch on live cards, and from 30 minutes before first pitch */
-    return '<div class="g'+(isFav?' fav':'')+(st.live?' live':'')+(imp?' imp':'')+(race?' race':'')+'" data-pk="'+g.gamePk+'" title="'+(st.live?'Open Game Center':st.fin?'Open the game breakdown':'Open the preview')+'"><div class="gtop">'+chip+'<span class="gstat'+(st.live?' live':'')+'">'+esc(st.t)+'</span></div>'+row(a,aS,hS)+row(h,hS,aS)+foot+'</div>';
+    return '<div class="g'+(isFav?' fav':'')+(st.live?' live':'')+(imp?' imp':'')+(race?' race':'')+'" data-pk="'+g.gamePk+'" title="'+(st.live?'Open Game Center':st.fin?'Open the game breakdown':'Open the preview')+'"><div class="gtop">'+chip+'<span class="gstat'+(st.live?' live':'')+'">'+esc(st.t)+'</span>'+tvHTML(g,'gtv')+'</div>'+row(a,aS,hS)+row(h,hS,aS)+foot+'</div>';
   }
   function blk(title,sub,list,showSeed){
     return '<div class="sblk"><div class="sh"><h3>'+esc(title)+'</h3><span>'+sub+'</span></div><div class="games">'+list.map(function(g){return card(g,showSeed);}).join('')+'</div></div>';
@@ -4573,7 +4603,7 @@ function gcRender(){
   var back={home:'Race',sched:'Schedule',stand:'Standings',bracket:'Bracket'}[S.gcFrom]||'Scoreboard';
   var ser=F&&gcSeries(F); /* v74: series status chip beside the title */
   var serChip=ser?'<span class="gc-ser"><span class="fl">'+ser.long+'</span><span class="sh">'+ser.short+'</span></span>':'';
-  var head='<div class="gchd"><button class="gc-back" type="button" data-gcback>&larr; '+back+'</button><h2>'+(gst==='Final'?'Game Breakdown':gst==='Preview'?'Preview':'Game Center')+'</h2>'+serChip+why+
+  var head='<div class="gchd"><button class="gc-back" type="button" data-gcback>&larr; '+back+'</button><h2>'+(gst==='Final'?'Game Breakdown':gst==='Preview'?'Preview':'Game Center')+'</h2>'+serChip+gcTvHTML(F)+why+
     '<span class="note">'+(S.gc.err?'Could not refresh ('+esc(S.gc.err)+'), retrying':F?'updated '+new Date(S.gc.at).toLocaleTimeString([], {hour:'numeric',minute:'2-digit',second:'2-digit'}):'')+'</span><span id="gcWatch">'+gcWatchHTML(F)+'</span></div>'; /* v75: Watch in the corner of the title row */
   if(!S.gc.pk){ box.innerHTML=head+'<div class="empty">Pick a game on the Scoreboard.</div>'; return; }
   if(!F){ box.innerHTML=head+'<div class="empty">'+(S.gc.err?'Could not load this game ('+esc(S.gc.err)+'). Retrying.':'Loading the game')+'</div>'; return; }
@@ -5464,7 +5494,7 @@ window.LSD.gcMomentum=gcMomentum; window.LSD.gcRender=gcRender; /* v36 */
 window.LSD.gcWP=gcWP; /* v42: test hook */
 window.LSD.gcMatchup=gcMatchup; /* v46: test hook */
 window.LSD.gcLine=gcLine; /* v63: test hook */
-window.LSD.watch={W:W,nets:WATCH_NETS,game:watchGame,link:watchLink,html:watchHTML,able:watchable,tick:watchTick}; /* v75: test hook */
+window.LSD.watch={W:W,nets:WATCH_NETS,game:watchGame,link:watchLink,html:watchHTML,able:watchable,tick:watchTick,tv:tvLabel}; /* v75: test hook; v76: tv */
 /* ================= v62: October. When the regular season is done the site becomes a postseason tracker:
    a Bracket tab (the landing page while it runs), series cards with every game, and each team's odds to win
    its series, the pennant and the World Series. No favourite: the Rangers get no special treatment here.
