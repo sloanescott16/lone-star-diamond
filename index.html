@@ -5770,16 +5770,17 @@ function psDetail(s){
     '<div class="pdo">'+sl.filter(function(x){return x.id;}).map(function(x){ return '<span data-tid="'+x.id+'">'+imgT(x.id)+'<b>'+(s.winner?(s.winner===x.id?'Won':'Out'):psPct(od[x.id]))+'</b><small>'+esc(ab(x.id))+'</small></span>'; }).join('')+'</div></div>';
   var rows=s.games.map(function(g){
     var a=g.teams.away, h=g.teams.home, real=psReal(a.team)&&psReal(h.team), fin=psFinal(g), lv=psLive(g), st=gameStatus(g);
-    var unneeded=s.winner&&!fin;
+    var unneeded=s.winner&&!fin, off=!fin&&!lv&&psOff(g);   /* v77: a postponed date reads Postponed, not as a game still to come */
     var match=real?'<span class="tm'+(fin&&!a.isWinner&&a.score<h.score?' lo':'')+'" data-tid="'+a.team.id+'">'+imgT(a.team.id)+esc(ab(a.team.id))+'</span>'+
       (fin||lv?'<span class="sc">'+a.score+'</span>':'')+'<span class="at">@</span>'+
       '<span class="tm'+(fin&&!h.isWinner&&h.score<a.score?' lo':'')+'" data-tid="'+h.team.id+'">'+imgT(h.team.id)+esc(ab(h.team.id))+'</span>'+
       (fin||lv?'<span class="sc">'+h.score+'</span>':''):'<span class="tbdr">'+esc(a.team.name)+' @ '+esc(h.team.name)+'</span>';
     var dec=g.decisions||{}, note='';
     if(fin&&(dec.winner||dec.loser)) note='W '+esc((dec.winner||{}).lastName||(dec.winner||{}).fullName||'')+(dec.loser?' &middot; L '+esc(dec.loser.lastName||dec.loser.fullName||''):'')+(dec.save?' &middot; S '+esc(dec.save.lastName||dec.save.fullName||''):'');
+    else if(off) note=esc((g.status||{}).reason||'');
     else if(!fin&&!lv&&!unneeded&&(a.probablePitcher||h.probablePitcher)) note=esc((a.probablePitcher||{}).fullName||'TBD')+' vs '+esc((h.probablePitcher||{}).fullName||'TBD');
-    var stt=unneeded?'Not needed':fin?(g.status.detailedState==='Final'?'Final':g.status.detailedState)+(g.linescore&&g.linescore.currentInning>9?' / '+g.linescore.currentInning:''):lv?st.t:psWhen(g,true);
-    return '<tr class="'+(lv?'lv ':'')+(unneeded?'nn ':'')+(fin?'fin':'')+'"'+(real&&!unneeded?' data-pspk="'+g.gamePk+'"':'')+'>'+
+    var stt=unneeded?'Not needed':off?((g.status||{}).detailedState||'Postponed'):fin?(g.status.detailedState==='Final'?'Final':g.status.detailedState)+(g.linescore&&g.linescore.currentInning>9?' / '+g.linescore.currentInning:''):lv?st.t:psWhen(g,true);
+    return '<tr class="'+(lv?'lv ':'')+(unneeded?'nn ':'')+(fin?'fin':'')+'"'+(real&&!unneeded&&!off?' data-pspk="'+g.gamePk+'"':'')+'>'+
       '<td class="gn">G'+g.seriesGameNumber+(g.ifNecessary==='Y'&&!fin?'<small>if needed</small>':'')+'</td>'+
       '<td class="mt">'+match+'</td><td class="stt">'+esc(stt)+'</td><td class="nt">'+note+(g.venue&&g.venue.name?'<small>'+esc(g.venue.name)+'</small>':'')+'</td></tr>';
   }).join('');
