@@ -5386,7 +5386,7 @@ function tmRender(){
       else res=(/Postponed|Suspended|Cancel/.test(det)?esc(det):((g.status||{}).startTimeTBD?'TBD':esc(d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}))));
       var o=S.byId[oid];
       return moRow+'<tr data-pk="'+g.gamePk+'" class="'+(x.i===nextIdx?'next':'')+'"><td>'+esc(d.toLocaleDateString([], {weekday:'short',month:'numeric',day:'numeric'}))+(g.doubleHeader&&g.doubleHeader!=='N'?' <span class="tv">G'+g.gameNumber+'</span>':'')+'</td>'+
-        '<td><span class="op"><i>'+(home?'vs':'@')+'</i><img src="'+logo(oid)+'" alt="" '+onErr()+'>'+esc(nick(oid))+(o?' <span class="orec">'+o.w+'-'+o.l+'</span>':'')+'</span></td><td class="rs">'+res+'</td></tr>';
+        '<td><span class="op"><i>'+(home?'vs':'@')+'</i>'+(TEAM[oid]?'<img src="'+logo(oid)+'" alt="" '+onErr()+'>'+esc(nick(oid)):esc(op.team.abbreviation||op.team.name||'TBD'))+(o?' <span class="orec">'+o.w+'-'+o.l+'</span>':'')+'</span></td><td class="rs">'+res+'</td></tr>';
     }).join('')+'</tbody></table>';
   }
   var seg='<span class="tseg"><button type="button" data-tmv="near" class="'+(S.tm.view==='near'?'on':'')+'">Last 10 &amp; next 10</button><button type="button" data-tmv="all" class="'+(S.tm.view==='all'?'on':'')+'">Full season</button></span>';
