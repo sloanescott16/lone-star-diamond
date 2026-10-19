@@ -5344,6 +5344,21 @@ function tmRank(group,key,id,lowGood){
   var rank=1; Object.keys(m).forEach(function(k){ var v=parseFloat(m[k][key]); if(!isNaN(v)&&(lowGood?v<mine:v>mine)) rank++; });
   return '<em class="'+(rank<=5?'top':rank>=26?'bot':'')+'">'+ord(rank)+'</em>';
 }
+/* v77: the Last 10 tile counts playoff games too. It reads the same game list as the schedule (all game types), newest ten completed games,
+   skipping postponed, cancelled and suspended entries and counting a replayed gamePk once. No list yet or it failed: '' so the standings split stands in. */
+function tmL10(id){
+  var c=S.tm.sch[id]; if(!c||!c.games) return '';
+  var seen={}, fin=[];
+  c.games.forEach(function(g){
+    var stt=g.status||{}, det=stt.detailedState||'';
+    if(stt.abstractGameState!=='Final'||/Postponed|Cancel|Suspended/i.test(det)) return;
+    var h=g.teams&&g.teams.home, a=g.teams&&g.teams.away; if(!h||!a||h.score==null||a.score==null||h.score===a.score) return;
+    if(seen[g.gamePk]) return; seen[g.gamePk]=1; fin.push(g);
+  });
+  fin.sort(function(x,y){ return (x.gameDate<y.gameDate?-1:x.gameDate>y.gameDate?1:0); });
+  var w=0,l=0; fin.slice(-10).forEach(function(g){ var home=g.teams.home.team.id===id, me=home?g.teams.home:g.teams.away, op=home?g.teams.away:g.teams.home; if(me.score>op.score) w++; else l++; });
+  return (w+l)?w+'-'+l:'';
+}
 function tmRender(){
   var id=S.tm.id; if(!id) return;
   var r=S.byId[id]||null, full=(TEAM[id]||[])[1]||'';
@@ -5357,7 +5372,7 @@ function tmRender(){
     var po=(oddsMap()||{})[id];
     var k=[[gb,'Division'],[r.wcgb==null||r.wcgb==='-'?(lgOf(r)?'In':'-'):(String(r.wcgb).charAt(0)==='+'?r.wcgb:r.wcgb+' GB'),'Wild card'],
       [r.clinch&&r.clinch!=='e'?'100%':r.clinch==='e'?'Out':po?pctTxt(po.all):'-','Playoff odds',po&&(po.all>=0.75||(r.clinch&&r.clinch!=='e'))?'up':(po&&po.all<0.25)||r.clinch==='e'?'dn':''],
-      [(r.rd>0?'+':'')+(r.rd==null?'-':r.rd),'Run diff',r.rd>0?'up':r.rd<0?'dn':''],[r.l10||'-','Last 10'],[r.streak||'-','Streak',/^W/.test(r.streak)?'up':/^L/.test(r.streak)?'dn':''],
+      [(r.rd>0?'+':'')+(r.rd==null?'-':r.rd),'Run diff',r.rd>0?'up':r.rd<0?'dn':''],[tmL10(id)||r.l10||'-','Last 10'],[r.streak||'-','Streak',/^W/.test(r.streak)?'up':/^L/.test(r.streak)?'dn':''],
       [r.home||'-','Home'],[r.away||'-','Road'],[r.left,'To play']];
     html+='<div class="tmk">'+k.map(function(x){ return '<div><b class="'+(x[2]||'')+'">'+esc(x[0])+'</b><span>'+x[1]+'</span></div>'; }).join('')+'</div>';
   }
