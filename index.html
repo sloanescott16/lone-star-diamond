@@ -5315,7 +5315,7 @@ S.tm={id:null,sch:{},lg:null,lgAt:0,view:'near'};
 function onErr(){ return 'onerror="if(this.src.indexOf(\'-on-dark/\')>0){this.src=this.src.replace(\'team-primary-on-dark/\',\'\')}else{this.style.visibility=\'hidden\'}"'; }
 function tmLoadSched(id){
   var c=S.tm.sch[id]; if(c&&Date.now()-c.at<60000) return Promise.resolve(c.games);
-  return j(API+'/schedule?sportId=1&teamId='+id+'&season='+SEASON+'&gameType=R&hydrate=team,linescore').then(function(d){
+  return j(API+'/schedule?sportId=1&teamId='+id+'&season='+SEASON+'&gameType=R,F,D,L,W&hydrate=team,linescore').then(function(d){ /* v77: playoff games too, not only the regular season */
     var out=[]; (d.dates||[]).forEach(function(dt){ (dt.games||[]).forEach(function(g){ g._d=dt.date; out.push(g); }); });
     S.tm.sch[id]={at:Date.now(),games:out}; return out;
   });
@@ -5368,7 +5368,11 @@ function tmRender(){
     var gs=c.games, nextIdx=-1;
     for(var i=0;i<gs.length;i++){ var s=(gs[i].status||{}).abstractGameState; if(s!=='Final'){ nextIdx=i; break; } }
     var list=gs.map(function(g,i){ return {g:g,i:i}; });
-    if(S.tm.view==='near'){ var lo=Math.max(0,(nextIdx<0?gs.length:nextIdx)-10); list=list.slice(lo,lo+20); }
+    if(S.tm.view==='near'){
+      /* v77: a postponed date the feed also lists on its new day does not take one of the ten places */
+      list=list.filter(function(x){ return !(x.g.rescheduleDate&&/Postponed/i.test((x.g.status||{}).detailedState||'')); });
+      var at=0; while(at<list.length&&(nextIdx<0||list[at].i<nextIdx)) at++;
+      var lo=Math.max(0,at-10); list=list.slice(lo,lo+20); }
     var lastMo='';
     sch='<table class="tsch"><tbody>'+list.map(function(x){
       var g=x.g, home=g.teams.home.team.id===id, me=home?g.teams.home:g.teams.away, op=home?g.teams.away:g.teams.home, oid=op.team.id;
@@ -5533,6 +5537,11 @@ function psWinnerOf(g){
 }
 function psFinal(g){ var st=g.status||{}; return st.abstractGameState==='Final'&&!/Postponed|Cancel|Suspend/i.test(st.detailedState||''); }
 function psLive(g){ return (g.status||{}).abstractGameState==='Live'; }
+/* v77: a postponed or cancelled game is never the next game. The feed keeps the rained-out date as its own entry
+   (ALCS Gm 4, Fri 10/16, "Postponed", with a rescheduleDate) beside the replayed one, and that old entry was shown as next.
+   A scheduled game more than 12 hours past its start that the feed never moved on gives way to a later one. */
+function psOff(g){ var st=g.status||{}; return /Postponed|Cancel/i.test(st.detailedState||'')||!!g.rescheduleDate; }
+function psStale(g){ return Date.now()>+new Date(g.gameDate)+12*36e5; }
 function psState(s){
   var ids=[], wins={}, need=Math.ceil(s.best/2), live=null, next=null, lastFin=null;
   s.games.forEach(function(g){ ['away','home'].forEach(function(k){ var t=g.teams[k].team; if(psReal(t)&&ids.indexOf(t.id)<0) ids.push(t.id); }); });
@@ -5540,7 +5549,8 @@ function psState(s){
   s.games.forEach(function(g){
     if(psFinal(g)){ var w=psWinnerOf(g); if(w!=null&&wins[w]!=null){ wins[w]++; lastFin=g; } }
     else if(psLive(g)){ if(!live) live=g; }
-    else if(!next) next=g;
+    else if(psOff(g)) return;
+    else if(!next||(psStale(next)&&!psStale(g))) next=g;
   });
   s.ids=ids; s.wins=wins; s.need=need; s.winner=null;
   ids.forEach(function(id){ if(wins[id]>=need) s.winner=id; });
