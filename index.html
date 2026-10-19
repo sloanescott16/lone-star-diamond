@@ -5746,7 +5746,7 @@ function psToday(){
   var list=all.filter(function(x){ return new Date(x.g.gameDate).toDateString()===td && !(x.s.winner&&!psFinal(x.g)); });
   var title='Today';
   if(!list.length){
-    var up=all.filter(function(x){ return !psFinal(x.g)&&!psLive(x.g)&&!x.s.winner&&x.s.ids.length===2&&new Date(x.g.gameDate)>new Date(); })
+    var up=all.filter(function(x){ return !psFinal(x.g)&&!psLive(x.g)&&!psOff(x.g)&&!x.s.winner&&x.s.ids.length===2&&new Date(x.g.gameDate)>new Date(); })
       .sort(function(a,b){ return new Date(a.g.gameDate)-new Date(b.g.gameDate); });
     if(up.length){ var d0=new Date(up[0].g.gameDate).toDateString(); list=up.filter(function(x){ return new Date(x.g.gameDate).toDateString()===d0; });
       title='Next up, '+new Date(up[0].g.gameDate).toLocaleDateString([], {weekday:'long',month:'short',day:'numeric'}); }
